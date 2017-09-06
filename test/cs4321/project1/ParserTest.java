@@ -40,7 +40,7 @@ public class ParserTest {
 
     @Test
     public void testBracketSimple() {
-        Parser p1 = new Parser("(1.0)");
+        Parser p1 = new Parser("( 1.0 )");
         TreeNode parseResult1 = p1.parse();
         PrintTreeVisitor v1 = new PrintTreeVisitor();
         parseResult1.accept(v1);
@@ -85,7 +85,7 @@ public class ParserTest {
 
     @Test
     public void testCompoundSimpleRight() {
-        Parser p1 = new Parser("(1.0 / 3.0) + 2.0");
+        Parser p1 = new Parser("( 1.0 / 3.0 ) + 2.0");
         TreeNode parseResult1 = p1.parse();
         PrintTreeVisitor v1 = new PrintTreeVisitor();
         parseResult1.accept(v1);
@@ -94,7 +94,7 @@ public class ParserTest {
 
     @Test
     public void testCompoundSimpleLeft() {
-        Parser p1 = new Parser("2.0 / (1.0 - 3.0)");
+        Parser p1 = new Parser("2.0 / ( 1.0 - 3.0 )");
         TreeNode parseResult1 = p1.parse();
         PrintTreeVisitor v1 = new PrintTreeVisitor();
         parseResult1.accept(v1);

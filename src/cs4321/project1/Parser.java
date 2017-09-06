@@ -1,25 +1,22 @@
 package cs4321.project1;
 
-import cs4321.project1.tokenizer.Tokens.*;
 import cs4321.project1.tree.*;
-
-import java.util.List;
 
 /**
  * Class for a parser that can parse a string and produce an expression tree. To
  * keep the code simple, this does no input checking whatsoever so it only works
  * on correct input.
- * 
+ *
  * An expression is one or more terms separated by + or - signs. A term is one
  * or more factors separated by * or / signs. A factor is an expression in
  * parentheses (), a factor with a unary - before it, or a number.
- * 
+ *
  * @author Lucja Kot
  * @author Your names and netids go here
  */
 public class Parser {
 
-	private List<Token> tokens;
+	private String[] tokens;
 	private int currentToken; // pointer to next input token to be processed
 
 	/**
@@ -30,14 +27,13 @@ public class Parser {
 	 *               be matched and properly nested.
 	 */
 	public Parser(String input) {
-		Lexer lexer = new Lexer(input);
-		this.tokens = lexer.lex();
-		this.currentToken = 0;
+		this.tokens = input.split("\\s+");
+		currentToken = 0;
 	}
 
 	/**
 	 * Parse the input and build the expression tree
-	 * 
+	 *
 	 * @return the (root node of) the resulting tree
 	 */
 	public TreeNode parse() {
@@ -46,123 +42,87 @@ public class Parser {
 
 	/**
 	 * Parse the remaining input as far as needed to get the next factor
-	 * 
+	 *
 	 * @return the (root node of) the resulting subtree
 	 */
 	private TreeNode factor() {
-
-		// TODO fill me in
-		if (this.currentToken < this.tokens.size()) {
-			Token token = this.tokens.get(this.currentToken);
-
-			if (token instanceof NumberToken) {
-				NumberToken numberToken = (NumberToken) token;
-				this.currentToken += 1;
-				return new LeafTreeNode(numberToken.value);
-			}
+		TreeNode result;
+		if (tokens[currentToken].equals("(")){
+			currentToken=currentToken+1;
+			result = expression();
+			currentToken=currentToken+1;
+			return result;
 		}
-
-		if (this.currentToken + 1 < this.tokens.size()) {
-			Token token = this.tokens.get(this.currentToken);
-
-			if (token instanceof SubtractToken) {
-				this.currentToken += 1;
-
-				TreeNode rightHandNode = this.factor();
-
-				if (rightHandNode != null) {
-					return new UnaryMinusTreeNode(rightHandNode);
-				}
-			}
+		if (tokens[currentToken].equals("-")){
+			currentToken=currentToken+1;
+			result = new UnaryMinusTreeNode(factor());
+			return result;
 		}
-
-		if (this.currentToken + 2 < this.tokens.size()) {
-			Token token = this.tokens.get(this.currentToken);
-
-			if (token instanceof LeftBracketToken) {
-				this.currentToken += 1;
-
-				TreeNode expression = this.expression();
-
-				if (expression != null) {
-					// safe to assume that left bracket must also be present.
-					this.currentToken += 1;
-
-					return expression;
-				}
-			}
+		else {
+			result= new LeafTreeNode(Double.parseDouble(tokens[currentToken]));
+			currentToken=currentToken+1;
+			return result;
 		}
-
-		return null;
 	}
 
 	/**
 	 * Parse the remaining input as far as needed to get the next term
-	 * 
+	 *
 	 * @return the (root node of) the resulting subtree
 	 */
 	private TreeNode term() {
-		TreeNode lhs = this.factor();
-
-		// TODO fill me in
-		while (this.currentToken < this.tokens.size()) {
-			if (lhs != null) {
-				Token token = this.tokens.get(this.currentToken);
-				if (token instanceof MultiplyToken) {
-					this.currentToken += 1;
-					TreeNode rhs = this.factor();
-					lhs = new MultiplicationTreeNode(lhs, rhs);
-					continue;
+		TreeNode result = factor();
+		while (currentToken != tokens.length){
+			if (tokens[currentToken].equals("*")){
+				currentToken=currentToken+1;
+				TreeNode result2 = factor();
+				TreeNode multNode = new MultiplicationTreeNode(result, result2);
+				result=multNode;
+			}
+			else {
+				if (tokens[currentToken].equals("/")){
+					currentToken=currentToken+1;
+					TreeNode result2 = factor();
+					TreeNode divNode = new DivisionTreeNode(result, result2);
+					result=divNode;
 				}
-
-				if (token instanceof DivideToken) {
-					this.currentToken += 1;
-					TreeNode rhs = this.factor();
-					lhs = new DivisionTreeNode(lhs, rhs);
-					continue;
+				else {
+					break;
 				}
-
-				break;
-			} else {
-				break;
 			}
 		}
+		return result;
 
-		return lhs;
 	}
 
 	/**
 	 * Parse the remaining input as far as needed to get the next expression
-	 * 
+	 *
 	 * @return the (root node of) the resulting subtree
 	 */
 	private TreeNode expression() {
-		TreeNode lhs = this.term();
+		TreeNode result = term();
 
-		// TODO fill me in
-		while (this.currentToken < this.tokens.size()) {
-			if (lhs != null) {
-				Token token = this.tokens.get(this.currentToken);
-				if (token instanceof AddToken) {
-					this.currentToken += 1;
-					TreeNode rhs = this.term();
-					lhs = new AdditionTreeNode(lhs, rhs);
-					continue;
+		while (currentToken != tokens.length){
+			if (tokens[currentToken].equals("+")){
+				currentToken=currentToken+1;
+				TreeNode result2 = term();
+				TreeNode addNode = new AdditionTreeNode(result, result2);
+				result=addNode;
+			}
+			else{
+				if (tokens[currentToken].equals("-")){
+					currentToken=currentToken+1;
+					TreeNode result2 = term();
+					TreeNode subNode = new SubtractionTreeNode(result, result2);
+					result=subNode;
 				}
 
-				if (token instanceof SubtractToken) {
-					this.currentToken += 1;
-					TreeNode rhs = this.term();
-					lhs = new SubtractionTreeNode(lhs, rhs);
-					continue;
+				else{
+					break;
 				}
-
-				break;
-			} else {
-				break;
 			}
 		}
-		return lhs;
-
+		return result;
 	}
 }
