@@ -32,7 +32,7 @@ public class Parser {
 	public Parser(String input) {
 		Lexer lexer = new Lexer(input);
 		this.tokens = lexer.lex();
-		currentToken = 0;
+		this.currentToken = 0;
 	}
 
 	/**
