@@ -1,6 +1,7 @@
 package cs4321.project1;
 
 import cs4321.project1.list.*;
+import cs4321.project1.utilities.Helpers;
 
 /**
  * Provide a comment about what your class does and the overall logic
@@ -34,10 +35,10 @@ public class EvaluatePrefixListVisitor implements ListVisitor {
     @Override
 	public void visit(AdditionListNode node) {
 		// TODO fill me in
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 		double lhs = this.value;
 
-		last.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(last, this);
 		double rhs = this.value;
 
 		this.value = lhs + rhs;
@@ -46,10 +47,10 @@ public class EvaluatePrefixListVisitor implements ListVisitor {
 	@Override
 	public void visit(SubtractionListNode node) {
 		// TODO fill me in
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 		double lhs = this.value;
 
-		last.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(last, this);
 		double rhs = this.value;
 
 		this.value = lhs - rhs;
@@ -58,10 +59,10 @@ public class EvaluatePrefixListVisitor implements ListVisitor {
 	@Override
 	public void visit(MultiplicationListNode node) {
 		// TODO fill me in
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 		double lhs = this.value;
 
-		last.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(last, this);
 		double rhs = this.value;
 
 		this.value = lhs * rhs;
@@ -70,10 +71,10 @@ public class EvaluatePrefixListVisitor implements ListVisitor {
 	@Override
 	public void visit(DivisionListNode node) {
 		// TODO fill me in
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 		double lhs = this.value;
 
-		last.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(last, this);
 		double rhs = this.value;
 
 		this.value = lhs / rhs;
@@ -82,7 +83,7 @@ public class EvaluatePrefixListVisitor implements ListVisitor {
 	@Override
 	public void visit(UnaryMinusListNode node) {
 		// TODO fill me in
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 		this.value = -this.value;
 	}
 }

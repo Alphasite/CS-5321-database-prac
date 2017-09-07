@@ -1,6 +1,6 @@
 package cs4321.project1;
 
-import cs4321.project1.tokenizer.Tokens.*;
+import cs4321.project1.tokenizer.tokens.*;
 import org.junit.Test;
 
 import java.util.List;

@@ -1,8 +1,8 @@
 package cs4321.project1;
 
 import cs4321.project1.tokenizer.Tokenizer;
-import cs4321.project1.tokenizer.Tokens.Token;
-import cs4321.project1.Utilities.Pair;
+import cs4321.project1.tokenizer.tokens.Token;
+import cs4321.project1.utilities.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

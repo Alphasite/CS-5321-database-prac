@@ -1,6 +1,7 @@
 package cs4321.project1;
 
 import cs4321.project1.list.*;
+import cs4321.project1.utilities.Helpers;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -27,7 +28,7 @@ public class EvaluatePostfixListVisitor implements ListVisitor {
 	public void visit(NumberListNode node) {
 		// TODO fill me in
 		this.numberStack.push(node.getData());
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 	}
 
 	@Override
@@ -36,7 +37,7 @@ public class EvaluatePostfixListVisitor implements ListVisitor {
 		double rhs = this.numberStack.pop();
 		double lhs = this.numberStack.pop();
 		this.numberStack.push(lhs + rhs);
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 	}
 
 	@Override
@@ -45,7 +46,7 @@ public class EvaluatePostfixListVisitor implements ListVisitor {
 		double rhs = this.numberStack.pop();
 		double lhs = this.numberStack.pop();
 		this.numberStack.push(lhs - rhs);
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 	}
 
 	@Override
@@ -54,7 +55,7 @@ public class EvaluatePostfixListVisitor implements ListVisitor {
 		double rhs = this.numberStack.pop();
 		double lhs = this.numberStack.pop();
 		this.numberStack.push(lhs * rhs);
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 	}
 
 	@Override
@@ -63,7 +64,7 @@ public class EvaluatePostfixListVisitor implements ListVisitor {
 		double rhs = this.numberStack.pop();
 		double lhs = this.numberStack.pop();
 		this.numberStack.push(lhs / rhs);
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 	}
 
 	@Override
@@ -71,6 +72,6 @@ public class EvaluatePostfixListVisitor implements ListVisitor {
 		// TODO fill me in
 		double number = this.numberStack.pop();
 		this.numberStack.push(-number);
-		node.visitNextIfNotNull(this);
+		Helpers.visitNextIfNotNull(node, this);
 	}
 }

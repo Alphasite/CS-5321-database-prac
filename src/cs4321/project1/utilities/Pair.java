@@ -1,4 +1,4 @@
-package cs4321.project1.Utilities;
+package cs4321.project1.utilities;
 
 /**
  * Created by nishadmathur on 23/8/17.

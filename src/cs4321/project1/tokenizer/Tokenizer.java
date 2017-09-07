@@ -1,7 +1,7 @@
 package cs4321.project1.tokenizer;
 
-import cs4321.project1.tokenizer.Tokens.*;
-import cs4321.project1.Utilities.Pair;
+import cs4321.project1.tokenizer.tokens.*;
+import cs4321.project1.utilities.Pair;
 
 /**
  * Created by nishadmathur on 23/8/17.

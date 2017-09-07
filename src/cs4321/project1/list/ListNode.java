@@ -42,11 +42,4 @@ public abstract class ListNode {
 	 *            visitor to be accepted
 	 */
 	public abstract void accept(ListVisitor visitor);
-
-	public void visitNextIfNotNull(ListVisitor visitor) {
-		if (this.getNext() != null) {
-			this.getNext().accept(visitor);
-		}
-	}
-
 }
