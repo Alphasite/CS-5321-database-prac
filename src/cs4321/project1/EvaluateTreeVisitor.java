@@ -1,11 +1,6 @@
 package cs4321.project1;
 
-import cs4321.project1.tree.DivisionTreeNode;
-import cs4321.project1.tree.LeafTreeNode;
-import cs4321.project1.tree.SubtractionTreeNode;
-import cs4321.project1.tree.AdditionTreeNode;
-import cs4321.project1.tree.MultiplicationTreeNode;
-import cs4321.project1.tree.UnaryMinusTreeNode;
+import cs4321.project1.tree.*;
 
 /**
  * Evaluate an expression tree for a value.
@@ -14,7 +9,7 @@ import cs4321.project1.tree.UnaryMinusTreeNode;
  * computed value into the result variable (effectively a return register)
  * before then evaluating the node its self.
  * 
- * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salon (ajs672)
  */
 public class EvaluateTreeVisitor implements TreeVisitor {
 	private double result;

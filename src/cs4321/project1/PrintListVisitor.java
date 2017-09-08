@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * A visitor to pretty print a list expression.
  * 
- * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salon (ajs672)
  */
 public class PrintListVisitor implements ListVisitor {
 	List<String> result;

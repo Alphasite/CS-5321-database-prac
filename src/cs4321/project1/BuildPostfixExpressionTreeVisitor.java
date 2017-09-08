@@ -10,7 +10,7 @@ import cs4321.project1.tree.*;
  * This approach just keeps track of the head and the tail of the list, adding nodes
  * to the tail, using post-order traversal.
  * 
- * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salon (ajs672)
  */
 public class BuildPostfixExpressionTreeVisitor implements TreeVisitor {
 	ListNode head;

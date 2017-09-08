@@ -17,7 +17,7 @@ import java.util.Deque;
  *   	 it places the result onto the stack
  * When the end of the list is reached only the result should be on the stack.
  * 
- * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salon (ajs672)
  */
 public class EvaluatePostfixListVisitor implements ListVisitor {
 	private Deque<Double> numberStack;
