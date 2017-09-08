@@ -18,7 +18,7 @@ import cs4321.project1.utilities.Helpers;
  * 	   it applies the operator and stores result
  * 	 it does this until the first node has returned and a value is stored in the result variable.
  *
- * @author Your names and netids go here
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
  */
 public class EvaluatePrefixListVisitor implements ListVisitor {
 	private ListNode lastNodeEvaluated;

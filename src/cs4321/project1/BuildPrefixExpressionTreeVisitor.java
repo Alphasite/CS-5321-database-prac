@@ -11,7 +11,7 @@ import cs4321.project1.tree.*;
  * This approach just keeps track of the head and the tail of the list, adding nodes
  * to the tail, using pre-order traversal.
  *
- * @author Your names and netids go here
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
  */
 public class BuildPrefixExpressionTreeVisitor implements TreeVisitor {
 	ListNode head;
