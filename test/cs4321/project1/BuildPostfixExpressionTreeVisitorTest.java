@@ -52,7 +52,6 @@ public class BuildPostfixExpressionTreeVisitorTest {
 		assertNull(result.getNext());
 	}
 
-
     @Test
 	public void testUnaryMinusNode() {
 		TreeNode n1 = new LeafTreeNode(1.0);
@@ -175,7 +174,5 @@ public class BuildPostfixExpressionTreeVisitorTest {
         result = result.getNext();
         assertTrue(result instanceof SubtractionListNode);
     }
-
-
 
 }

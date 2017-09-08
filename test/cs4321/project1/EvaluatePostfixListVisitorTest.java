@@ -54,6 +54,42 @@ public class EvaluatePostfixListVisitorTest {
 		assertEquals(6.0, v1.getResult(), DELTA);
 	}
 
+	//ADDED TEST, simple test for non commutative operations
+	@Test
+	public void testSubtractDivideSimple() {
+		ListNode n1 = new NumberListNode(2.0);
+		ListNode n2 = new NumberListNode(5.0);
+		ListNode n3 = new SubtractionListNode();
+
+		n1.setNext(n2);
+		n2.setNext(n3);
+		EvaluatePostfixListVisitor v1 = new EvaluatePostfixListVisitor();
+		n1.accept(v1);
+		assertEquals(-3.0, v1.getResult(), DELTA);
+
+		n2.setNext(n1);
+		n1.setNext(n3);
+		v1 = new EvaluatePostfixListVisitor();
+		n2.accept(v1);
+		assertEquals(3.0, v1.getResult(), DELTA);
+
+		ListNode n4 = new NumberListNode(2.0);
+		ListNode n5 = new NumberListNode(5.0);
+		ListNode n6 = new DivisionListNode();
+
+		n4.setNext(n5);
+		n5.setNext(n6);
+		EvaluatePostfixListVisitor v2 = new EvaluatePostfixListVisitor();
+		n4.accept(v2);
+		assertEquals(0.4, v2.getResult(), DELTA);
+
+		n5.setNext(n4);
+		n4.setNext(n6);
+		v2 = new EvaluatePostfixListVisitor();
+		n5.accept(v2);
+		assertEquals(2.5, v2.getResult(), DELTA);
+	}
+
 	//ADDED TEST, testing an UnaryMinus expression
 	@Test
 	public void testUnaryMinusSimple() {

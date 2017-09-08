@@ -54,6 +54,42 @@ public class EvaluatePrefixListVisitorTest {
 		assertEquals(6.0, v1.getResult(), DELTA);
 	}
 
+	//ADDED TEST, simple test for non commutative operations
+	@Test
+	public void testSubtractDivideSimple() {
+		ListNode n1 = new SubtractionListNode();
+		ListNode n2 = new NumberListNode(2.0);
+		ListNode n3 = new NumberListNode(5.0);
+
+		n1.setNext(n2);
+		n2.setNext(n3);
+		EvaluatePrefixListVisitor v1 = new EvaluatePrefixListVisitor();
+		n1.accept(v1);
+		assertEquals(-3.0, v1.getResult(), DELTA);
+
+		n1.setNext(n3);
+		n3.setNext(n2);
+		v1 = new EvaluatePrefixListVisitor();
+		n1.accept(v1);
+		assertEquals(3.0, v1.getResult(), DELTA);
+
+		ListNode n4 = new DivisionListNode();
+		ListNode n5 = new NumberListNode(2.0);
+		ListNode n6 = new NumberListNode(5.0);
+
+		n4.setNext(n5);
+		n5.setNext(n6);
+		EvaluatePrefixListVisitor v2 = new EvaluatePrefixListVisitor();
+		n4.accept(v2);
+		assertEquals(0.4, v2.getResult(), DELTA);
+
+		n4.setNext(n6);
+		n6.setNext(n5);
+		v2 = new EvaluatePrefixListVisitor();
+		n4.accept(v2);
+		assertEquals(2.5, v2.getResult(), DELTA);
+	}
+
 	//ADDED TEST, testing an UnaryMinus expression
 	@Test
 	public void testUnaryMinusSimple() {
