@@ -14,7 +14,7 @@ import cs4321.project1.tree.UnaryMinusTreeNode;
  * computed value into the result variable (effectively a return register)
  * before then evaluating the node its self.
  * 
- * @author Your names and netids go here
+ * @author Nishad Mathur (nm594), Antoine Klopocki (ajk332), Antoine Salom (ajs672)
  */
 public class EvaluateTreeVisitor implements TreeVisitor {
 	private double result;
