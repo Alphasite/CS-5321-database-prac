@@ -25,6 +25,9 @@ public class Parser {
      * tokens must be either numbers that parse to Double, or one
      * of the symbols +, -, /, *, ( or ), and all parentheses must
      * be matched and properly nested.
+     *
+     * @param input
+     *              The string to be parsed
      */
     public Parser(String input) {
         this.tokens = input.split("\\s+");

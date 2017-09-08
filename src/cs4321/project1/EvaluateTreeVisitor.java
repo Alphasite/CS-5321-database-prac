@@ -18,6 +18,11 @@ public class EvaluateTreeVisitor implements TreeVisitor {
 		this.result = 0;
 	}
 
+	/**
+	 * Get the result of the computation.
+	 *
+	 * @return the result of the computation.
+	 */
 	public double getResult() {
 		return this.result;
 	}
