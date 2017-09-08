@@ -118,4 +118,14 @@ public class ParserTest {
         parseResult1.accept(v1);
         assertEquals("(2.0+(1.0/3.0))", v1.getResult());
     }
+
+    //ADDED TEST, testing the example provided in the instructions of the assignment
+    @Test
+    public void testExampleProvidedInInstructions() {
+        Parser p1 = new Parser("- 2.0 * ( 3.0 + 1.0 )");
+        TreeNode parseResult1 = p1.parse();
+        PrintTreeVisitor v1 = new PrintTreeVisitor();
+        parseResult1.accept(v1);
+        assertEquals("((-2.0)*(3.0+1.0))", v1.getResult());
+    }
 }

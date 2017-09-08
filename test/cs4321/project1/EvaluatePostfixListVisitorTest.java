@@ -1,9 +1,9 @@
 package cs4321.project1;
 
-import static org.junit.Assert.*;
 import cs4321.project1.list.*;
-
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class EvaluatePostfixListVisitorTest {
 
@@ -52,6 +52,25 @@ public class EvaluatePostfixListVisitorTest {
 		EvaluatePostfixListVisitor v1 = new EvaluatePostfixListVisitor();
 		n1.accept(v1);
 		assertEquals(6.0, v1.getResult(), DELTA);
+	}
+
+	//ADDED TEST, testing the example provided in the instructions of the assignment
+	@Test
+	public void testExampleProvidedInInstructions() {
+		ListNode n1 = new NumberListNode(2.0D);
+		ListNode n2 = new UnaryMinusListNode();
+		ListNode n3 = new NumberListNode(3.0D);
+		ListNode n4 = new NumberListNode(1.0D);
+		ListNode n5 = new AdditionListNode();
+		ListNode n6 = new MultiplicationListNode();
+		n1.setNext(n2);
+		n2.setNext(n3);
+		n3.setNext(n4);
+		n4.setNext(n5);
+		n5.setNext(n6);
+		EvaluatePostfixListVisitor v1 = new EvaluatePostfixListVisitor();
+		n1.accept(v1);
+		assertEquals(-8.0D, v1.getResult(), 1.0E-15D);
 	}
 
 }

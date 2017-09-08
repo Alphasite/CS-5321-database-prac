@@ -1,10 +1,9 @@
 package cs4321.project1;
 
-import static org.junit.Assert.*;
-
+import cs4321.project1.tree.*;
 import org.junit.Test;
 
-import cs4321.project1.tree.*;
+import static org.junit.Assert.assertEquals;
 
 public class EvaluateTreeVisitorTest {
 
@@ -44,6 +43,20 @@ public class EvaluateTreeVisitorTest {
         EvaluateTreeVisitor v2 = new EvaluateTreeVisitor();
 		n4.accept(v2);
 		assertEquals(2.0, v2.getResult(), DELTA);
+	}
+
+	//ADDED TEST, testing the example provided in the instructions of the assignment
+	@Test
+	public void testExampleProvidedInInstructions() {
+		TreeNode n1 = new LeafTreeNode(1.0);
+		TreeNode n2 = new LeafTreeNode(2.0);
+		TreeNode n3 = new LeafTreeNode(3.0);
+		TreeNode n4 = new AdditionTreeNode(n1,n3);
+		TreeNode n5 = new UnaryMinusTreeNode(n2);
+		TreeNode n6 = new MultiplicationTreeNode(n4, n5);
+		EvaluateTreeVisitor v1 = new EvaluateTreeVisitor();
+		n6.accept(v1);
+		assertEquals(-8.0, v1.getResult(), DELTA);
 	}
 
 }

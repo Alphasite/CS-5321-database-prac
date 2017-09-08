@@ -1,11 +1,10 @@
 package cs4321.project1;
 
-import static org.junit.Assert.*;
-
+import cs4321.project1.list.*;
+import cs4321.project1.tree.*;
 import org.junit.Test;
 
-import cs4321.project1.tree.*;
-import cs4321.project1.list.*;
+import static org.junit.Assert.*;
 
 public class BuildPrefixExpressionTreeVisitorTest {
 
@@ -64,6 +63,34 @@ public class BuildPrefixExpressionTreeVisitorTest {
 		ListNode first = result.getNext();
 		assertTrue(first instanceof NumberListNode);
 		assertEquals(((NumberListNode) first).getData(), 1.0, DELTA);
+	}
+
+	//ADDED TEST, testing the example provided in the instructions of the assignment
+	@Test
+	public void testExampleProvidedInInstructions() {
+		TreeNode n1 = new LeafTreeNode(2.0D);
+		TreeNode n2 = new UnaryMinusTreeNode(n1);
+		TreeNode n3 = new LeafTreeNode(3.0D);
+		TreeNode n4 = new LeafTreeNode(1.0D);
+		TreeNode n5 = new AdditionTreeNode(n3, n4);
+		TreeNode n6 = new MultiplicationTreeNode(n2, n5);
+		BuildPrefixExpressionTreeVisitor v1 = new BuildPrefixExpressionTreeVisitor();
+		n6.accept(v1);
+		ListNode result = v1.getResult();
+		assertTrue(result instanceof MultiplicationListNode);
+		result = result.getNext();
+		assertTrue(result instanceof UnaryMinusListNode);
+		result = result.getNext();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode)result).getData(), 2.0D, 1.0E-15D);
+		result = result.getNext();
+		assertTrue(result instanceof AdditionListNode);
+		result = result.getNext();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode)result).getData(), 3.0D, 1.0E-15D);
+		result = result.getNext();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode)result).getData(), 1.0D, 1.0E-15D);
 	}
 
 }
