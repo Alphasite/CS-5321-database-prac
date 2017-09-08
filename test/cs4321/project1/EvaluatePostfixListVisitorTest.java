@@ -54,6 +54,17 @@ public class EvaluatePostfixListVisitorTest {
 		assertEquals(6.0, v1.getResult(), DELTA);
 	}
 
+	//ADDED TEST, testing an UnaryMinus expression
+	@Test
+	public void testUnaryMinusSimple() {
+		ListNode n1 = new NumberListNode(1.0);
+		ListNode n2 = new UnaryMinusListNode();
+		n1.setNext(n2);
+		EvaluatePostfixListVisitor v1 = new EvaluatePostfixListVisitor();
+		n1.accept(v1);
+		assertEquals(-1.0, v1.getResult(), DELTA);
+	}
+
 	//ADDED TEST, testing the example provided in the instructions of the assignment
 	@Test
 	public void testExampleProvidedInInstructions() {

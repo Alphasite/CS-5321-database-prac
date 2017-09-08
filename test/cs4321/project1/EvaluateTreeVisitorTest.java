@@ -45,6 +45,20 @@ public class EvaluateTreeVisitorTest {
 		assertEquals(2.0, v2.getResult(), DELTA);
 	}
 
+	//ADDED TEST, testing a simple UnaryMinus TreeNode
+	@Test
+	public void UnaryMinusTreeNode() {
+		TreeNode n1 = new LeafTreeNode(3.0);
+		TreeNode n2 = new UnaryMinusTreeNode(n1);
+		TreeNode n3 = new UnaryMinusTreeNode(n2);
+		EvaluateTreeVisitor v1 = new EvaluateTreeVisitor();
+		n2.accept(v1);
+		assertEquals(-3.0, v1.getResult(), 1.0E-15);
+		EvaluateTreeVisitor v2 = new EvaluateTreeVisitor();
+		n3.accept(v2);
+		assertEquals(3.0, v2.getResult(), 1.0E-15);
+	}
+
 	//ADDED TEST, testing the example provided in the instructions of the assignment
 	@Test
 	public void testExampleProvidedInInstructions() {

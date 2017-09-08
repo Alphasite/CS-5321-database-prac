@@ -69,6 +69,39 @@ public class BuildPostfixExpressionTreeVisitorTest {
 
 	}
 
+	//ADDED TEST, testing a Division Node
+	@Test
+	public void testDivisionNode() {
+		TreeNode n1 = new LeafTreeNode(4.0);
+		TreeNode n2 = new LeafTreeNode(2.0);
+		TreeNode n3 = new DivisionTreeNode(n1, n2);
+		TreeNode n4 = new DivisionTreeNode(n2, n1);
+
+		BuildPostfixExpressionTreeVisitor v1 = new BuildPostfixExpressionTreeVisitor();
+		n3.accept(v1);
+		ListNode result = v1.getResult();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode) result).getData(), 4.0, DELTA);
+		result = result.getNext();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode) result).getData(), 2.0, DELTA);
+		result = result.getNext();
+		assertTrue(result instanceof DivisionListNode);
+		assertNull(result.getNext());
+
+		BuildPostfixExpressionTreeVisitor v2 = new BuildPostfixExpressionTreeVisitor();
+		n4.accept(v2);
+		result = v2.getResult();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode) result).getData(), 2.0, DELTA);
+		result = result.getNext();
+		assertTrue(result instanceof NumberListNode);
+		assertEquals(((NumberListNode) result).getData(), 4.0, DELTA);
+		result = result.getNext();
+		assertTrue(result instanceof DivisionListNode);
+		assertNull(result.getNext());
+	}
+
     //ADDED TEST, testing the example provided in the instructions of the assignment
 	@Test
 	public void testExampleProvidedInInstructions() {

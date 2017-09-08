@@ -39,6 +39,28 @@ public class PrintListVisitorTest {
 		assertEquals("1.0 2.0 +", pv1.getResult());
 	}
 
+	//ADDED TEST, testing a Postfix representation of an UnaryMinus expression
+	@Test
+	public void testUnaryMinusSimplePostfix() {
+		ListNode n1 = new NumberListNode(1.0);
+		ListNode n2 = new UnaryMinusListNode();
+		n1.setNext(n2);
+		PrintListVisitor pv1 = new PrintListVisitor();
+		n1.accept(pv1);
+		assertEquals("1.0 ~", pv1.getResult());
+	}
+
+	//ADDED TEST, testing a Prefix representation of an UnaryMinus expression
+	@Test
+	public void testUnaryMinusSimplePrefix() {
+		ListNode n1 = new NumberListNode(1.0);
+		ListNode n2 = new UnaryMinusListNode();
+		n2.setNext(n1);
+		PrintListVisitor pv1 = new PrintListVisitor();
+		n2.accept(pv1);
+		assertEquals("~ 1.0", pv1.getResult());
+	}
+
 	//ADDED TEST, testing the example provided in the instructions of the assignment for a PrefixList
 	@Test
 	public void testExampleProvidedInInstructionsPrefix() {
