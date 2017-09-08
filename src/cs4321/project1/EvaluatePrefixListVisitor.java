@@ -9,7 +9,7 @@ import cs4321.project1.utilities.Helpers;
  * It evaluates its by treating the list as a tree,
  * 	 it recursively evaluates each child of the expression until a number is encountered
  * 	   the left hand sub expression is evaluated as the next node of the current node
- * 	   the right hand sub expression is evalated as the next node of the lastNodeEvaluated node
+ * 	   the right hand sub expression is evaluated as the next node of the lastNodeEvaluated node
  * 	 on encountering a number
  * 	   it stores that number in the result var
  * 	   it stores the number node in the lastNodeEvaluated var

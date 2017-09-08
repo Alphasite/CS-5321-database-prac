@@ -22,6 +22,11 @@ public class BuildPrefixExpressionTreeVisitor implements TreeVisitor {
 		this.tail = null;
 	}
 
+	/**
+	 * Get the resulting node from applying the visitor to the tree.
+	 *
+	 * @return the head node of the expression.
+	 */
 	public ListNode getResult() {
 		return head;
 	}
