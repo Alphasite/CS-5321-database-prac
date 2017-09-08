@@ -8,39 +8,61 @@ import cs4321.project1.tree.MultiplicationTreeNode;
 import cs4321.project1.tree.UnaryMinusTreeNode;
 
 /**
- * Provide a comment about what your class does and the overall logic
+ * Evaluate an expression tree for a value.
+ *
+ * The expression recursively evaluates the children of each node, placing its
+ * computed value into the result variable (effectively a return register)
+ * before then evaluating the node its self.
  * 
  * @author Your names and netids go here
  */
-
 public class EvaluateTreeVisitor implements TreeVisitor {
-	double result;
+	private double result;
 
 	public EvaluateTreeVisitor() {
-		// TODO fill me in
+		this.result = 0;
 	}
 
 	public double getResult() {
-		// TODO fill me in
 		return this.result;
 	}
 
+	/**
+	 * Visit method for leaf node
+	 * just store the integer value into the result var.
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(LeafTreeNode node) {
-		// TODO fill me in
 		this.result = node.getData();
 	}
 
+	/**
+	 * Visit method for unary minus node.
+	 * Recursively computes the value of its child node
+	 * Then applies the negation and stores the result.
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(UnaryMinusTreeNode node) {
-		// TODO fill me in
 		node.getChild().accept(this);
 		this.result = -this.result;
 	}
 
+	/**
+	 * Visit method for + node.
+	 * Recursively computes the values of the child expressions
+	 * Then applies the operator and stores the result.
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(AdditionTreeNode node) {
-		// TODO fill me in
 		node.getLeftChild().accept(this);
 		double lhs = this.result;
 		node.getRightChild().accept(this);
@@ -49,9 +71,16 @@ public class EvaluateTreeVisitor implements TreeVisitor {
 		this.result = lhs + rhs;
 	}
 
+	/**
+	 * Visit method for * node.
+	 * Recursively computes the values of the child expressions
+	 * Then applies the operator and stores the result.
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(MultiplicationTreeNode node) {
-		// TODO fill me in
 		node.getLeftChild().accept(this);
 		double lhs = this.result;
 		node.getRightChild().accept(this);
@@ -60,9 +89,16 @@ public class EvaluateTreeVisitor implements TreeVisitor {
 		this.result = lhs * rhs;
 	}
 
+	/**
+	 * Visit method for - node.
+	 * Recursively computes the values of the child expressions
+	 * Then applies the operator and stores the result.
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(SubtractionTreeNode node) {
-		// TODO fill me in
 		node.getLeftChild().accept(this);
 		double lhs = this.result;
 		node.getRightChild().accept(this);
@@ -71,9 +107,16 @@ public class EvaluateTreeVisitor implements TreeVisitor {
 		this.result = lhs - rhs;
 	}
 
+	/**
+	 * Visit method for / node.
+	 * Recursively computes the values of the child expressions
+	 * Then applies the operator and stores the result.
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(DivisionTreeNode node) {
-		// TODO fill me in
 		node.getLeftChild().accept(this);
 		double lhs = this.result;
 		node.getRightChild().accept(this);

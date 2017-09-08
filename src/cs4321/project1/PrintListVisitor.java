@@ -7,62 +7,100 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Provide a comment about what your class does and the overall logic
+ * A visitor to pretty print a list expression.
  * 
  * @author Your names and netids go here
  */
-
 public class PrintListVisitor implements ListVisitor {
 	List<String> result;
 
 	public PrintListVisitor() {
-		// TODO fill me in
 		this.result = new ArrayList<>();
 	}
 
+	/**
+	 * Method to get the finished string representation when visitor is done
+	 *
+	 * @return string representation of the visited tree
+	 */
 	public String getResult() {
-		// TODO fill me in
 		return String.join(" ", this.result);
 	}
 
+	/**
+	 * Visit method for a number node; just concatenates the numeric value to the
+	 * running string
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(NumberListNode node) {
-		// TODO fill me in
 		this.result.add(((Double) node.getData()).toString());
 		Helpers.visitNextIfNotNull(node, this);
 	}
 
+	/**
+	 * Visit method for addition node; just concatenates the '+' operator to the
+	 * running string
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(AdditionListNode node) {
-		// TODO fill me in
 		this.result.add("+");
 		Helpers.visitNextIfNotNull(node, this);
 	}
 
+	/**
+	 * Visit method for addition node; just concatenates the '-' operator to the
+	 * running string
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(SubtractionListNode node) {
-		// TODO fill me in
 		this.result.add("-");
 		Helpers.visitNextIfNotNull(node, this);
 	}
 
+	/**
+	 * Visit method for addition node; just concatenates the '*' operator to the
+	 * running string
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(MultiplicationListNode node) {
-		// TODO fill me in
 		this.result.add("*");
 		Helpers.visitNextIfNotNull(node, this);
 	}
 
+	/**
+	 * Visit method for addition node; just concatenates the '/' operator to the
+	 * running string
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(DivisionListNode node) {
-		// TODO fill me in
 		this.result.add("/");
 		Helpers.visitNextIfNotNull(node, this);
 	}
 
+	/**
+	 * Visit method for addition node; just concatenates the '~' operator to the
+	 * running string
+	 *
+	 * @param node
+	 *            the node to be visited
+	 */
 	@Override
 	public void visit(UnaryMinusListNode node) {
-		// TODO fill me in
 		this.result.add("~");
 		Helpers.visitNextIfNotNull(node, this);
 	}
