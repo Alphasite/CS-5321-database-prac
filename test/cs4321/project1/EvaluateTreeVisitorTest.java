@@ -59,4 +59,23 @@ public class EvaluateTreeVisitorTest {
 		assertEquals(-8.0, v1.getResult(), DELTA);
 	}
 
+	//ADDED TEST, testing the example called "Example Complex A"
+	@Test
+	public void testExampleComplexA() {
+		TreeNode n1 = new LeafTreeNode(1.0);
+		TreeNode n2 = new LeafTreeNode(2.0);
+		TreeNode n3 = new LeafTreeNode(3.0);
+		TreeNode n4 = new LeafTreeNode(4.0);
+		TreeNode n5 = new LeafTreeNode(5.0);
+		TreeNode n6 = new UnaryMinusTreeNode(n5);
+		TreeNode n7 = new UnaryMinusTreeNode(n6);
+		TreeNode n8 = new MultiplicationTreeNode(n7, n3);
+		TreeNode n9 = new DivisionTreeNode(n4, n2);
+		TreeNode n10 = new AdditionTreeNode(n1, n9);
+		TreeNode n11 = new SubtractionTreeNode(n8, n10);
+
+		EvaluateTreeVisitor v1 = new EvaluateTreeVisitor();
+		n11.accept(v1);
+		assertEquals(12.0, v1.getResult(), DELTA);
+	}
 }

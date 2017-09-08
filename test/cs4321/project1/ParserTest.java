@@ -38,6 +38,7 @@ public class ParserTest {
         assertEquals("(-(-1.0))", v1.getResult());
     }
 
+    //ADDED TEST, testing brackets
     @Test
     public void testBracketSimple() {
         Parser p1 = new Parser("( 1.0 )");
@@ -47,6 +48,7 @@ public class ParserTest {
         assertEquals("1.0", v1.getResult());
     }
 
+    //ADDED TEST, testing a simple addition
     @Test
     public void testAdditionSimple() {
         Parser p1 = new Parser("1.0 + 1.0");
@@ -56,6 +58,7 @@ public class ParserTest {
         assertEquals("(1.0+1.0)", v1.getResult());
     }
 
+    //ADDED TEST, testing a simple subtraction
     @Test
     public void testSubtractionSimple() {
         Parser p1 = new Parser("1.0 - 1.0");
@@ -65,6 +68,7 @@ public class ParserTest {
         assertEquals("(1.0-1.0)", v1.getResult());
     }
 
+    //ADDED TEST, testing a simple multiplication
     @Test
     public void testMultiplicationSimple() {
         Parser p1 = new Parser("1.0 * 1.0");
@@ -74,6 +78,7 @@ public class ParserTest {
         assertEquals("(1.0*1.0)", v1.getResult());
     }
 
+    //ADDED TEST, testing a simple division
     @Test
     public void testDivisionSimple() {
         Parser p1 = new Parser("1.0 / 1.0");
@@ -83,6 +88,7 @@ public class ParserTest {
         assertEquals("(1.0/1.0)", v1.getResult());
     }
 
+    //ADDED TEST, testing a compounded expression
     @Test
     public void testCompoundSimpleRight() {
         Parser p1 = new Parser("( 1.0 / 3.0 ) + 2.0");
@@ -92,6 +98,7 @@ public class ParserTest {
         assertEquals("((1.0/3.0)+2.0)", v1.getResult());
     }
 
+    //ADDED TEST, testing another compounded expression
     @Test
     public void testCompoundSimpleLeft() {
         Parser p1 = new Parser("2.0 / ( 1.0 - 3.0 )");
@@ -101,6 +108,7 @@ public class ParserTest {
         assertEquals("(2.0/(1.0-3.0))", v1.getResult());
     }
 
+    //ADDED TEST, testing another compounded expression, without bracket
     @Test
     public void testCompoundSimpleNoBracketDivAdd() {
         Parser p1 = new Parser("1.0 / 3.0 + 2.0");
@@ -110,6 +118,7 @@ public class ParserTest {
         assertEquals("((1.0/3.0)+2.0)", v1.getResult());
     }
 
+    //ADDED TEST, testing another compounded expression, without bracket
     @Test
     public void testCompoundSimpleNoBracketAddDiv() {
         Parser p1 = new Parser("2.0 + 1.0 / 3.0");
@@ -127,5 +136,15 @@ public class ParserTest {
         PrintTreeVisitor v1 = new PrintTreeVisitor();
         parseResult1.accept(v1);
         assertEquals("((-2.0)*(3.0+1.0))", v1.getResult());
+    }
+
+    //ADDED TEST, testing the example called "Example Complex A"
+    @Test
+    public void testExampleComplexA() {
+        Parser p1 = new Parser("- ( - 5.0 ) * 3.0 - ( 1.0 + 4.0 / 2.0 )");
+        TreeNode parseResult1 = p1.parse();
+        PrintTreeVisitor v1 = new PrintTreeVisitor();
+        parseResult1.accept(v1);
+        assertEquals("(((-(-5.0))*3.0)-(1.0+(4.0/2.0)))", v1.getResult());
     }
 }
