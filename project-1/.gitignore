@@ -1,7 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Java template
 # Compiled class file
-*.class
+out/test/ex1/cs4321/project1/FullSystemTest.class
 
 # Log file
 *.log
@@ -13,7 +13,7 @@
 .mtj.tmp/
 
 # Package Files #
-project-2/lib/jsqlparser.jar
+*.jar
 *.war
 *.ear
 *.zip
