@@ -10,37 +10,32 @@ import java.util.Optional;
 public class Rename implements Operator {
     private Operator child;
     private String newTableName;
-    private TableHeader renamedTableHeaderCache;
+    private TableHeader header;
 
     public Rename(Operator child, String newTableName) {
         this.child = child;
         this.newTableName = newTableName;
-        this.renamedTableHeaderCache = null;
+
+        ArrayList<String> newAliases = new ArrayList<>();
+        for (int i = 0; i < this.child.getHeader().size(); i++) {
+            newAliases.add(this.newTableName);
+        }
+
+        this.header = new TableHeader(newAliases, child.getHeader().columnHeaders);
     }
 
     @Override
     public Optional<Tuple> getNextTuple() {
-        Optional<Tuple> nextTuple = this.child.getNextTuple();
+        return this.child.getNextTuple();
+    }
 
-        if (nextTuple.isPresent()) {
-            if (renamedTableHeaderCache == null) {
-                ArrayList<String> newAliases = new ArrayList<>();
-                for (int i = 0; i < nextTuple.get().header.aliasMap.size(); i++) {
-                    newAliases.add(this.newTableName);
-                }
-
-                this.renamedTableHeaderCache = new TableHeader(newAliases, nextTuple.get().header.columnHeaders);
-            }
-
-            return Optional.of(new Tuple(this.renamedTableHeaderCache, nextTuple.get().fields));
-        } else {
-            return Optional.empty();
-        }
+    @Override
+    public TableHeader getHeader() {
+        return header;
     }
 
     @Override
     public boolean reset() {
-        this.renamedTableHeaderCache = null;
         return this.child.reset();
     }
 }

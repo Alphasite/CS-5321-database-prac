@@ -1,18 +1,30 @@
 package operators.extended;
 
+import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
 import java.util.Optional;
 
 public class Sort implements Operator {
+    private Operator source;
+
+    public Sort(Operator source) {
+        this.source = source;
+    }
+
     @Override
     public Optional<Tuple> getNextTuple() {
         return Optional.empty();
     }
 
     @Override
+    public TableHeader getHeader() {
+        return this.source.getHeader();
+    }
+
+    @Override
     public boolean reset() {
-        return false; // TODO
+        return this.source.reset();
     }
 }

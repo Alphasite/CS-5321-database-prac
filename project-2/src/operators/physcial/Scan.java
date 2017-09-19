@@ -1,6 +1,7 @@
 package operators.physcial;
 
 import datastore.Table;
+import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
@@ -44,10 +45,15 @@ public class Scan implements Operator {
                 }
             }
 
-            return Optional.of(new Tuple(this.table.header, row));
+            return Optional.of(new Tuple(row));
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public TableHeader getHeader() {
+        return this.table.header;
     }
 
     @Override

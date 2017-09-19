@@ -4,18 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Tuple {
-    public final TableHeader header;
     public final List<Integer> fields;
 
-    public Tuple(TableHeader header, List<Integer> fields) {
-        this.header = header;
+    public Tuple(List<Integer> fields) {
         this.fields = fields;
     }
 
-    public Tuple join(TableHeader header, Tuple joinTarget) {
+    public Tuple join(Tuple joinTarget) {
         ArrayList<Integer> fields = new ArrayList<>(this.fields);
         fields.addAll(joinTarget.fields);
-        return new Tuple(header, fields);
+        return new Tuple(fields);
     }
 
     public String toRowForm() {

@@ -1,15 +1,19 @@
 package operators.bag;
 
+import datastore.TableHeader;
 import datastore.Tuple;
+import net.sf.jsqlparser.expression.Expression;
 import operators.Operator;
 
 import java.util.Optional;
 
 public class Selection implements Operator {
     Operator source;
+    Expression expression;
 
-    public Selection(Operator source) {
+    public Selection(Operator source, Expression expression) {
         this.source = source;
+        this.expression = expression;
     }
 
     @Override
@@ -22,6 +26,11 @@ public class Selection implements Operator {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public TableHeader getHeader() {
+        return this.source.getHeader();
     }
 
     @Override
