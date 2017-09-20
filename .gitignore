@@ -6,14 +6,7 @@
 # Log file
 *.log
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
 # Package Files #
-project-2/lib/jsqlparser.jar
 *.war
 *.ear
 *.zip
@@ -24,4 +17,7 @@ project-2/lib/jsqlparser.jar
 hs_err_pid*
 
 .idea/
+*.iml
+.gradle/
 out/
+build/
