@@ -2,8 +2,7 @@ package query;
 
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.SelectVisitor;
-import net.sf.jsqlparser.statement.select.SetOperationList;
-import net.sf.jsqlparser.statement.select.WithItem;
+import net.sf.jsqlparser.statement.select.Union;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class SelectVisitorColumnFinder implements SelectVisitor {
@@ -14,13 +13,7 @@ public class SelectVisitorColumnFinder implements SelectVisitor {
     }
 
     @Override
-    public void visit(SetOperationList setOpList) {
+    public void visit(Union union) {
         throw new NotImplementedException();
     }
-
-    @Override
-    public void visit(WithItem withItem) {
-        throw new NotImplementedException();
-    }
-
 }

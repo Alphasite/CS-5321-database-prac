@@ -1,4 +1,4 @@
 dependencies {
     // https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser
-    compile group: 'com.github.jsqlparser', name: 'jsqlparser', version: '0.9'
+    compile files('lib/jsqlparser.jar')
 }
