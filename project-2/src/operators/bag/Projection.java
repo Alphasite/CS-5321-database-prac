@@ -1,11 +1,11 @@
 package operators.bag;
 
 import datastore.Tuple;
-import operators.Operator;
+import operators.AbstractOperator;
 
 import java.util.Optional;
 
-public class Projection implements Operator {
+public class Projection extends AbstractOperator {
     @Override
     public Optional<Tuple> getNextTuple() {
         return Optional.empty();

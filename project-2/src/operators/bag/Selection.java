@@ -1,11 +1,12 @@
 package operators.bag;
 
 import datastore.Tuple;
+import operators.AbstractOperator;
 import operators.Operator;
 
 import java.util.Optional;
 
-public class Selection implements Operator {
+public class Selection extends AbstractOperator {
     Operator source;
 
     public Selection(Operator source) {

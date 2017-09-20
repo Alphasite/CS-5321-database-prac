@@ -1,6 +1,5 @@
 import datastore.Database;
 import datastore.Table;
-import datastore.Tuple;
 import operators.bag.Join;
 import operators.physcial.Scan;
 import org.junit.Test;
@@ -26,17 +25,6 @@ public class SimpleIntegrationTest {
 
         Join join = new Join(boatsScan.get(), reservesScan.get());
 
-        boolean printedHeader = false;
-        Optional<Tuple> row;
-
-        int i = 0;
-        while ((row = join.getNextTuple()).isPresent()) {
-            if (!printedHeader) {
-                System.out.println(row.get().header.toHeaderForm());
-                printedHeader = true;
-            }
-
-            System.out.println(i++ + ": " + row.get().toRowForm());
-        }
+        join.dump(System.out);
     }
 }

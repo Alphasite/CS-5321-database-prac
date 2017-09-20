@@ -2,12 +2,14 @@ package operators.bag;
 
 import datastore.TableHeader;
 import datastore.Tuple;
+import operators.AbstractOperator;
 import operators.Operator;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class Join implements Operator {
+public class Join extends AbstractOperator {
     Operator left;
     Operator right;
 
@@ -78,5 +80,11 @@ public class Join implements Operator {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public void dump(PrintStream stream) {
+//        stream.println(getNextTuple().get().header);
+        super.dump(stream);
     }
 }

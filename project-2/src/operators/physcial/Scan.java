@@ -2,7 +2,7 @@ package operators.physcial;
 
 import datastore.Table;
 import datastore.Tuple;
-import operators.Operator;
+import operators.AbstractOperator;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import java.util.Scanner;
 
-public class Scan implements Operator {
+public class Scan extends AbstractOperator {
     private final Table table;
     private final Path inputFile;
     private Scanner tableFile;

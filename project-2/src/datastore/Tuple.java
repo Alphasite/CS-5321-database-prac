@@ -18,12 +18,12 @@ public class Tuple {
         return new Tuple(header, fields);
     }
 
-    public String toRowForm() {
+    @Override
+    public String toString() {
         StringBuilder builder = new StringBuilder();
 
-        for (int i = 0; i < this.fields.size(); i++) {
-            builder.append(this.fields.get(i));
-            builder.append(" | ");
+        for (int i : fields) {
+            builder.append(i + " | ");
         }
 
         return builder.toString();

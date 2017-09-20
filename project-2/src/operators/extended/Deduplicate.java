@@ -1,11 +1,11 @@
 package operators.extended;
 
 import datastore.Tuple;
-import operators.Operator;
+import operators.AbstractOperator;
 
 import java.util.Optional;
 
-public class Deduplicate implements Operator {
+public class Deduplicate extends AbstractOperator {
     @Override
     public Optional<Tuple> getNextTuple() {
         return Optional.empty();
