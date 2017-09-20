@@ -155,12 +155,17 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
     }
 
     @Override
-    public void visit(InverseExpression inverseExpression) {
+    public void visit(SignedExpression signedExpression) {
         throw new NotImplementedException();
     }
 
     @Override
     public void visit(JdbcParameter jdbcParameter) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(JdbcNamedParameter jdbcNamedParameter) {
         throw new NotImplementedException();
     }
 
@@ -241,6 +246,41 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(BitwiseXor bitwiseXor) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(CastExpression cast) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(Modulo modulo) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(AnalyticExpression aexpr) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(ExtractExpression eexpr) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(IntervalExpression iexpr) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(OracleHierarchicalExpression oexpr) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(RegExpMatchOperator rexpr) {
         throw new NotImplementedException();
     }
 }
