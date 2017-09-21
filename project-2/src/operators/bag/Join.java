@@ -2,23 +2,37 @@ package operators.bag;
 
 import datastore.TableHeader;
 import datastore.Tuple;
-import operators.AbstractOperator;
 import operators.Operator;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-public class Join extends AbstractOperator {
+public class Join implements Operator {
     Operator left;
     Operator right;
 
     private Tuple leftTupleCache;
-    private TableHeader tableHeaderCache;
+    private TableHeader tableHeader;
 
     public Join(Operator left, Operator right) {
         this.left = left;
         this.right = right;
+        this.reset();
+
+        int tableWidth = left.getHeader().size() + right.getHeader().size();
+
+        List<String> headings = new ArrayList<>(tableWidth);
+        List<String> aliases = new ArrayList<>(tableWidth);
+
+        headings.addAll(left.getHeader().columnHeaders);
+        headings.addAll(right.getHeader().columnHeaders);
+
+        aliases.addAll(left.getHeader().columnAliases);
+        aliases.addAll(right.getHeader().columnAliases);
+
+        this.tableHeader = new TableHeader(aliases, headings);
     }
 
     @Override
@@ -27,25 +41,11 @@ public class Join extends AbstractOperator {
         // we probably can do selections inline (as an optimisation)?
         // Also i wish we had value types, this would be much faster.
 
-        // Populate the initial LHS cache
-        if (leftTupleCache == null) {
-            Optional<Tuple> leftFromChild = this.left.getNextTuple();
-            if (leftFromChild.isPresent()) {
-                leftTupleCache = leftFromChild.get();
-            } else {
-                return Optional.empty();
-            }
-        }
-
         // Get the rhs tuple and if necessary wrap around the lhs
         Optional<Tuple> rightFromChild;
 
         while (!(rightFromChild = this.right.getNextTuple()).isPresent()) {
-            Optional<Tuple> leftFromChild = this.left.getNextTuple();
-            if (leftFromChild.isPresent()) {
-                leftTupleCache = leftFromChild.get();
-                right.reset();
-            } else {
+            if (!loadNextLeftTuple()) {
                 return Optional.empty();
             }
         }
@@ -53,29 +53,29 @@ public class Join extends AbstractOperator {
         Tuple left = leftTupleCache;
         Tuple right = rightFromChild.get();
 
-        if (this.tableHeaderCache == null) {
-            int tableWidth = left.header.columnHeaders.size() + right.header.columnHeaders.size();
+        return Optional.of(left.join(right));
+    }
 
-            ArrayList<String> headings = new ArrayList<>(tableWidth);
-            ArrayList<String> aliases = new ArrayList<>(tableWidth);
-
-            headings.addAll(left.header.columnHeaders);
-            headings.addAll(right.header.columnHeaders);
-
-            aliases.addAll(left.header.columnAliases);
-            aliases.addAll(right.header.columnAliases);
-
-            this.tableHeaderCache = new TableHeader(aliases, headings);
-        }
-
-        return Optional.of(left.join(this.tableHeaderCache, right));
+    @Override
+    public TableHeader getHeader() {
+        return this.tableHeader;
     }
 
     @Override
     public boolean reset() {
         if (this.left.reset() && this.right.reset()) {
-            this.tableHeaderCache = null;
-            this.leftTupleCache = null;
+            this.loadNextLeftTuple();
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    private boolean loadNextLeftTuple() {
+        Optional<Tuple> leftFromChild = this.left.getNextTuple();
+        if (leftFromChild.isPresent()) {
+            leftTupleCache = leftFromChild.get();
+            right.reset();
             return true;
         } else {
             return false;
@@ -84,7 +84,6 @@ public class Join extends AbstractOperator {
 
     @Override
     public void dump(PrintStream stream) {
-//        stream.println(getNextTuple().get().header);
-        super.dump(stream);
+
     }
 }
