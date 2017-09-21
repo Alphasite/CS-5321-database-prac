@@ -1,4 +1,4 @@
-package operators.physcial;
+package operators.physical;
 
 import datastore.Table;
 import datastore.TableHeader;
