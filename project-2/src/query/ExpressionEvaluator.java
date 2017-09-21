@@ -10,7 +10,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-public class FilterBuilderVisitor implements ExpressionVisitor {
+public class ExpressionEvaluator implements ExpressionVisitor {
 
     private boolean result;
     private long value;
@@ -18,7 +18,7 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
     private Expression expressionRoot;
     private Tuple tuple;
 
-    public FilterBuilderVisitor(Expression expression) {
+    public ExpressionEvaluator(Expression expression) {
         this.result = false;
         this.value = 0;
         this.expressionRoot = expression;
@@ -41,7 +41,7 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(LongValue longValue) {
-        value = longValue.getValue();
+        this.value = longValue.getValue();
     }
 
     @Override
@@ -61,17 +61,32 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(Division division) {
+        division.getLeftExpression().accept(this);
+        long lhs = this.value;
+        division.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.value = lhs / rhs;
     }
 
     @Override
     public void visit(Multiplication multiplication) {
+        multiplication.getLeftExpression().accept(this);
+        long lhs = this.value;
+        multiplication.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.value = lhs * rhs;
     }
 
     @Override
     public void visit(Subtraction subtraction) {
+        subtraction.getLeftExpression().accept(this);
+        long lhs = this.value;
+        subtraction.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.value = lhs - rhs;
     }
 
     @Override
@@ -86,7 +101,12 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
 
     @Override
     public void visit(OrExpression orExpression) {
+        orExpression.getLeftExpression().accept(this);
+        boolean lhs = this.result;
+        orExpression.getRightExpression().accept(this);
+        boolean rhs = this.result;
 
+        this.result = lhs || rhs;
     }
 
     @Override
@@ -243,5 +263,4 @@ public class FilterBuilderVisitor implements ExpressionVisitor {
     public void visit(BitwiseXor bitwiseXor) {
         throw new NotImplementedException();
     }
-
 }
