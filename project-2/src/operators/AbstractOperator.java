@@ -9,6 +9,8 @@ public abstract class AbstractOperator implements Operator {
 
     @Override
     public void dump(PrintStream stream) {
+        stream.println(getHeader());
+
         Optional<Tuple> record = getNextTuple();
         int i = 0;
 

@@ -20,11 +20,15 @@ public class TableHeader {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
-        for (int i = 0; i < this.columnHeaders.size(); i++) {
+        builder.append(this.columnAliases.get(0));
+        builder.append(".");
+        builder.append(this.columnHeaders.get(0));
+
+        for (int i = 1; i < this.columnHeaders.size(); i++) {
+            builder.append(" | ");
             builder.append(this.columnAliases.get(i));
             builder.append(".");
             builder.append(this.columnHeaders.get(i));
-            builder.append(" | ");
         }
 
         return builder.toString();

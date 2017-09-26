@@ -20,8 +20,10 @@ public class Tuple {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
-        for (int i : fields) {
-            builder.append(i + " | ");
+        builder.append(fields.get(0));
+
+        for (int i = 1; i < fields.size(); i++) {
+            builder.append(" | " + fields.get(i));
         }
 
         return builder.toString();
