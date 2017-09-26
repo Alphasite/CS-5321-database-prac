@@ -4,6 +4,7 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -81,4 +82,8 @@ public class Join implements Operator {
         }
     }
 
+    @Override
+    public void dump(PrintStream stream) {
+
+    }
 }

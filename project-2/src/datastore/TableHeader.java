@@ -16,7 +16,8 @@ public class TableHeader {
         return this.columnHeaders.size();
     }
 
-    public String toHeaderForm() {
+    @Override
+    public String toString() {
         StringBuilder builder = new StringBuilder();
 
         for (int i = 0; i < this.columnHeaders.size(); i++) {

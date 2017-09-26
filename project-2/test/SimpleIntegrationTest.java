@@ -42,14 +42,15 @@ public class SimpleIntegrationTest {
 
         Join join = new Join(boatsScan.get(), reservesScan.get());
 
+        join.dump(System.out);
         Optional<Tuple> row;
 
-        System.out.println(join.getHeader().toHeaderForm());
+        System.out.println(join.getHeader());
 
         int i = 0;
         while ((row = join.getNextTuple()).isPresent()) {
 
-            System.out.println(++i + ": " + row.get().toRowForm());
+            System.out.println(++i + ": " + row.get());
         }
 
         assertThat(i, is(5 * 6));
@@ -77,11 +78,11 @@ public class SimpleIntegrationTest {
 
         Optional<Tuple> row;
 
-        System.out.println(projection.getHeader().toHeaderForm());
+        System.out.println(projection.getHeader());
 
         int i = 0;
         while ((row = projection.getNextTuple()).isPresent()) {
-            System.out.println(++i + ": " + row.get().toRowForm());
+            System.out.println(++i + ": " + row.get());
         }
 
         assertThat(i, is(5 * 6));
