@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+// TODO: documentation
+
 public class QueryTable {
     Map<String, Integer> nameMap;
     List<List<Integer>> rows;

@@ -4,16 +4,17 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import net.sf.jsqlparser.expression.Expression;
 import operators.Operator;
+import query.ExpressionEvaluator;
 
 import java.util.Optional;
 
 public class Selection implements Operator {
-    Operator source;
-    Expression expression;
+    private Operator source;
+    private ExpressionEvaluator evaluator;
 
     public Selection(Operator source, Expression expression) {
         this.source = source;
-        this.expression = expression;
+        this.evaluator = new ExpressionEvaluator(expression);
     }
 
     @Override
@@ -21,8 +22,8 @@ public class Selection implements Operator {
         Optional<Tuple> next;
 
         while ((next = this.source.getNextTuple()).isPresent()) {
-            // TODO
-            return next;
+            if (evaluator.matches(next.get()))
+                return next;
         }
 
         return Optional.empty();

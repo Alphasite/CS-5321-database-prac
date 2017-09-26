@@ -5,6 +5,8 @@ import net.sf.jsqlparser.statement.select.FromItemVisitor;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
+// TODO: What is this ?
+
 public class FromVisitor implements FromItemVisitor {
 
     @Override

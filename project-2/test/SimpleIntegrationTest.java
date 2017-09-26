@@ -4,7 +4,7 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.bag.Join;
 import operators.bag.Projection;
-import operators.physcial.Scan;
+import operators.physical.Scan;
 import org.junit.Before;
 import org.junit.Test;
 
