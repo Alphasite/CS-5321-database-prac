@@ -1,7 +1,7 @@
 package operators.physical;
 
-import datastore.Table;
 import datastore.TableHeader;
+import datastore.TableInfo;
 import datastore.Tuple;
 import operators.AbstractOperator;
 
@@ -14,17 +14,17 @@ import java.util.Optional;
 import java.util.Scanner;
 
 public class Scan extends AbstractOperator {
-    private final Table table;
+    private final TableInfo table;
     private final Path inputFile;
     private Scanner tableFile;
 
-    private Scan(Table table, Path inputFile) {
-        this.table = table;
+    private Scan(TableInfo tableInfo, Path inputFile) {
+        this.table = tableInfo;
         this.inputFile = inputFile;
         this.reset();
     }
 
-    public static Optional<Scan> setupScan(Table table) {
+    public static Optional<Scan> setupScan(TableInfo table) {
         if (Files.exists(table.file)) {
             return Optional.of(new Scan(table, table.file));
         } else {

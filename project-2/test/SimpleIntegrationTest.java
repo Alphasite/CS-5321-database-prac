@@ -1,6 +1,6 @@
 import datastore.Database;
-import datastore.Table;
 import datastore.TableHeader;
+import datastore.TableInfo;
 import datastore.Tuple;
 import operators.bag.Join;
 import operators.bag.Projection;
@@ -18,9 +18,9 @@ import static org.junit.Assert.assertThat;
 
 public class SimpleIntegrationTest {
     Database database;
-    Table boats;
-    Table reserves;
-    Table sailors;
+    TableInfo boats;
+    TableInfo reserves;
+    TableInfo sailors;
 
     @Before
     public void setUp() throws Exception {

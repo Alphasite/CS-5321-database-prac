@@ -7,14 +7,14 @@ import java.nio.file.Path;
 import java.util.*;
 
 public class Database {
-    private final Map<String, Table> tables;
+    private final Map<String, TableInfo> tables;
 
-    private Database(Map<String, Table> tables) {
+    private Database(Map<String, TableInfo> tables) {
         this.tables = tables;
     }
 
     public static Optional<Database> loadDatabase(Path inputPath) {
-        HashMap<String, Table> tables = new HashMap<>();
+        HashMap<String, TableInfo> tables = new HashMap<>();
 
         Path schema = inputPath.resolve("schema.txt");
         Path data = inputPath.resolve("data");
@@ -34,8 +34,8 @@ public class Database {
                 }
 
                 TableHeader header = new TableHeader(alias, columns);
-                Table table = new Table(header, data.resolve(tableName));
-                tables.put(tableName, table);
+                TableInfo tableInfo = new TableInfo(header, data.resolve(tableName));
+                tables.put(tableName, tableInfo);
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -45,7 +45,7 @@ public class Database {
         return Optional.of(new Database(tables));
     }
 
-    public Optional<Table> getTable(String name) {
+    public Optional<TableInfo> getTable(String name) {
         return Optional.ofNullable(this.tables.get(name));
     }
 }
