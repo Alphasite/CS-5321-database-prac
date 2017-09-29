@@ -4,7 +4,6 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,10 +69,5 @@ public class Projection implements Operator {
     @Override
     public boolean reset() {
         return this.source.reset();
-    }
-
-    @Override
-    public void dump(PrintStream stream) {
-
     }
 }

@@ -11,5 +11,15 @@ public interface Operator {
     TableHeader getHeader();
     boolean reset();
 
-    void dump(PrintStream stream);
+    default int dump(PrintStream stream) {
+        stream.println(this.getHeader());
+
+        int i = 0;
+        Optional<Tuple> record;
+        while ((record = this.getNextTuple()).isPresent()) {
+            stream.println(++i + ": " + record.get());
+        }
+
+        return i;
+    }
 }

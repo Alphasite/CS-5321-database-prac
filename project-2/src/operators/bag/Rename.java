@@ -2,13 +2,12 @@ package operators.bag;
 
 import datastore.TableHeader;
 import datastore.Tuple;
-import operators.AbstractOperator;
 import operators.Operator;
 
 import java.util.ArrayList;
 import java.util.Optional;
 
-public class Rename extends AbstractOperator {
+public class Rename implements Operator {
     private Operator child;
     private String newTableName;
     private TableHeader header;
