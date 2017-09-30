@@ -1,5 +1,6 @@
 package query;
 
+import datastore.TableHeader;
 import datastore.Tuple;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
@@ -17,11 +18,13 @@ public class ExpressionEvaluator implements ExpressionVisitor {
 
     private Expression expressionRoot;
     private Tuple tuple;
+    private TableHeader schema;
 
-    public ExpressionEvaluator(Expression expression) {
+    public ExpressionEvaluator(Expression expression, TableHeader schema) {
         this.result = false;
         this.value = 0;
         this.expressionRoot = expression;
+        this.schema = schema;
     }
 
     public boolean matches(Tuple tuple) {
@@ -36,7 +39,17 @@ public class ExpressionEvaluator implements ExpressionVisitor {
 
     @Override
     public void visit(Column column) {
-        // TODO: implement alias/column name resolution and lookup from tuple
+        // TODO: implement alias/column name resolution
+        // TODO: move this computation to object construction
+
+        for (int i = 0; i < schema.columnHeaders.size(); i++) {
+            if (schema.columnAliases.get(i).equals(column.getTable().getName()) && schema.columnHeaders.get(i).equals(column.getColumnName())) {
+                this.value = tuple.fields.get(i);
+                return;
+            }
+        }
+
+        System.out.println(new Exception("Invalid column reference : " + column).getMessage());
     }
 
     @Override
@@ -121,27 +134,52 @@ public class ExpressionEvaluator implements ExpressionVisitor {
 
     @Override
     public void visit(GreaterThan greaterThan) {
+        greaterThan.getLeftExpression().accept(this);
+        long lhs = this.value;
+        greaterThan.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.result = (lhs > rhs);
     }
 
     @Override
     public void visit(GreaterThanEquals greaterThanEquals) {
+        greaterThanEquals.getLeftExpression().accept(this);
+        long lhs = this.value;
+        greaterThanEquals.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.result = (lhs >= rhs);
     }
 
     @Override
     public void visit(MinorThan minorThan) {
+        minorThan.getLeftExpression().accept(this);
+        long lhs = this.value;
+        minorThan.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.result = (lhs < rhs);
     }
 
     @Override
     public void visit(MinorThanEquals minorThanEquals) {
+        minorThanEquals.getLeftExpression().accept(this);
+        long lhs = this.value;
+        minorThanEquals.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.result = (lhs <= rhs);
     }
 
     @Override
     public void visit(NotEqualsTo notEqualsTo) {
+        notEqualsTo.getLeftExpression().accept(this);
+        long lhs = this.value;
+        notEqualsTo.getRightExpression().accept(this);
+        long rhs = this.value;
 
+        this.result = (lhs != rhs);
     }
 
     @Override
