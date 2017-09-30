@@ -10,7 +10,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
-public class ScanTest {
+public class ScanOperatorTest {
 
     @Test
     public void testScan () {
