@@ -6,9 +6,10 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
 import operators.Operator;
-import operators.bag.Projection;
-import operators.bag.Selection;
-import operators.physical.Scan;
+import operators.bag.JoinOperator;
+import operators.bag.ProjectionOperator;
+import operators.bag.SelectionOperator;
+import operators.physical.ScanOperator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,20 +42,20 @@ public class QueryBuilder {
 
 		// For now only build a SCAN op from the FromItem info
 		TableInfo table = DB.getTable(fromItem.getName());
-		rootNode = new Scan(table);
+		rootNode = new ScanOperator(table);
 
 		// Add joins as needed
         if (joinItems != null) {
             for (Join join : joinItems) {
                 Table joinTable = (Table) join.getRightItem();
-                Scan rightScan = new Scan(DB.getTable(joinTable.getName()));
+                ScanOperator rightScan = new ScanOperator(DB.getTable(joinTable.getName()));
 
-                rootNode = new operators.bag.Join(rootNode, rightScan);
+                rootNode = new JoinOperator(rootNode, rightScan);
             }
         }
 
 		if (whereItem != null) {
-			rootNode = new Selection(rootNode, whereItem);
+			rootNode = new SelectionOperator(rootNode, whereItem);
 		}
 
 		// TODO: convert aliases
@@ -68,7 +69,7 @@ public class QueryBuilder {
 				columnNames.add(columnRef.getColumnName());
 			}
 
-			rootNode = new Projection(new TableHeader(tableNames, columnNames), rootNode);
+			rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
 		}
 
 		return rootNode;

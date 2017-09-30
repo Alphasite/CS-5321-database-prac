@@ -7,14 +7,14 @@ import operators.Operator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Join implements Operator {
+public class JoinOperator implements Operator {
     private Operator left;
     private Operator right;
 
     private Tuple leftTupleCache;
     private TableHeader tableHeader;
 
-    public Join(Operator left, Operator right) {
+    public JoinOperator(Operator left, Operator right) {
         this.left = left;
         this.right = right;
         this.reset();

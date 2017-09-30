@@ -2,9 +2,9 @@ import datastore.Database;
 import datastore.TableHeader;
 import datastore.TableInfo;
 import datastore.Tuple;
-import operators.bag.Join;
-import operators.bag.Projection;
-import operators.physical.Scan;
+import operators.bag.JoinOperator;
+import operators.bag.ProjectionOperator;
+import operators.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,10 +33,10 @@ public class SimpleIntegrationTest {
 
     @Test
     public void simpleIntegration() throws Exception {
-        Scan boatsScan = new Scan(boats);
-        Scan reservesScan = new Scan(reserves);
+        ScanOperator boatsScan = new ScanOperator(boats);
+        ScanOperator reservesScan = new ScanOperator(reserves);
 
-        Join join = new Join(boatsScan, reservesScan);
+        JoinOperator join = new JoinOperator(boatsScan, reservesScan);
 
         join.dump(System.out);
         Tuple row;
@@ -54,8 +54,8 @@ public class SimpleIntegrationTest {
 
     @Test
     public void projectionTest() throws Exception {
-        Scan boatsScan = new Scan(boats);
-        Scan reservesScan = new Scan(reserves);
+        ScanOperator boatsScan = new ScanOperator(boats);
+        ScanOperator reservesScan = new ScanOperator(reserves);
 
         TableHeader tableHeader = new TableHeader(
                 new ArrayList<>(),
@@ -69,8 +69,8 @@ public class SimpleIntegrationTest {
         tableHeader.columnAliases.add("Reserves");
         tableHeader.columnHeaders.add("G");
 
-        Join join = new Join(boatsScan, reservesScan);
-        Projection projection = new Projection(tableHeader, join);
+        JoinOperator join = new JoinOperator(boatsScan, reservesScan);
+        ProjectionOperator projection = new ProjectionOperator(tableHeader, join);
 
         Tuple row;
 

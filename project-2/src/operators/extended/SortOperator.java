@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class Sort implements Operator {
+public class SortOperator implements Operator {
     private Operator source;
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
     private List<Integer> tupleSortPriorityIndex;
 
-    public Sort(Operator source, TableHeader sortHeaders) {
+    public SortOperator(Operator source, TableHeader sortHeaders) {
         this.source = source;
         this.tupleSortPriorityIndex = new ArrayList<>();
 

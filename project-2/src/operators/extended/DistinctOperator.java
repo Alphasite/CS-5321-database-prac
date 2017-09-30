@@ -4,10 +4,10 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
-public class Deduplicate implements Operator {
+public class DistinctOperator implements Operator {
     private Operator source;
 
-    public Deduplicate(Operator source) {
+    public DistinctOperator(Operator source) {
         this.source = source;
     }
 

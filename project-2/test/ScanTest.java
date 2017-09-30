@@ -1,6 +1,6 @@
 import datastore.Database;
 import datastore.TableInfo;
-import operators.physical.Scan;
+import operators.physical.ScanOperator;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -19,7 +19,7 @@ public class ScanTest {
         Database database = Database.loadDatabase(inputDir);
         TableInfo sailors;
         sailors = database.getTable("Sailors");
-        Scan scan = new Scan(sailors);
+        ScanOperator scan = new ScanOperator(sailors);
 
         List<Integer> tuple1 = new ArrayList<>();
         tuple1.add(1);

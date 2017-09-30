@@ -10,11 +10,11 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Scan implements Operator {
+public class ScanOperator implements Operator {
     private final TableInfo table;
     private Scanner tableFile;
 
-    public Scan(TableInfo tableInfo) {
+    public ScanOperator(TableInfo tableInfo) {
         this.table = tableInfo;
         this.reset();
     }

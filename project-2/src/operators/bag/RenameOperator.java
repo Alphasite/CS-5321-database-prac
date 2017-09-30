@@ -6,12 +6,12 @@ import operators.Operator;
 
 import java.util.ArrayList;
 
-public class Rename implements Operator {
+public class RenameOperator implements Operator {
     private Operator child;
     private String newTableName;
     private TableHeader header;
 
-    public Rename(Operator child, String newTableName) {
+    public RenameOperator(Operator child, String newTableName) {
         this.child = child;
         this.newTableName = newTableName;
 

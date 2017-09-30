@@ -7,12 +7,12 @@ import operators.Operator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Projection implements Operator {
+public class ProjectionOperator implements Operator {
     private final Operator source;
     private final TableHeader newHeader;
     private final List<Integer> newToOldColumnMapping;
 
-    public Projection(TableHeader newHeader, Operator source) {
+    public ProjectionOperator(TableHeader newHeader, Operator source) {
         this.source = source;
         this.newHeader = newHeader.clone();
         this.newToOldColumnMapping = new ArrayList<>();

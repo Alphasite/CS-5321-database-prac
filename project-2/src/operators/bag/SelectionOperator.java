@@ -6,11 +6,11 @@ import net.sf.jsqlparser.expression.Expression;
 import operators.Operator;
 import query.ExpressionEvaluator;
 
-public class Selection implements Operator {
+public class SelectionOperator implements Operator {
     private Operator source;
     private ExpressionEvaluator evaluator;
 
-    public Selection(Operator source, Expression expression) {
+    public SelectionOperator(Operator source, Expression expression) {
         this.source = source;
         this.evaluator = new ExpressionEvaluator(expression, getHeader());
     }
