@@ -43,6 +43,16 @@ public class QueryBuilder {
 		TableInfo table = DB.getTable(fromItem.getName());
 		rootNode = new Scan(table);
 
+		// Add joins as needed
+        if (joinItems != null) {
+            for (Join join : joinItems) {
+                Table joinTable = (Table) join.getRightItem();
+                Scan rightScan = new Scan(DB.getTable(joinTable.getName()));
+
+                rootNode = new operators.bag.Join(rootNode, rightScan);
+            }
+        }
+
 		if (whereItem != null) {
 			rootNode = new Selection(rootNode, whereItem);
 		}

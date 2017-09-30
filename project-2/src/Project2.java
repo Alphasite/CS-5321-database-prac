@@ -3,6 +3,7 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import operators.Operator;
 
 import java.io.FileReader;
 import java.nio.file.Paths;
@@ -30,7 +31,8 @@ public class Project2 {
 				PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
 
 				// Run query and print output
-				builder.buildQuery(select).dump(System.out);
+				Operator queryPlanRoot = builder.buildQuery(select);
+				queryPlanRoot.dump(System.out);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

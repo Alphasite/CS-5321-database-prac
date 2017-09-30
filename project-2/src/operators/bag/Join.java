@@ -39,19 +39,22 @@ public class Join implements Operator {
         // we probably can do selections inline (as an optimisation)?
         // Also i wish we had value types, this would be much faster.
 
-        // Get the rhs tuple and if necessary wrap around the lhs
-        Tuple rightFromChild;
+        if (this.leftTupleCache == null) {
+            // No more tuple on left op : we are done
+            return null;
+        }
 
-        while ((rightFromChild = this.right.getNextTuple())!=null) {
+        // Get the rhs tuple and if necessary wrap around the lhs
+        Tuple rightTuple;
+
+        while ((rightTuple = this.right.getNextTuple()) == null) {
+            // Try again with next left tuple
             if (!loadNextLeftTuple()) {
                 return null;
             }
         }
 
-        Tuple left = leftTupleCache;
-        Tuple right = rightFromChild;
-
-        return (left.join(right));
+        return (this.leftTupleCache.join(rightTuple));
     }
 
     @Override
@@ -71,7 +74,7 @@ public class Join implements Operator {
 
     private boolean loadNextLeftTuple() {
         Tuple leftFromChild = this.left.getNextTuple();
-        if (leftFromChild!=null) {
+        if (leftFromChild != null) {
             leftTupleCache = leftFromChild;
             right.reset();
             return true;
