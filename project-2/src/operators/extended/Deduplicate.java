@@ -4,8 +4,6 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
-import java.io.PrintStream;
-
 public class Deduplicate implements Operator {
     private Operator source;
 
@@ -29,8 +27,4 @@ public class Deduplicate implements Operator {
         return this.source.reset();
     }
 
-    @Override
-    public void dump(PrintStream stream) {
-
-    }
 }

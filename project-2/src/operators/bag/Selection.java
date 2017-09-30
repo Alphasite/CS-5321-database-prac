@@ -6,8 +6,6 @@ import net.sf.jsqlparser.expression.Expression;
 import operators.Operator;
 import query.ExpressionEvaluator;
 
-import java.io.PrintStream;
-
 public class Selection implements Operator {
     private Operator source;
     private ExpressionEvaluator evaluator;
@@ -39,8 +37,4 @@ public class Selection implements Operator {
         return this.source.reset();
     }
 
-    @Override
-    public void dump(PrintStream stream) {
-
-    }
 }

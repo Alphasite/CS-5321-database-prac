@@ -14,9 +14,9 @@ public interface Operator {
         stream.println(this.getHeader());
 
         int i = 0;
-        Optional<Tuple> record;
-        while ((record = this.getNextTuple()).isPresent()) {
-            stream.println(++i + ": " + record.get());
+        Tuple record;
+        while ((record = this.getNextTuple()) != null) {
+            stream.println(++i + ": " + record);
         }
 
         return i;
