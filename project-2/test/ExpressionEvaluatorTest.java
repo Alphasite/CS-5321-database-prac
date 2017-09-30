@@ -41,7 +41,6 @@ public class ExpressionEvaluatorTest {
 			e.printStackTrace();
 			return null;
 		}
-
 		return evaluator;
 	}
 

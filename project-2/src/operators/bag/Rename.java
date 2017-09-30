@@ -6,7 +6,6 @@ import operators.AbstractOperator;
 import operators.Operator;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
 public class Rename extends AbstractOperator {
     private Operator child;
@@ -26,7 +25,7 @@ public class Rename extends AbstractOperator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
+    public Tuple getNextTuple() {
         return this.child.getNextTuple();
     }
 

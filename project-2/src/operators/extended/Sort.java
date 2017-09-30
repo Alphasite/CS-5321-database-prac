@@ -5,7 +5,6 @@ import datastore.Tuple;
 import operators.Operator;
 
 import java.io.PrintStream;
-import java.util.Optional;
 
 public class Sort implements Operator {
     private Operator source;
@@ -15,8 +14,9 @@ public class Sort implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        return Optional.empty();
+    public Tuple getNextTuple() {
+        //TODO:
+        return null;
     }
 
     @Override

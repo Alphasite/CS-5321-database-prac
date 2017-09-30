@@ -13,7 +13,7 @@ import java.io.FileReader;
  */
 public class ParserExample {
 
-	private static final String queriesFile = "resources/samples/input/queries.sql";
+	private static final String queriesFile = "project-2/resources/samples/input/queries.sql";
 
 	public static void main(String[] args) {
 		try {

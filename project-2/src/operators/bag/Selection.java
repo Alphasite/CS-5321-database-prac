@@ -7,7 +7,6 @@ import operators.Operator;
 import query.ExpressionEvaluator;
 
 import java.io.PrintStream;
-import java.util.Optional;
 
 public class Selection implements Operator {
     private Operator source;
@@ -19,15 +18,15 @@ public class Selection implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        Optional<Tuple> next;
+    public Tuple getNextTuple() {
+        Tuple next;
 
-        while ((next = this.source.getNextTuple()).isPresent()) {
-            if (evaluator.matches(next.get()))
+        while ((next = this.source.getNextTuple())!=null) {
+            if (evaluator.matches(next))
                 return next;
         }
+        return null;
 
-        return Optional.empty();
     }
 
     @Override

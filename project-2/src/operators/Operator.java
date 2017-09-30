@@ -4,10 +4,9 @@ import datastore.TableHeader;
 import datastore.Tuple;
 
 import java.io.PrintStream;
-import java.util.Optional;
 
 public interface Operator {
-    Optional<Tuple> getNextTuple();
+    Tuple getNextTuple();
     TableHeader getHeader();
     boolean reset();
 

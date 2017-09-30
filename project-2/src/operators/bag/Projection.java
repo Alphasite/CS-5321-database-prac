@@ -7,7 +7,6 @@ import operators.Operator;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class Projection implements Operator {
     private final Operator source;
@@ -45,20 +44,19 @@ public class Projection implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        Optional<Tuple> optionalTuple = this.source.getNextTuple();
+    public Tuple getNextTuple() {
+        Tuple tuple = this.source.getNextTuple();
 
-        if (optionalTuple.isPresent()) {
-            Tuple tuple = optionalTuple.get();
+        if (tuple!=null) {
             List<Integer> newBackingArray = new ArrayList<>(this.newHeader.size());
 
             for (int i = 0; i < this.newHeader.size(); i++) {
                 newBackingArray.add(tuple.fields.get(this.newToOldColumnMapping.get(i)));
             }
 
-            return Optional.of(new Tuple(newBackingArray));
+            return (new Tuple(newBackingArray));
         } else {
-            return optionalTuple;
+            return tuple;
         }
     }
 

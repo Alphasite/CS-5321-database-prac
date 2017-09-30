@@ -6,7 +6,6 @@ import net.sf.jsqlparser.statement.select.Select;
 
 import java.io.FileReader;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 /**
  * Startup class for Project2
@@ -19,14 +18,7 @@ public class Project2 {
 	public static void main(String args[]) {
 		// TODO: read paths from command line
 
-		Optional<Database> dbOpt = Database.loadDatabase(Paths.get(DB_PATH));
-
-		if (!dbOpt.isPresent()) {
-			System.out.println("Error loading database from " + Paths.get(DB_PATH));
-			return;
-		}
-
-		Database DB = dbOpt.get();
+		Database DB = Database.loadDatabase(Paths.get(DB_PATH));
 		QueryBuilder builder = new QueryBuilder(DB);
 
 		try {

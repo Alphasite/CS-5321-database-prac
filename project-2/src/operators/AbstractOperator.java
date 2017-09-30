@@ -3,7 +3,6 @@ package operators;
 import datastore.Tuple;
 
 import java.io.PrintStream;
-import java.util.Optional;
 
 public abstract class AbstractOperator implements Operator {
 
@@ -11,11 +10,11 @@ public abstract class AbstractOperator implements Operator {
     public void dump(PrintStream stream) {
         stream.println(getHeader());
 
-        Optional<Tuple> record = getNextTuple();
+        Tuple record = getNextTuple();
         int i = 0;
 
-        while (record.isPresent()) {
-            stream.println(i++ + ": " + record.get());
+        while (record!=null) {
+            stream.println(i++ + ": " + record);
             record = getNextTuple();
         }
     }

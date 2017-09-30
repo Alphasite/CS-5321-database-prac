@@ -7,7 +7,6 @@ import operators.Operator;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class Join implements Operator {
     Operator left;
@@ -36,24 +35,24 @@ public class Join implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
+    public Tuple getNextTuple() {
         // TODO make this more efficient.
         // we probably can do selections inline (as an optimisation)?
         // Also i wish we had value types, this would be much faster.
 
         // Get the rhs tuple and if necessary wrap around the lhs
-        Optional<Tuple> rightFromChild;
+        Tuple rightFromChild;
 
-        while (!(rightFromChild = this.right.getNextTuple()).isPresent()) {
+        while ((rightFromChild = this.right.getNextTuple())!=null) {
             if (!loadNextLeftTuple()) {
-                return Optional.empty();
+                return null;
             }
         }
 
         Tuple left = leftTupleCache;
-        Tuple right = rightFromChild.get();
+        Tuple right = rightFromChild;
 
-        return Optional.of(left.join(right));
+        return (left.join(right));
     }
 
     @Override
@@ -72,9 +71,9 @@ public class Join implements Operator {
     }
 
     private boolean loadNextLeftTuple() {
-        Optional<Tuple> leftFromChild = this.left.getNextTuple();
-        if (leftFromChild.isPresent()) {
-            leftTupleCache = leftFromChild.get();
+        Tuple leftFromChild = this.left.getNextTuple();
+        if (leftFromChild!=null) {
+            leftTupleCache = leftFromChild;
             right.reset();
             return true;
         } else {

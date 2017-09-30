@@ -5,8 +5,6 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import operators.Operator;
 import operators.physical.Scan;
 
-import java.util.Optional;
-
 public class QueryBuilder {
 	private Database DB;
 
@@ -26,13 +24,8 @@ public class QueryBuilder {
 
 		// For now only build a SCAN op from the FromItem info
 		Table from = (Table) query.getFromItem();
-		Optional<TableInfo> tableOpt = DB.getTable(from.getName());
-
-		if (tableOpt.isPresent()) {
-			Scan node = Scan.setupScan(tableOpt.get()).get();
-			return node;
-		}
-
-		return null;
+		TableInfo table = DB.getTable(from.getName());
+		Scan node = new Scan(table);
+		return node;
 	}
 }
