@@ -4,13 +4,12 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Join implements Operator {
-    Operator left;
-    Operator right;
+    private Operator left;
+    private Operator right;
 
     private Tuple leftTupleCache;
     private TableHeader tableHeader;
@@ -79,10 +78,5 @@ public class Join implements Operator {
         } else {
             return false;
         }
-    }
-
-    @Override
-    public void dump(PrintStream stream) {
-
     }
 }

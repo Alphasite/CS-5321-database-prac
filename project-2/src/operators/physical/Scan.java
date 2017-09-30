@@ -3,14 +3,14 @@ package operators.physical;
 import datastore.TableHeader;
 import datastore.TableInfo;
 import datastore.Tuple;
-import operators.AbstractOperator;
+import operators.Operator;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Scan extends AbstractOperator {
+public class Scan implements Operator {
     private final TableInfo table;
     private Scanner tableFile;
 
