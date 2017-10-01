@@ -8,12 +8,25 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * @inheritDoc
+ */
 public class SortOperator implements Operator {
     private Operator source;
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
     private List<Integer> tupleSortPriorityIndex;
 
+    /** This creates the sort operator.
+     *
+     * Instantiating this operator will automatically fully evaluate the child operators and sort their output,
+     * storing the sorted tuples in an internal buffer, so be careful to not sort too large a dataset with the
+     * current implementation.
+     *
+     * @param source The operator which creates the tuples which shall be sorted
+     * @param sortHeaders The header defines the name and sort order of the columns which are to be used for sorting.
+     *                    These do no effect the header of the output, use a project for that.
+     */
     public SortOperator(Operator source, TableHeader sortHeaders) {
         this.source = source;
         this.tupleSortPriorityIndex = new ArrayList<>();
@@ -41,9 +54,17 @@ public class SortOperator implements Operator {
             throw new RuntimeException("Projection mappings are incorrect. " + alias + "." + header + " has no match.");
         }
 
+        this.buffer();
         this.reset();
     }
 
+    /**
+     * Get the next tuple in sorted order.
+     *
+     * The tuples are read from the internal sorted buffer.
+     *
+     * @inheritDoc
+     */
     @Override
     public Tuple getNextTuple() {
         if (this.bufferIterator.hasNext()) {
@@ -53,17 +74,28 @@ public class SortOperator implements Operator {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.source.getHeader();
     }
 
+    /**
+     * This does not reset the underlying stream, only resets the buffer iterator.
+     *
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
-        this.buffer();
-        return this.source.reset();
+        this.bufferIterator = this.buffer.iterator();
+        return true;
     }
 
+    /**
+     * Read all the tuples from the child operator then sort them using the provided sort headers.
+     */
     private void buffer() {
         this.buffer = new ArrayList<>();
 
@@ -87,6 +119,6 @@ public class SortOperator implements Operator {
             return 0;
         });
 
-        this.bufferIterator = this.buffer.iterator();
+        this.reset();
     }
 }
