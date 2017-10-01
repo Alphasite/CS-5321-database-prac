@@ -3,6 +3,9 @@ package datastore;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A class which represents just 1 tuple, with convenience methods.
+ */
 public class Tuple {
     public final List<Integer> fields;
 
@@ -10,6 +13,11 @@ public class Tuple {
         this.fields = fields;
     }
 
+
+    /** A method to join two tuples into a single tuple.
+     * @param joinTarget The right hand tuple, it is joined after the left hand tuple.
+     * @return The joined tuple.
+     */
     public Tuple join(Tuple joinTarget) {
         ArrayList<Integer> fields = new ArrayList<>(this.fields);
         fields.addAll(joinTarget.fields);
