@@ -11,8 +11,12 @@ import operators.bag.ProjectionOperator;
 import operators.bag.RenameOperator;
 import operators.bag.SelectionOperator;
 import operators.physical.ScanOperator;
+import query.BreakWhereBuilder;
+import query.TableCouple;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 public class QueryBuilder {
@@ -54,6 +58,36 @@ public class QueryBuilder {
 
 		// Add joins as needed
         if (joinItems != null) {
+			BreakWhereBuilder bwb = new BreakWhereBuilder();
+			HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin(query.getWhere());
+			HashMap<Table, Expression> hashSelection = bwb.getHashSelection(query.getWhere());
+
+			HashMap<Table,Boolean> alreadyJoinedTables =new HashMap<>();
+			while (!hashJoin.isEmpty()){
+				Iterator<TableCouple> iterator = hashJoin.keySet().iterator();
+				while (iterator.hasNext()){
+					TableCouple tc = iterator.next();
+					Table table1=tc.getTable1();
+					Table table2=tc.getTable2();
+					if (alreadyJoinedTables.containsKey(table1)){
+						if (hashSelection.containsKey(table2)){
+
+						}
+
+
+						hashJoin.remove(tc);
+						alreadyJoinedTables.put(table2,true);
+					}
+					else{
+						if (alreadyJoinedTables.containsKey(table2)){
+
+						}
+					}
+			}
+
+
+			}
+
 
             for (Join join : joinItems) {
                 Table joinTable = (Table) join.getRightItem();
