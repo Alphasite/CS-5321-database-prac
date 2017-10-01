@@ -51,8 +51,10 @@ public class QueryBuilder {
 			rootNode = new RenameOperator(rootNode, fromItem.getAlias());
 		}
 
+
 		// Add joins as needed
         if (joinItems != null) {
+
             for (Join join : joinItems) {
                 Table joinTable = (Table) join.getRightItem();
                 Operator rightOp = new ScanOperator(DB.getTable(joinTable.getName()));
@@ -67,6 +69,12 @@ public class QueryBuilder {
 		if (whereItem != null) {
 			rootNode = new SelectionOperator(rootNode, whereItem);
 		}
+
+
+
+
+
+
 
 		if (!(selectItems.get(0) instanceof AllColumns)) {
 			List<String> tableNames = new ArrayList<>();
