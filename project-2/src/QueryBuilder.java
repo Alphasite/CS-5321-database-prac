@@ -10,6 +10,7 @@ import operators.bag.JoinOperator;
 import operators.bag.ProjectionOperator;
 import operators.bag.RenameOperator;
 import operators.bag.SelectionOperator;
+import operators.extended.DistinctOperator;
 import operators.extended.SortOperator;
 import operators.physical.ScanOperator;
 
@@ -30,7 +31,6 @@ public class QueryBuilder {
 	 * @return The root operator of the query execution plan tree
 	 */
 	public Operator buildQuery(PlainSelect query) {
-		// TODO: for now build a simple query plan (SCAN -> JOIN -> SELECT -> PROJECT)
 		// TODO: later on optimize by breaking down SELECT into multiple OPs evaluated as early as possible
 
 		// Store ref to all needed query tokens
@@ -39,6 +39,7 @@ public class QueryBuilder {
 		List<Join> joinItems = query.getJoins();
 		Expression whereItem = query.getWhere();
 		List<OrderByElement> orderBy = query.getOrderByElements();
+		boolean isDistinct = query.getDistinct() != null;
 
 		// Keep reference to current root
 		Operator rootNode;
@@ -85,6 +86,7 @@ public class QueryBuilder {
 		}
 
 		// The spec allows handling sorting and duplicate elimination after projection
+
         if (orderBy != null) {
 		    List<Column> orderByColumns = new ArrayList<>();
 		    for (OrderByElement element : orderBy) {
@@ -94,6 +96,16 @@ public class QueryBuilder {
             TableHeader sortHeader = TableHeader.fromColumns(orderByColumns);
 		    rootNode = new SortOperator(rootNode, sortHeader);
         }
+
+        if (isDistinct) {
+			// Current implementation requires sorted queries
+			if (orderBy == null) {
+				// Sort all fields
+				rootNode = new SortOperator(rootNode, rootNode.getHeader());
+			}
+
+			rootNode = new DistinctOperator(rootNode);
+		}
 
 		return rootNode;
 	}
