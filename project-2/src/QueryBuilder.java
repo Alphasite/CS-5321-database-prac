@@ -1,6 +1,5 @@
 import datastore.Database;
 import datastore.TableHeader;
-import datastore.TableInfo;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -14,16 +13,18 @@ import operators.physical.ScanOperator;
 import query.BreakWhereBuilder;
 import query.TableCouple;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class QueryBuilder {
 	private Database DB;
 
+	private Map<Table, Expression> mhashSelection;
+    private Map<TableCouple, Expression> mhashJoin;
+
 	public QueryBuilder(Database db) {
 		this.DB = db;
+		this.mhashJoin = new HashMap<>();
+		this.mhashSelection = new HashMap<>();
 	}
 
 	/**
@@ -33,7 +34,6 @@ public class QueryBuilder {
 	 * @return The root operator of the query execution plan tree
 	 */
 	public Operator buildQuery(PlainSelect query) {
-		// TODO: for now build a simple query plan (SCAN -> JOIN -> SELECT -> PROJECT)
 		// TODO: later on optimize by breaking down SELECT into multiple OPs evaluated as early as possible
 
 		// Store ref to all needed query tokens
@@ -43,20 +43,35 @@ public class QueryBuilder {
 		Expression whereItem = query.getWhere();
 
 		// Keep reference to current root
-		Operator rootNode;
+		Operator rootNode = null;
 
-		// Begin by building a SCAN op from the FromItem info
-		TableInfo table = DB.getTable(fromItem.getName());
-		rootNode = new ScanOperator(table);
+		List<Table> allTables = buildTableList(fromItem, joinItems);
 
-		// If an alias is given, just rename the table internally
-		// We can do this because we are allowed to assume the original name will not be used in the query
-		if (fromItem.getAlias() != null) {
-			rootNode = new RenameOperator(rootNode, fromItem.getAlias());
-		}
+		preprocessWhereClause(whereItem);
 
+		// Build a left-to-right join tree between all required tables (no reordering)
+		for (Table table : allTables) {
+		    Operator tableOp = new ScanOperator(DB.getTable(table.getName()));
+
+            // If an alias is given, just rename the table internally
+            // We can do this because we are allowed to assume the original name will not be used in the query
+            if (table.getAlias() != null) {
+                tableOp = new RenameOperator(tableOp, table.getAlias());
+            }
+
+            // TODO: add Selection operators when needed
+
+            // Add table operator to the tree
+            if (rootNode == null) {
+                rootNode = tableOp;
+            } else {
+                // TODO: conditional join if needed
+                rootNode = new JoinOperator(rootNode, tableOp);
+            }
+        }
 
 		// Add joins as needed
+        // TODO: move all logic to preprocessMethod
         if (joinItems != null) {
 			BreakWhereBuilder bwb = new BreakWhereBuilder();
 			HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin(query.getWhere());
@@ -125,4 +140,36 @@ public class QueryBuilder {
 
 		return rootNode;
 	}
+
+    /**
+     *  Collapse all tables referenced in FROM clause for easier handling
+     */
+	private List<Table> buildTableList(Table fromItem, List<Join> joins) {
+	    List<Table> list = new ArrayList<>();
+	    list.add(fromItem);
+
+	    if (joins != null) {
+            for (Join join : joins) {
+                list.add((Table) join.getRightItem());
+            }
+        }
+
+	    return list;
+    }
+
+    /**
+     * Build the internal maps used to link every part of the WHERE clause to the table they reference
+     * @param rootExpression the query WHERE clause
+     */
+    private void preprocessWhereClause(Expression rootExpression) {
+	    if (rootExpression == null) {
+	        return;
+        }
+
+        BreakWhereBuilder builder = new BreakWhereBuilder();
+	    mhashJoin = builder.getHashJoin(rootExpression);
+	    mhashSelection = builder.getHashSelection(rootExpression);
+
+	    // TODO: add rest of logic here
+    }
 }
