@@ -107,6 +107,13 @@ public class QueryBuilderTest {
         assertEquals("3 | 100 | 105", root.getNextTuple().toString());
         assertEquals("2 | 200 | 200", root.getNextTuple().toString());
 
+        tokens = ParseUtils.parseQuery("SELECT * FROM Sailors S ORDER BY S.B, S.C;");
+        root = builder.buildQuery(tokens);
+
+        assertEquals("4 | 100 | 50", root.getNextTuple().toString());
+        assertEquals("3 | 100 | 105", root.getNextTuple().toString());
+        assertEquals("5 | 100 | 500", root.getNextTuple().toString());
+        assertEquals("1 | 200 | 50", root.getNextTuple().toString());
     }
 
     @Test
