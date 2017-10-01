@@ -7,15 +7,14 @@ import operators.Operator;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
-public class Sort implements Operator {
+public class SortOperator implements Operator {
     private Operator source;
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
     private List<Integer> tupleSortPriorityIndex;
 
-    public Sort(Operator source, TableHeader sortHeaders) {
+    public SortOperator(Operator source, TableHeader sortHeaders) {
         this.source = source;
         this.tupleSortPriorityIndex = new ArrayList<>();
 
@@ -46,11 +45,11 @@ public class Sort implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
+    public Tuple getNextTuple() {
         if (this.bufferIterator.hasNext()) {
-            return Optional.of(this.bufferIterator.next());
+            return (this.bufferIterator.next());
         } else {
-            return Optional.empty();
+            return null;
         }
     }
 
@@ -68,9 +67,9 @@ public class Sort implements Operator {
     private void buffer() {
         this.buffer = new ArrayList<>();
 
-        Optional<Tuple> tuple;
-        while ((tuple = this.source.getNextTuple()).isPresent()) {
-            this.buffer.add(tuple.get());
+        Tuple tuple;
+        while ((tuple = this.source.getNextTuple())!=null) {
+            this.buffer.add(tuple);
         }
 
         this.buffer.sort((a, b) -> {

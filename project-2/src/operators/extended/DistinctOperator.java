@@ -4,18 +4,17 @@ import datastore.TableHeader;
 import datastore.Tuple;
 import operators.Operator;
 
-import java.util.Optional;
-
-public class Deduplicate implements Operator {
+public class DistinctOperator implements Operator {
     private Operator source;
 
-    public Deduplicate(Operator source) {
+    public DistinctOperator(Operator source) {
         this.source = source;
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        return Optional.empty();
+    public Tuple getNextTuple() {
+        //TODO:
+        return null;
     }
 
     @Override
@@ -27,4 +26,5 @@ public class Deduplicate implements Operator {
     public boolean reset() {
         return this.source.reset();
     }
+
 }

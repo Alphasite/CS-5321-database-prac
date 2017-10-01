@@ -25,7 +25,6 @@ public class Tuple {
         for (int i = 1; i < fields.size(); i++) {
             builder.append(" | " + fields.get(i));
         }
-
         return builder.toString();
     }
 }

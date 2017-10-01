@@ -6,27 +6,25 @@ import net.sf.jsqlparser.expression.Expression;
 import operators.Operator;
 import query.ExpressionEvaluator;
 
-import java.util.Optional;
-
-public class Selection implements Operator {
+public class SelectionOperator implements Operator {
     private Operator source;
     private ExpressionEvaluator evaluator;
 
-    public Selection(Operator source, Expression expression) {
+    public SelectionOperator(Operator source, Expression expression) {
         this.source = source;
-        this.evaluator = new ExpressionEvaluator(expression);
+        this.evaluator = new ExpressionEvaluator(expression, getHeader());
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        Optional<Tuple> next;
+    public Tuple getNextTuple() {
+        Tuple next;
 
-        while ((next = this.source.getNextTuple()).isPresent()) {
-            if (evaluator.matches(next.get()))
+        while ((next = this.source.getNextTuple()) != null) {
+            if (evaluator.matches(next))
                 return next;
         }
+        return null;
 
-        return Optional.empty();
     }
 
     @Override
@@ -38,4 +36,5 @@ public class Selection implements Operator {
     public boolean reset() {
         return this.source.reset();
     }
+
 }

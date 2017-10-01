@@ -1,11 +1,18 @@
 import datastore.Database;
+import datastore.TableHeader;
 import datastore.TableInfo;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.*;
 import operators.Operator;
-import operators.physical.Scan;
+import operators.bag.JoinOperator;
+import operators.bag.ProjectionOperator;
+import operators.bag.SelectionOperator;
+import operators.physical.ScanOperator;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 public class QueryBuilder {
 	private Database DB;
@@ -24,15 +31,47 @@ public class QueryBuilder {
 		// TODO: for now build a simple query plan (SCAN -> JOIN -> SELECT -> PROJECT)
 		// TODO: later on optimize by breaking down SELECT into multiple OPs evaluated as early as possible
 
-		// For now only build a SCAN op from the FromItem info
-		Table from = (Table) query.getFromItem();
-		Optional<TableInfo> tableOpt = DB.getTable(from.getName());
+		// Store ref to all needed query tokens
+		List<SelectItem> selectItems = query.getSelectItems();
+		Table fromItem = (Table) query.getFromItem();
+		List<Join> joinItems = query.getJoins();
+		Expression whereItem = query.getWhere();
 
-		if (tableOpt.isPresent()) {
-			Scan node = Scan.setupScan(tableOpt.get()).get();
-			return node;
+		// Keep reference to current root
+		Operator rootNode;
+
+		// For now only build a SCAN op from the FromItem info
+		TableInfo table = DB.getTable(fromItem.getName());
+		rootNode = new ScanOperator(table);
+
+		// Add joins as needed
+        if (joinItems != null) {
+            for (Join join : joinItems) {
+                Table joinTable = (Table) join.getRightItem();
+                ScanOperator rightScan = new ScanOperator(DB.getTable(joinTable.getName()));
+
+                rootNode = new JoinOperator(rootNode, rightScan);
+            }
+        }
+
+		if (whereItem != null) {
+			rootNode = new SelectionOperator(rootNode, whereItem);
 		}
 
-		return null;
+		// TODO: convert aliases
+		if (!(selectItems.get(0) instanceof AllColumns)) {
+			List<String> tableNames = new ArrayList<>();
+			List<String> columnNames = new ArrayList<>();
+
+			for (SelectItem item : selectItems) {
+				Column columnRef = (Column) ((SelectExpressionItem) item).getExpression();
+				tableNames.add(columnRef.getTable().getName());
+				columnNames.add(columnRef.getColumnName());
+			}
+
+			rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
+		}
+
+		return rootNode;
 	}
 }

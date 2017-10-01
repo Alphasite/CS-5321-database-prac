@@ -13,7 +13,7 @@ public class Database {
         this.tables = tables;
     }
 
-    public static Optional<Database> loadDatabase(Path inputPath) {
+    public static Database loadDatabase(Path inputPath) {
         HashMap<String, TableInfo> tables = new HashMap<>();
 
         Path schema = inputPath.resolve("schema.txt");
@@ -39,13 +39,12 @@ public class Database {
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-            return Optional.empty();
         }
 
-        return Optional.of(new Database(tables));
+        return (new Database(tables));
     }
 
-    public Optional<TableInfo> getTable(String name) {
-        return Optional.ofNullable(this.tables.get(name));
+    public TableInfo getTable(String name) {
+        return (this.tables.get(name));
     }
 }

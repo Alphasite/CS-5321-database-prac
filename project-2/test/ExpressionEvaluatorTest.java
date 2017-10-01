@@ -1,3 +1,4 @@
+import datastore.TableHeader;
 import datastore.Tuple;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
@@ -17,6 +18,7 @@ import static org.junit.Assert.assertTrue;
 public class ExpressionEvaluatorTest {
 
 	private static List<Tuple> tuples;
+	private static TableHeader header;
 
 	@BeforeClass
 	public static void loadData() {
@@ -27,6 +29,10 @@ public class ExpressionEvaluatorTest {
 		tuples.add(new Tuple(Arrays.asList(4, 100, 50)));
 		tuples.add(new Tuple(Arrays.asList(5, 100, 500)));
 		tuples.add(new Tuple(Arrays.asList(6, 300, 400)));
+
+		List<String> tableNames = Arrays.asList("Sailors", "Sailors", "Sailors");
+		List<String> columnNames = Arrays.asList("A", "B", "C");
+		header = new TableHeader(tableNames, columnNames);
 	}
 
 	private static ExpressionEvaluator buildEvaluator(String query) {
@@ -36,12 +42,11 @@ public class ExpressionEvaluatorTest {
 
 		try {
 			select = (PlainSelect) parser.Select().getSelectBody();
-			evaluator = new ExpressionEvaluator(select.getWhere());
+			evaluator = new ExpressionEvaluator(select.getWhere(), header);
 		} catch (ParseException e) {
 			e.printStackTrace();
 			return null;
 		}
-
 		return evaluator;
 	}
 
@@ -88,7 +93,7 @@ public class ExpressionEvaluatorTest {
 		assertFalse(e.matches(tuples.get(1)));
 		assertTrue(e.matches(tuples.get(2)));
 		assertFalse(e.matches(tuples.get(3)));
-		assertFalse(e.matches(tuples.get(4)));
+		assertTrue(e.matches(tuples.get(4)));
 		assertTrue(e.matches(tuples.get(5)));
 	}
 }

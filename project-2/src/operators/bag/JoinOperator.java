@@ -6,16 +6,15 @@ import operators.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-public class Join implements Operator {
+public class JoinOperator implements Operator {
     private Operator left;
     private Operator right;
 
     private Tuple leftTupleCache;
     private TableHeader tableHeader;
 
-    public Join(Operator left, Operator right) {
+    public JoinOperator(Operator left, Operator right) {
         this.left = left;
         this.right = right;
         this.reset();
@@ -35,20 +34,27 @@ public class Join implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        // Get the rhs tuple and if necessary wrap around the lhs
-        Optional<Tuple> rightFromChild;
+    public Tuple getNextTuple() {
+        // TODO make this more efficient.
+        // we probably can do selections inline (as an optimisation)?
+        // Also i wish we had value types, this would be much faster.
 
-        while (!(rightFromChild = this.right.getNextTuple()).isPresent()) {
+        if (this.leftTupleCache == null) {
+            // No more tuple on left op : we are done
+            return null;
+        }
+
+        // Get the rhs tuple and if necessary wrap around the lhs
+        Tuple rightTuple;
+
+        while ((rightTuple = this.right.getNextTuple()) == null) {
+            // Try again with next left tuple
             if (!loadNextLeftTuple()) {
-                return Optional.empty();
+                return null;
             }
         }
 
-        Tuple left = leftTupleCache;
-        Tuple right = rightFromChild.get();
-
-        return Optional.of(left.join(right));
+        return (this.leftTupleCache.join(rightTuple));
     }
 
     @Override
@@ -67,9 +73,9 @@ public class Join implements Operator {
     }
 
     private boolean loadNextLeftTuple() {
-        Optional<Tuple> leftFromChild = this.left.getNextTuple();
-        if (leftFromChild.isPresent()) {
-            leftTupleCache = leftFromChild.get();
+        Tuple leftFromChild = this.left.getNextTuple();
+        if (leftFromChild != null) {
+            leftTupleCache = leftFromChild;
             right.reset();
             return true;
         } else {

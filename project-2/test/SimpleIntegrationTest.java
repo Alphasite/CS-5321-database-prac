@@ -1,16 +1,16 @@
 import datastore.Database;
 import datastore.TableHeader;
 import datastore.TableInfo;
-import operators.bag.Join;
-import operators.bag.Projection;
-import operators.physical.Scan;
+import datastore.Tuple;
+import operators.bag.JoinOperator;
+import operators.bag.ProjectionOperator;
+import operators.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Optional;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -25,33 +25,37 @@ public class SimpleIntegrationTest {
     public void setUp() throws Exception {
         Path inputDir = Paths.get("resources/samples/input/db");
         inputDir = inputDir.toAbsolutePath();
-        Optional<Database> databaseOptional = Database.loadDatabase(inputDir);
-
-        database = databaseOptional.get();
-
-        this.boats = database.getTable("Boats").get();
-        this.reserves = database.getTable("Reserves").get();
-        this.sailors = database.getTable("Sailors").get();
+        Database database = Database.loadDatabase(inputDir);
+        this.boats = database.getTable("Boats");
+        this.reserves = database.getTable("Reserves");
+        this.sailors = database.getTable("Sailors");
     }
 
     @Test
     public void simpleIntegration() throws Exception {
-        System.out.println("Simple Integration");
+        ScanOperator boatsScan = new ScanOperator(boats);
+        ScanOperator reservesScan = new ScanOperator(reserves);
 
-        Optional<Scan> boatsScan = Scan.setupScan(boats);
-        Optional<Scan> reservesScan = Scan.setupScan(reserves);
+        JoinOperator join = new JoinOperator(boatsScan, reservesScan);
 
-        Join join = new Join(boatsScan.get(), reservesScan.get());
+        join.dump(System.out);
+        Tuple row;
 
-        assertThat(join.dump(System.out), is(5 * 6));
+        System.out.println(join.getHeader());
+
+        int i = 0;
+        while ((row = join.getNextTuple())!=null) {
+
+            System.out.println(++i + ": " + row);
+        }
+
+        assertThat(i, is(5 * 6));
     }
 
     @Test
     public void projectionTest() throws Exception {
-        System.out.println("Projection Test");
-
-        Optional<Scan> boatsScan = Scan.setupScan(boats);
-        Optional<Scan> reservesScan = Scan.setupScan(reserves);
+        ScanOperator boatsScan = new ScanOperator(boats);
+        ScanOperator reservesScan = new ScanOperator(reserves);
 
         TableHeader tableHeader = new TableHeader(
                 new ArrayList<>(),
@@ -65,9 +69,18 @@ public class SimpleIntegrationTest {
         tableHeader.columnAliases.add("Reserves");
         tableHeader.columnHeaders.add("G");
 
-        Join join = new Join(boatsScan.get(), reservesScan.get());
-        Projection projection = new Projection(tableHeader, join);
+        JoinOperator join = new JoinOperator(boatsScan, reservesScan);
+        ProjectionOperator projection = new ProjectionOperator(tableHeader, join);
 
-        assertThat(projection.dump(System.out), is(5 * 6));
+        Tuple row;
+
+        System.out.println(projection.getHeader());
+
+        int i = 0;
+        while ((row = projection.getNextTuple())!=null) {
+            System.out.println(++i + ": " + row);
+        }
+
+        assertThat(i, is(5 * 6));
     }
 }

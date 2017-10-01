@@ -6,14 +6,13 @@ import operators.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-public class Projection implements Operator {
+public class ProjectionOperator implements Operator {
     private final Operator source;
     private final TableHeader newHeader;
     private final List<Integer> newToOldColumnMapping;
 
-    public Projection(TableHeader newHeader, Operator source) {
+    public ProjectionOperator(TableHeader newHeader, Operator source) {
         this.source = source;
         this.newHeader = newHeader.clone();
         this.newToOldColumnMapping = new ArrayList<>();
@@ -44,20 +43,19 @@ public class Projection implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
-        Optional<Tuple> optionalTuple = this.source.getNextTuple();
+    public Tuple getNextTuple() {
+        Tuple tuple = this.source.getNextTuple();
 
-        if (optionalTuple.isPresent()) {
-            Tuple tuple = optionalTuple.get();
+        if (tuple!=null) {
             List<Integer> newBackingArray = new ArrayList<>(this.newHeader.size());
 
             for (int i = 0; i < this.newHeader.size(); i++) {
                 newBackingArray.add(tuple.fields.get(this.newToOldColumnMapping.get(i)));
             }
 
-            return Optional.of(new Tuple(newBackingArray));
+            return (new Tuple(newBackingArray));
         } else {
-            return optionalTuple;
+            return tuple;
         }
     }
 

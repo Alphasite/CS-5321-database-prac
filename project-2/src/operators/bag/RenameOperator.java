@@ -5,14 +5,13 @@ import datastore.Tuple;
 import operators.Operator;
 
 import java.util.ArrayList;
-import java.util.Optional;
 
-public class Rename implements Operator {
+public class RenameOperator implements Operator {
     private Operator child;
     private String newTableName;
     private TableHeader header;
 
-    public Rename(Operator child, String newTableName) {
+    public RenameOperator(Operator child, String newTableName) {
         this.child = child;
         this.newTableName = newTableName;
 
@@ -25,7 +24,7 @@ public class Rename implements Operator {
     }
 
     @Override
-    public Optional<Tuple> getNextTuple() {
+    public Tuple getNextTuple() {
         return this.child.getNextTuple();
     }
 
