@@ -37,6 +37,10 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         return this.result;
     }
 
+    public Expression getExpression() {
+        return this.expressionRoot;
+    }
+
     @Override
     public void visit(Column column) {
         // TODO: implement alias/column name resolution

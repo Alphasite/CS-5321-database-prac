@@ -1,5 +1,6 @@
 import datastore.TableHeader;
 import datastore.Tuple;
+import net.sf.jsqlparser.expression.Expression;
 import operators.bag.JoinOperator;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -68,5 +69,25 @@ public class JoinOperatorTest {
         assertEquals(Arrays.asList(1, 200, 50, 2, 101), tuples.get(3).fields);
         assertEquals(Arrays.asList(2, 200, 200, 1, 101), tuples.get(6).fields);
         assertEquals(Arrays.asList(4, 100, 50, 3, 102), tuples.get(22).fields);
+    }
+
+    @Test
+    public void testFiltering() {
+        String query = "SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;";
+        Expression expression = ExpressionEvaluatorTest.buildEvaluator(query).getExpression();
+        JoinOperator join = new JoinOperator(opA, opB, expression);
+
+        List<Tuple> tuples = new ArrayList<>();
+        Tuple next;
+
+        while ((next = join.getNextTuple()) != null) {
+            tuples.add(next);
+        }
+
+        assertEquals(6, tuples.size());
+        assertEquals(Arrays.asList(1, 200, 50, 1, 101), tuples.get(0).fields);
+        assertEquals(Arrays.asList(1, 200, 50, 1, 103), tuples.get(2).fields);
+        assertEquals(Arrays.asList(2, 200, 200, 2, 101), tuples.get(3).fields);
+        assertEquals(Arrays.asList(4, 100, 50, 4, 104), tuples.get(5).fields);
     }
 }

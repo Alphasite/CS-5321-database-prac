@@ -35,7 +35,7 @@ public class ExpressionEvaluatorTest {
 		header = new TableHeader(tableNames, columnNames);
 	}
 
-	private static ExpressionEvaluator buildEvaluator(String query) {
+	public static ExpressionEvaluator buildEvaluator(String query) {
 		CCJSqlParser parser = new CCJSqlParser(new StringReader(query));
 		PlainSelect select;
 		ExpressionEvaluator evaluator;

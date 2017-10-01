@@ -2,7 +2,9 @@ package operators.bag;
 
 import datastore.TableHeader;
 import datastore.Tuple;
+import net.sf.jsqlparser.expression.Expression;
 import operators.Operator;
+import query.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ public class JoinOperator implements Operator {
 
     private Tuple leftTupleCache;
     private TableHeader tableHeader;
-
+    private ExpressionEvaluator evaluator;
 
     /** Create an object which joins left and right tuples.
      * @param left The operator which generates the left hand tuples.
@@ -43,6 +45,16 @@ public class JoinOperator implements Operator {
         this.tableHeader = new TableHeader(aliases, headings);
     }
 
+    /** Create an object which joins left and right tuples and filters results based on a conditional clause
+     * @param left The operator which generates the left hand tuples.
+     * @param right The operator which generates the right hand tuples.
+     * @param expression The expression to evaluate the resulting tuples on.
+     */
+    public JoinOperator(Operator left, Operator right, Expression expression) {
+        this(left, right);
+        this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
+    }
+
     /**
      * @inheritDoc
      *
@@ -57,19 +69,28 @@ public class JoinOperator implements Operator {
         }
 
         // Get the rhs tuple and if necessary wrap around the lhs
-        Tuple rightTuple;
+        Tuple rightTuple, candidate = null;
+        boolean foundMatch = false;
 
-        // try to get a right hand tuple
-        while ((rightTuple = this.right.getNextTuple()) == null) {
-            // If there is none, then increment the left hand operator and then
-            // reset the right hand operator and try to get another tuple.
-            if (!loadNextLeftTuple()) {
-                return null;
+        while (!foundMatch) {
+
+            // try to get a right hand tuple
+            while ((rightTuple = this.right.getNextTuple()) == null) {
+                // If there is none, then increment the left hand operator and then
+                // reset the right hand operator and try to get another tuple.
+                if (!loadNextLeftTuple()) {
+                    return null;
+                }
+            }
+
+            candidate = leftTupleCache.join(rightTuple);
+            if (evaluator.matches(candidate)) {
+                foundMatch = true;
             }
         }
 
         // Return the joined tuple.
-        return (this.leftTupleCache.join(rightTuple));
+        return candidate;
     }
 
     /**
