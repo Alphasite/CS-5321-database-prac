@@ -35,10 +35,6 @@ public class JoinOperator implements Operator {
 
     @Override
     public Tuple getNextTuple() {
-        // TODO make this more efficient.
-        // we probably can do selections inline (as an optimisation)?
-        // Also i wish we had value types, this would be much faster.
-
         if (this.leftTupleCache == null) {
             // No more tuple on left op : we are done
             return null;
