@@ -10,6 +10,9 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/** An operator which reads a file and parses it according to the schema in the catalogue, producing tuples.
+ * @inheritDoc
+ */
 public class ScanOperator implements Operator {
     private final TableInfo table;
     private Scanner tableFile;
@@ -19,6 +22,11 @@ public class ScanOperator implements Operator {
         this.reset();
     }
 
+    /** This method reads the next tuple from the file,
+     * the file is parsed according to the scheme provided in the catalog.
+     *
+     * @inheritDoc
+     */
     @Override
     public Tuple getNextTuple() {
 
@@ -38,11 +46,22 @@ public class ScanOperator implements Operator {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.table.header;
     }
 
+    /** This method creates a new underlying file stream to the table file.
+     *
+     * This steam points to the head of the file.
+     *
+     * If there is an error finding the file it fails, it returns false.
+     *
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
         try {
