@@ -1,5 +1,7 @@
 package datastore;
 
+import net.sf.jsqlparser.schema.Column;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +27,20 @@ public class TableHeader {
         this.columnHeaders = columnHeaders;
     }
 
+    /**
+     * Creates a TableHeader from a list of Column objects containing info about a column and its source table
+     */
+    public static TableHeader fromColumns(List<Column> columns) {
+        List<String> tableNames = new ArrayList<>();
+        List<String> columnNames = new ArrayList<>();
+
+        for (Column c : columns) {
+            tableNames.add(c.getTable().getName());
+            columnNames.add(c.getColumnName());
+        }
+
+        return new TableHeader(tableNames, columnNames);
+    }
 
     /**
      * @return The width of the table.
