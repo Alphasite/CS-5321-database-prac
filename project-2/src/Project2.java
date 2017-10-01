@@ -13,8 +13,8 @@ import java.nio.file.Paths;
  * Loads the database and the queries file, runs all queries
  */
 public class Project2 {
-	private static String INPUT_PATH = "resources/samples/input";
-	private static String DB_PATH = INPUT_PATH + "/db";
+	public static final String INPUT_PATH = "resources/samples/input";
+	public static final String DB_PATH = INPUT_PATH + "/db";
 
 	public static void main(String args[]) {
 		// TODO: read paths from command line

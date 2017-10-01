@@ -1,6 +1,6 @@
 import datastore.TableHeader;
 import datastore.Tuple;
-import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.statement.select.PlainSelect;
 import operators.bag.JoinOperator;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -73,9 +73,8 @@ public class JoinOperatorTest {
 
     @Test
     public void testFiltering() {
-        String query = "SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;";
-        Expression expression = ExpressionEvaluatorTest.buildEvaluator(query).getExpression();
-        JoinOperator join = new JoinOperator(opA, opB, expression);
+        PlainSelect tokens = ParseUtils.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
+        JoinOperator join = new JoinOperator(opA, opB, tokens.getWhere());
 
         List<Tuple> tuples = new ArrayList<>();
         Tuple next;

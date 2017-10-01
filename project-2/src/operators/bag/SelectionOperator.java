@@ -54,4 +54,7 @@ public class SelectionOperator implements Operator {
         return this.source.reset();
     }
 
+    public Expression getPredicate() {
+        return evaluator.getExpression();
+    }
 }
