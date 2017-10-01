@@ -36,10 +36,6 @@ public class Join implements Operator {
 
     @Override
     public Optional<Tuple> getNextTuple() {
-        // TODO make this more efficient.
-        // we probably can do selections inline (as an optimisation)?
-        // Also i wish we had value types, this would be much faster.
-
         // Get the rhs tuple and if necessary wrap around the lhs
         Optional<Tuple> rightFromChild;
 
