@@ -84,7 +84,7 @@ public class JoinOperator implements Operator {
             }
 
             candidate = leftTupleCache.join(rightTuple);
-            if (evaluator.matches(candidate)) {
+            if (evaluator == null || evaluator.matches(candidate)) {
                 foundMatch = true;
             }
         }

@@ -43,7 +43,6 @@ public class ExpressionEvaluator implements ExpressionVisitor {
 
     @Override
     public void visit(Column column) {
-        // TODO: implement alias/column name resolution
         // TODO: move this computation to object construction
 
         for (int i = 0; i < schema.columnHeaders.size(); i++) {

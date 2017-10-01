@@ -8,6 +8,7 @@ import net.sf.jsqlparser.statement.select.*;
 import operators.Operator;
 import operators.bag.JoinOperator;
 import operators.bag.ProjectionOperator;
+import operators.bag.RenameOperator;
 import operators.bag.SelectionOperator;
 import operators.physical.ScanOperator;
 
@@ -40,17 +41,26 @@ public class QueryBuilder {
 		// Keep reference to current root
 		Operator rootNode;
 
-		// For now only build a SCAN op from the FromItem info
+		// Begin by building a SCAN op from the FromItem info
 		TableInfo table = DB.getTable(fromItem.getName());
 		rootNode = new ScanOperator(table);
+
+		// If an alias is given, just rename the table internally
+		// We can do this because we are allowed to assume the original name will not be used in the query
+		if (fromItem.getAlias() != null) {
+			rootNode = new RenameOperator(rootNode, fromItem.getAlias());
+		}
 
 		// Add joins as needed
         if (joinItems != null) {
             for (Join join : joinItems) {
                 Table joinTable = (Table) join.getRightItem();
-                ScanOperator rightScan = new ScanOperator(DB.getTable(joinTable.getName()));
+                Operator rightOp = new ScanOperator(DB.getTable(joinTable.getName()));
+                if (joinTable.getAlias() != null) {
+                	rightOp = new RenameOperator(rightOp, joinTable.getAlias());
+				}
 
-                rootNode = new JoinOperator(rootNode, rightScan);
+                rootNode = new JoinOperator(rootNode, rightOp);
             }
         }
 
@@ -58,7 +68,6 @@ public class QueryBuilder {
 			rootNode = new SelectionOperator(rootNode, whereItem);
 		}
 
-		// TODO: convert aliases
 		if (!(selectItems.get(0) instanceof AllColumns)) {
 			List<String> tableNames = new ArrayList<>();
 			List<String> columnNames = new ArrayList<>();
