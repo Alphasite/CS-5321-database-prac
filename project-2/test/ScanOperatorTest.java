@@ -27,7 +27,4 @@ public class ScanOperatorTest {
         tuple1.add(50);
         assertTrue(tuple1.equals(scan.getNextTuple().fields));
     }
-
-
-
 }

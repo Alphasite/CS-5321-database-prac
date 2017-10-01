@@ -1,7 +1,6 @@
 import datastore.Database;
 import datastore.TableHeader;
 import datastore.TableInfo;
-import datastore.Tuple;
 import operators.bag.JoinOperator;
 import operators.bag.ProjectionOperator;
 import operators.physical.ScanOperator;
@@ -37,19 +36,7 @@ public class SimpleIntegrationTest {
         ScanOperator reservesScan = new ScanOperator(reserves);
 
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
-
-        join.dump(System.out);
-        Tuple row;
-
-        System.out.println(join.getHeader());
-
-        int i = 0;
-        while ((row = join.getNextTuple())!=null) {
-
-            System.out.println(++i + ": " + row);
-        }
-
-        assertThat(i, is(5 * 6));
+        assertThat(join.dump(System.out), is(5 * 6));
     }
 
     @Test
@@ -72,15 +59,6 @@ public class SimpleIntegrationTest {
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
         ProjectionOperator projection = new ProjectionOperator(tableHeader, join);
 
-        Tuple row;
-
-        System.out.println(projection.getHeader());
-
-        int i = 0;
-        while ((row = projection.getNextTuple())!=null) {
-            System.out.println(++i + ": " + row);
-        }
-
-        assertThat(i, is(5 * 6));
+        assertThat(projection.dump(System.out), is(5 * 6));
     }
 }

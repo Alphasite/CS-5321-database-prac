@@ -2,9 +2,10 @@ package datastore;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * An object which contains the mappings required to resolve a comlumn index from its fully qualified name.
+ * An object which contains the mappings required to resolve a column index from its fully qualified name.
  * For example:
  *  boat.name,
  *  name,
@@ -30,6 +31,21 @@ public class TableHeader {
      */
     public int size() {
         return this.columnHeaders.size();
+    }
+
+    public Optional<Integer> resolve(String alias, String column) {
+        boolean notRequireAliasMatch = alias.equals("");
+
+        for (int i = 0; i < columnHeaders.size(); i++) {
+            boolean aliasMatch = columnAliases.get(i).equals(alias);
+            boolean headerMatch = columnHeaders.get(i).equals(column);
+
+            if ((notRequireAliasMatch || aliasMatch) && headerMatch) {
+                return Optional.of(i);
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override

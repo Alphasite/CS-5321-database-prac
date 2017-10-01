@@ -9,7 +9,8 @@ public class ProjectionOperatorTest {
         assertEquals(true, false);
     }
 
-    @Test void testProjection() {
+    @Test
+    public void testProjection() {
         // TODO
         assertEquals(true, false);
     }
