@@ -15,7 +15,6 @@ import query.TableCouple;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 public class QueryBuilder {
@@ -80,12 +79,12 @@ public class QueryBuilder {
      *
      */
     private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table fromItem ) {
-        HashMap<Table,Boolean> alreadyJoinedTables =new HashMap<>();
-        alreadyJoinedTables.put(fromItem, true);
+        HashMap<String,Boolean> alreadyJoinedTables =new HashMap<>();
+        alreadyJoinedTables.put(fromItem.getName(), true);
         List<Table> allTables = buildTableList(fromItem, joinItems);
-        HashMap<Table,Boolean> tablesToBeJoined= new HashMap<>();
+        HashMap<String,Boolean> tablesToBeJoined= new HashMap<>();
         for (Table t : allTables){
-            tablesToBeJoined.put(t,true);
+            tablesToBeJoined.put(t.getName(),true);
         }
 
         Operator rootNode = new ScanOperator(DB.getTable(fromItem.getName()));
@@ -96,11 +95,8 @@ public class QueryBuilder {
             if (hashSelection.containsKey(fromItem)){
                 rootNode = new SelectionOperator(rootNode, hashSelection.get(fromItem));
             }
-            tablesToBeJoined.remove(fromItem);
         }
-
-
-
+        tablesToBeJoined.remove(fromItem.getName());
 
 
         if (joinItems != null) {
@@ -108,12 +104,11 @@ public class QueryBuilder {
             HashMap<Table, Expression> hashSelection = bwb.getHashSelection(rootExpression);
             HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin(rootExpression);
             while (!hashJoin.isEmpty()){
-                Iterator<TableCouple> iterator = hashJoin.keySet().iterator();
-                while (iterator.hasNext()){
-                    TableCouple tc = iterator.next();
+                for (TableCouple tc : hashJoin.keySet()){
                     Table table1=tc.getTable1();
                     Table table2=tc.getTable2();
-                    if (alreadyJoinedTables.containsKey(table1)){
+                    Boolean temp = alreadyJoinedTables.containsKey(table1.getName());
+                    if (alreadyJoinedTables.containsKey(table1.getName())){
                         Operator rightOp = new ScanOperator(DB.getTable(table2.getName()));
                         if (hashSelection.containsKey(table2)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
@@ -123,8 +118,8 @@ public class QueryBuilder {
                         }
                         rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
                         hashJoin.remove(tc);
-                        alreadyJoinedTables.put(table2,true);
-                        tablesToBeJoined.remove(table2);
+                        alreadyJoinedTables.put(table2.getName(),true);
+                        tablesToBeJoined.remove(table2.getName());
                     }
                     else{
                         Operator rightOp = new ScanOperator(DB.getTable(table1.getName()));
@@ -136,8 +131,8 @@ public class QueryBuilder {
                         }
                         rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
                         hashJoin.remove(tc);
-                        alreadyJoinedTables.put(table1,true);
-                        tablesToBeJoined.remove(table1);
+                        alreadyJoinedTables.put(table1.getName(),true);
+                        tablesToBeJoined.remove(table1.getName());
                     }
                 }
             }
