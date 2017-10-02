@@ -99,7 +99,6 @@ public class QueryBuilder {
                 list.add((Table) join.getRightItem());
             }
         }
-
 	    return list;
     }
 
@@ -108,42 +107,38 @@ public class QueryBuilder {
      *
      */
     private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table fromItem ) {
+
         HashMap<String,Boolean> alreadyJoinedTables =new HashMap<>();
-        alreadyJoinedTables.put(fromItem.getName(), true);
-        List<Table> allTables = buildTableList(fromItem, joinItems);
+        alreadyJoinedTables.put(getIdentifier(fromItem), true);
+
         HashMap<String,Boolean> tablesToBeJoined= new HashMap<>();
-        for (Table t : allTables){
-            if (t.getAlias()!=null){
-                tablesToBeJoined.put(t.getAlias(),true);
-            }
-            else{
-                tablesToBeJoined.put(t.getName(),true);
+        if (joinItems != null) {
+            for (Join join : joinItems) {
+                tablesToBeJoined.put(getIdentifier((Table) join.getRightItem()), true);
             }
         }
 
-        Operator rootNode = new ScanOperator(DB.getTable(fromItem.getName()));
+        Operator rootNode = new ScanOperator(DB.getTable(getIdentifier(fromItem)));
 
         if (rootExpression!=null){
-            BreakWhereBuilder bwb = new BreakWhereBuilder();
-            HashMap<Table, Expression> hashSelection = bwb.getHashSelection(rootExpression);
-            if (hashSelection.containsKey(fromItem)){
+            BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
+            HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
+            if (hashSelection.containsKey(getIdentifier(fromItem))){
                 rootNode = new SelectionOperator(rootNode, hashSelection.get(fromItem));
             }
         }
-        //TODO
-        tablesToBeJoined.remove(fromItem.getName());
-
 
         if (joinItems != null) {
-            BreakWhereBuilder bwb = new BreakWhereBuilder();
-            HashMap<Table, Expression> hashSelection = bwb.getHashSelection(rootExpression);
-            HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin(rootExpression);
+            BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
+            HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
+            HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin();
+
             while (!hashJoin.isEmpty()){
                 for (TableCouple tc : hashJoin.keySet()){
                     Table table1=tc.getTable1();
                     Table table2=tc.getTable2();
-                    if (alreadyJoinedTables.containsKey(table1.getName())){
-                        Operator rightOp = new ScanOperator(DB.getTable(table2.getName()));
+                    if (alreadyJoinedTables.containsKey(getIdentifier(table1))){
+                        Operator rightOp = new ScanOperator(DB.getTable(getIdentifier(table2)));
                         if (hashSelection.containsKey(table2)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
                         }
@@ -152,11 +147,11 @@ public class QueryBuilder {
                         }
                         rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
                         hashJoin.remove(tc);
-                        alreadyJoinedTables.put(table2.getName(),true);
-                        tablesToBeJoined.remove(table2.getName());
+                        alreadyJoinedTables.put(getIdentifier(table2),true);
+                        tablesToBeJoined.remove(getIdentifier(table2));
                     }
                     else{
-                        Operator rightOp = new ScanOperator(DB.getTable(table1.getName()));
+                        Operator rightOp = new ScanOperator(DB.getTable(getIdentifier(table1)));
                         if (hashSelection.containsKey(table1)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table1));
                         }
@@ -165,15 +160,29 @@ public class QueryBuilder {
                         }
                         rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
                         hashJoin.remove(tc);
-                        alreadyJoinedTables.put(table1.getName(),true);
-                        tablesToBeJoined.remove(table1.getName());
+                        alreadyJoinedTables.put(getIdentifier(table1),true);
+                        tablesToBeJoined.remove(getIdentifier(table1));
                     }
                 }
             }
         }
-        while(!tablesToBeJoined.isEmpty()){
-
+        if(!tablesToBeJoined.isEmpty()){
+            for (Join join : joinItems){
+                if (tablesToBeJoined.containsKey(getIdentifier((Table) join.getRightItem()))){
+                    Operator rightOp = new ScanOperator(DB.getTable(getIdentifier((Table) join.getRightItem())));
+                    rootNode = new JoinOperator(rootNode, rightOp);
+                }
+            }
         }
         return rootNode;
+    }
+
+    public String getIdentifier (Table table){
+        if (table.getAlias()!=null){
+            return table.getAlias();
+        }
+        else{
+            return table.getName();
+        }
     }
 }

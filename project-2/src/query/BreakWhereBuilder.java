@@ -17,21 +17,19 @@ public class BreakWhereBuilder implements ExpressionVisitor {
     HashMap<TableCouple, Expression> hashJoin;
 
 
-    public BreakWhereBuilder() {
+    public BreakWhereBuilder(Expression expression) {
         this.hashSelection=new HashMap<>();
         this.hashJoin=new HashMap<>();
+        expression.accept(this);
+
 
     }
 
-    public HashMap<Table, Expression> getHashSelection(Expression expression) {
-        this.hashSelection=new HashMap<>();
-        expression.accept(this);
+    public HashMap<Table, Expression> getHashSelection() {
         return hashSelection;
     }
 
-    public HashMap<TableCouple, Expression> getHashJoin(Expression expression) {
-        this.hashJoin=new HashMap<>();
-        expression.accept(this);
+    public HashMap<TableCouple, Expression> getHashJoin() {
         return hashJoin;
     }
 
@@ -81,12 +79,24 @@ public class BreakWhereBuilder implements ExpressionVisitor {
         else{
             if (comparator.getLeftExpression()instanceof Column){
                 Table table= ((Column) comparator.getLeftExpression()).getTable();
-                hashSelection.put(table, comparator);
+                if (hashSelection.containsKey(table)){
+                    AndExpression andExpression = new AndExpression(comparator,hashSelection.get(table));
+                    hashSelection.put(table, andExpression);
+                }
+                else{
+                    hashSelection.put(table, comparator);
+                }
             }
             else{
                 if (comparator.getRightExpression()instanceof Column){
                     Table table= ((Column) comparator.getRightExpression()).getTable();
-                    hashSelection.put(table, comparator);
+                    if (hashSelection.containsKey(table)){
+                        AndExpression andExpression = new AndExpression(comparator,hashSelection.get(table));
+                        hashSelection.put(table, andExpression);
+                    }
+                    else{
+                        hashSelection.put(table, comparator);
+                    }
                 }
                 else throw new NotImplementedException();
             }
