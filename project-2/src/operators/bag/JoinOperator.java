@@ -130,4 +130,8 @@ public class JoinOperator implements Operator {
             return false;
         }
     }
+
+    public Expression getPredicate() {
+        return evaluator.getExpression();
+    }
 }
