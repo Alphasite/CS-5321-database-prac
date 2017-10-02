@@ -113,7 +113,12 @@ public class QueryBuilder {
         List<Table> allTables = buildTableList(fromItem, joinItems);
         HashMap<String,Boolean> tablesToBeJoined= new HashMap<>();
         for (Table t : allTables){
-            tablesToBeJoined.put(t.getName(),true);
+            if (t.getAlias()!=null){
+                tablesToBeJoined.put(t.getAlias(),true);
+            }
+            else{
+                tablesToBeJoined.put(t.getName(),true);
+            }
         }
 
         Operator rootNode = new ScanOperator(DB.getTable(fromItem.getName()));
@@ -125,6 +130,7 @@ public class QueryBuilder {
                 rootNode = new SelectionOperator(rootNode, hashSelection.get(fromItem));
             }
         }
+        //TODO
         tablesToBeJoined.remove(fromItem.getName());
 
 
@@ -136,7 +142,6 @@ public class QueryBuilder {
                 for (TableCouple tc : hashJoin.keySet()){
                     Table table1=tc.getTable1();
                     Table table2=tc.getTable2();
-                    Boolean temp = alreadyJoinedTables.containsKey(table1.getName());
                     if (alreadyJoinedTables.containsKey(table1.getName())){
                         Operator rightOp = new ScanOperator(DB.getTable(table2.getName()));
                         if (hashSelection.containsKey(table2)){

@@ -69,20 +69,24 @@ public class BreakWhereBuilder implements ExpressionVisitor {
 
     @Override
     public void visit(EqualsTo equalsTo) {
-        if (equalsTo.getLeftExpression()instanceof Column &&  equalsTo.getRightExpression()instanceof Column){
-            Table table1= ((Column) equalsTo.getLeftExpression()).getTable();
-            Table table2= ((Column) equalsTo.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2),equalsTo);
+        comparisonOperator(equalsTo);
+    }
+
+    private void comparisonOperator(BinaryExpression comparator) {
+        if (comparator.getLeftExpression()instanceof Column &&  comparator.getRightExpression()instanceof Column){
+            Table table1= ((Column) comparator.getLeftExpression()).getTable();
+            Table table2= ((Column) comparator.getRightExpression()).getTable();
+            hashJoin.put(new TableCouple(table1,table2), comparator);
         }
         else{
-            if (equalsTo.getLeftExpression()instanceof Column){
-                Table table= ((Column) equalsTo.getLeftExpression()).getTable();
-                hashSelection.put(table, equalsTo);
+            if (comparator.getLeftExpression()instanceof Column){
+                Table table= ((Column) comparator.getLeftExpression()).getTable();
+                hashSelection.put(table, comparator);
             }
             else{
-                if (equalsTo.getRightExpression()instanceof Column){
-                    Table table= ((Column) equalsTo.getRightExpression()).getTable();
-                    hashSelection.put(table, equalsTo);
+                if (comparator.getRightExpression()instanceof Column){
+                    Table table= ((Column) comparator.getRightExpression()).getTable();
+                    hashSelection.put(table, comparator);
                 }
                 else throw new NotImplementedException();
             }
@@ -91,112 +95,27 @@ public class BreakWhereBuilder implements ExpressionVisitor {
 
     @Override
     public void visit(GreaterThan greaterThan) {
-        if (greaterThan.getLeftExpression()instanceof Column &&  greaterThan.getRightExpression()instanceof Column){
-            Table table1= ((Column) greaterThan.getLeftExpression()).getTable();
-            Table table2= ((Column) greaterThan.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2),greaterThan);
-        }
-        else{
-            if (greaterThan.getLeftExpression()instanceof Column){
-                Table table= ((Column) greaterThan.getLeftExpression()).getTable();
-                hashSelection.put(table, greaterThan);
-            }
-            else{
-                if (greaterThan.getRightExpression()instanceof Column){
-                    Table table= ((Column) greaterThan.getRightExpression()).getTable();
-                    hashSelection.put(table, greaterThan);
-                }
-                else throw new NotImplementedException();
-            }
-        }
+        comparisonOperator(greaterThan);
     }
 
     @Override
     public void visit(GreaterThanEquals greaterThanEquals) {
-        if (greaterThanEquals.getLeftExpression()instanceof Column &&  greaterThanEquals.getRightExpression()instanceof Column){
-            Table table1= ((Column) greaterThanEquals.getLeftExpression()).getTable();
-            Table table2= ((Column) greaterThanEquals.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2),greaterThanEquals);
-        }
-        else{
-            if (greaterThanEquals.getLeftExpression()instanceof Column){
-                Table table= ((Column) greaterThanEquals.getLeftExpression()).getTable();
-                hashSelection.put(table, greaterThanEquals);
-            }
-            else{
-                if (greaterThanEquals.getRightExpression()instanceof Column){
-                    Table table= ((Column) greaterThanEquals.getRightExpression()).getTable();
-                    hashSelection.put(table, greaterThanEquals);
-                }
-                else throw new NotImplementedException();
-            }
-        }
+        comparisonOperator(greaterThanEquals);
     }
 
     @Override
     public void visit(MinorThan minorThan) {
-        if (minorThan.getLeftExpression()instanceof Column &&  minorThan.getRightExpression()instanceof Column){
-            Table table1= ((Column) minorThan.getLeftExpression()).getTable();
-            Table table2= ((Column) minorThan.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2),minorThan);
-        }
-        else{
-            if (minorThan.getLeftExpression()instanceof Column){
-                Table table= ((Column) minorThan.getLeftExpression()).getTable();
-                hashSelection.put(table, minorThan);
-            }
-            else{
-                if (minorThan.getRightExpression()instanceof Column){
-                    Table table= ((Column) minorThan.getRightExpression()).getTable();
-                    hashSelection.put(table, minorThan);
-                }
-                else throw new NotImplementedException();
-            }
-        }
+        comparisonOperator(minorThan);
     }
 
     @Override
     public void visit(MinorThanEquals minorThanEquals) {
-        if (minorThanEquals.getLeftExpression()instanceof Column &&  minorThanEquals.getRightExpression()instanceof Column){
-            Table table1= ((Column) minorThanEquals.getLeftExpression()).getTable();
-            Table table2= ((Column) minorThanEquals.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2),minorThanEquals);
-        }
-        else{
-            if (minorThanEquals.getLeftExpression()instanceof Column){
-                Table table= ((Column) minorThanEquals.getLeftExpression()).getTable();
-                hashSelection.put(table, minorThanEquals);
-            }
-            else{
-                if (minorThanEquals.getRightExpression()instanceof Column){
-                    Table table= ((Column) minorThanEquals.getRightExpression()).getTable();
-                    hashSelection.put(table, minorThanEquals);
-                }
-                else throw new NotImplementedException();
-            }
-        }
+        comparisonOperator(minorThanEquals);
     }
 
     @Override
     public void visit(NotEqualsTo notEqualsTo) {
-        if (notEqualsTo.getLeftExpression()instanceof Column &&  notEqualsTo.getRightExpression()instanceof Column){
-            Table table1= ((Column) notEqualsTo.getLeftExpression()).getTable();
-            Table table2= ((Column) notEqualsTo.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2),notEqualsTo);
-        }
-        else{
-            if (notEqualsTo.getLeftExpression()instanceof Column){
-                Table table= ((Column) notEqualsTo.getLeftExpression()).getTable();
-                hashSelection.put(table, notEqualsTo);
-            }
-            else{
-                if (notEqualsTo.getRightExpression()instanceof Column){
-                    Table table= ((Column) notEqualsTo.getRightExpression()).getTable();
-                    hashSelection.put(table, notEqualsTo);
-                }
-                else throw new NotImplementedException();
-            }
-        }
+        comparisonOperator(notEqualsTo);
     }
 
     @Override
