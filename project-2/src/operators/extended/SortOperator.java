@@ -7,6 +7,7 @@ import operators.Operator;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @inheritDoc
@@ -31,27 +32,17 @@ public class SortOperator implements Operator {
         this.source = source;
         this.tupleSortPriorityIndex = new ArrayList<>();
 
-        nextNewColumnLoop:
         for (int i = 0; i < sortHeaders.size(); i++) {
             String alias = sortHeaders.columnAliases.get(i);
             String header = sortHeaders.columnHeaders.get(i);
 
-            boolean notRequireAliasMatch = alias.equals("");
+            Optional<Integer> index = this.source.getHeader().resolve(alias, header);
 
-            List<String> sourceAliases = this.source.getHeader().columnAliases;
-            List<String> sourceHeaders = this.source.getHeader().columnHeaders;
-
-            for (int j = 0; j < sourceHeaders.size(); j++) {
-                boolean aliasMatch = sourceAliases.get(j).equals(alias);
-                boolean headerMatch = sourceHeaders.get(j).equals(header);
-
-                if ((notRequireAliasMatch || aliasMatch) && headerMatch) {
-                    this.tupleSortPriorityIndex.add(j);
-                    continue nextNewColumnLoop;
-                }
+            if (index.isPresent()) {
+                this.tupleSortPriorityIndex.add(index.get());
+            } else {
+                throw new RuntimeException("Sort mappings are incorrect. " + alias + "." + header + " has no match.");
             }
-
-            throw new RuntimeException("Projection mappings are incorrect. " + alias + "." + header + " has no match.");
         }
 
         this.buffer();
@@ -83,9 +74,9 @@ public class SortOperator implements Operator {
     }
 
     /**
-     * This does not reset the underlying stream, only resets the buffer iterator.
-     *
      * @inheritDoc
+     *
+     * This does not reset the underlying stream, only resets the buffer iterator.
      */
     @Override
     public boolean reset() {

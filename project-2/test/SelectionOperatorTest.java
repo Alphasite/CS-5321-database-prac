@@ -10,7 +10,8 @@ public class SelectionOperatorTest {
         assertEquals(true, false);
     }
 
-    @Test void testAliased() {
+    @Test
+    public void testAliased() {
         // TODO
         assertEquals(true, false);
     }

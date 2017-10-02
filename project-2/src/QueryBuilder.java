@@ -9,6 +9,8 @@ import operators.bag.JoinOperator;
 import operators.bag.ProjectionOperator;
 import operators.bag.RenameOperator;
 import operators.bag.SelectionOperator;
+import operators.extended.DistinctOperator;
+import operators.extended.SortOperator;
 import operators.physical.ScanOperator;
 import query.BreakWhereBuilder;
 import query.TableCouple;
@@ -38,10 +40,15 @@ public class QueryBuilder {
 		Table fromItem = (Table) query.getFromItem();
 		List<Join> joinItems = query.getJoins();
 		Expression whereItem = query.getWhere();
+		List<OrderByElement> orderBy = query.getOrderByElements();
+		boolean isDistinct = query.getDistinct() != null;
+
+		// Keep reference to current root
 		Operator rootNode;
 
 		rootNode=processWhereClause(whereItem, joinItems, fromItem);
 
+		// Projection
 		if (!(selectItems.get(0) instanceof AllColumns)) {
 			List<String> tableNames = new ArrayList<>();
 			List<String> columnNames = new ArrayList<>();
@@ -53,6 +60,28 @@ public class QueryBuilder {
 			}
 
 			rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
+		}
+
+		// The spec allows handling sorting and duplicate elimination after projection
+
+        if (orderBy != null) {
+		    List<Column> orderByColumns = new ArrayList<>();
+		    for (OrderByElement element : orderBy) {
+		        orderByColumns.add((Column) element.getExpression());
+            }
+
+            TableHeader sortHeader = TableHeader.fromColumns(orderByColumns);
+		    rootNode = new SortOperator(rootNode, sortHeader);
+        }
+
+        if (isDistinct) {
+			// Current implementation requires sorted queries
+			if (orderBy == null) {
+				// Sort all fields
+				rootNode = new SortOperator(rootNode, rootNode.getHeader());
+			}
+
+			rootNode = new DistinctOperator(rootNode);
 		}
 
 		return rootNode;

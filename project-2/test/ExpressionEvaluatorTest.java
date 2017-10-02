@@ -1,13 +1,10 @@
 import datastore.TableHeader;
 import datastore.Tuple;
-import net.sf.jsqlparser.parser.CCJSqlParser;
-import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import query.ExpressionEvaluator;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,41 +32,31 @@ public class ExpressionEvaluatorTest {
 		header = new TableHeader(tableNames, columnNames);
 	}
 
-	public static ExpressionEvaluator buildEvaluator(String query) {
-		CCJSqlParser parser = new CCJSqlParser(new StringReader(query));
-		PlainSelect select;
-		ExpressionEvaluator evaluator;
-
-		try {
-			select = (PlainSelect) parser.Select().getSelectBody();
-			evaluator = new ExpressionEvaluator(select.getWhere(), header);
-		} catch (ParseException e) {
-			e.printStackTrace();
-			return null;
-		}
-		return evaluator;
-	}
-
 	/**
 	 * Check that simple arithmetic and logic expressions are evaluated properly
 	 */
 	@Test
 	public void testNakedCondition() {
-		ExpressionEvaluator whereEvaluator = buildEvaluator("SELECT * FROM a WHERE 2 * 3 = 6 OR 2 = 6 - 3;");
+		PlainSelect tokens = ParseUtils.parseQuery("SELECT * FROM a WHERE 2 * 3 = 6 OR 2 = 6 - 3;");
+		ExpressionEvaluator whereEvaluator = new ExpressionEvaluator(tokens.getWhere(), header);
 		for (Tuple T : tuples) {
 			assertTrue(whereEvaluator.matches(T));
 		}
 
-		whereEvaluator = buildEvaluator("SELECT * FROM a WHERE 1 + 2 = 3 AND 6 = 5 - 1;");
+		tokens = ParseUtils.parseQuery("SELECT * FROM a WHERE 1 + 2 = 3 AND 6 = 5 - 1;");
+		whereEvaluator = new ExpressionEvaluator(tokens.getWhere(), header);
 		for (Tuple T : tuples) {
 			assertFalse(whereEvaluator.matches(T));
 		}
 	}
 
-
+	/**
+	 * Check that column identifier resolution works properly
+	 */
 	@Test
 	public void testSingleColumnReferences() {
-		ExpressionEvaluator e = buildEvaluator("SELECT * FROM Sailors WHERE Sailors.B = 100;");
+		PlainSelect tokens = ParseUtils.parseQuery("SELECT * FROM Sailors WHERE Sailors.B = 100;");
+		ExpressionEvaluator e = new ExpressionEvaluator(tokens.getWhere(), header);
 		assertFalse(e.matches(tuples.get(0)));
 		assertFalse(e.matches(tuples.get(1)));
 		assertTrue(e.matches(tuples.get(2)));
@@ -77,7 +64,8 @@ public class ExpressionEvaluatorTest {
 		assertTrue(e.matches(tuples.get(4)));
 		assertFalse(e.matches(tuples.get(5)));
 
-		e = buildEvaluator("SELECT * FROM Sailors WHERE Sailors.C > 100 AND Sailors.B <= 200;");
+		tokens = ParseUtils.parseQuery("SELECT * FROM Sailors WHERE Sailors.C > 100 AND Sailors.B <= 200;");
+		e = new ExpressionEvaluator(tokens.getWhere(), header);
 		assertFalse(e.matches(tuples.get(0)));
 		assertTrue(e.matches(tuples.get(1)));
 		assertTrue(e.matches(tuples.get(2)));
@@ -86,9 +74,13 @@ public class ExpressionEvaluatorTest {
 		assertFalse(e.matches(tuples.get(5)));
 	}
 
+	/**
+	 * Check that column identifier resolution works properly on both operands
+	 */
 	@Test
 	public void testMultipleColumnReferences() {
-		ExpressionEvaluator e = buildEvaluator("SELECT * FROM Sailors WHERE Sailors.B < Sailors.C;");
+		PlainSelect tokens = ParseUtils.parseQuery("SELECT * FROM Sailors WHERE Sailors.B < Sailors.C;");
+		ExpressionEvaluator e = new ExpressionEvaluator(tokens.getWhere(), header);
 		assertFalse(e.matches(tuples.get(0)));
 		assertFalse(e.matches(tuples.get(1)));
 		assertTrue(e.matches(tuples.get(2)));

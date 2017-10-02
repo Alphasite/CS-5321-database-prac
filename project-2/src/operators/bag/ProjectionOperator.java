@@ -6,6 +6,7 @@ import operators.Operator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * An operator which performs a projection (similar to the relational operator).
@@ -32,28 +33,20 @@ public class ProjectionOperator implements Operator {
         this.newHeader = newHeader.clone();
         this.newToOldColumnMapping = new ArrayList<>();
 
-        nextNewColumnLoop:
         for (int i = 0; i < newHeader.size(); i++) {
             String alias = newHeader.columnAliases.get(i);
             String header = newHeader.columnHeaders.get(i);
 
-            boolean notRequireAliasMatch = alias.equals("");
+            Optional<Integer> index = this.source.getHeader().resolve(alias, header);
 
             List<String> sourceAliases = this.source.getHeader().columnAliases;
-            List<String> sourceHeaders = this.source.getHeader().columnHeaders;
 
-            for (int j = 0; j < sourceHeaders.size(); j++) {
-                boolean aliasMatch = sourceAliases.get(j).equals(alias);
-                boolean headerMatch = sourceHeaders.get(j).equals(header);
-
-                if ((notRequireAliasMatch || aliasMatch) && headerMatch) {
-                    this.newToOldColumnMapping.add(j);
-                    this.newHeader.columnAliases.set(i, sourceAliases.get(j));
-                    continue nextNewColumnLoop;
-                }
+            if (index.isPresent()) {
+                this.newToOldColumnMapping.add(index.get());
+                this.newHeader.columnAliases.set(i, sourceAliases.get(index.get()));
+            } else {
+                throw new RuntimeException("Projection mappings are incorrect. " + alias + "." + header + " has no match.");
             }
-
-            throw new RuntimeException("Projection mappings are incorrect. " + alias + "." + header + " has no match.");
         }
     }
 
