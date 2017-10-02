@@ -2,3 +2,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser
     compile fileTree(dir: 'lib', include: '*.jar')
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'Project2'
+    }
+}

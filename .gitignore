@@ -18,7 +18,3 @@ hs_err_pid*
 
 .idea/
 .gradle/
-out/
-build/
-
-output/
