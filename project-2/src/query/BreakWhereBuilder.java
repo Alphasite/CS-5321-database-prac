@@ -24,11 +24,13 @@ public class BreakWhereBuilder implements ExpressionVisitor {
     }
 
     public HashMap<Table, Expression> getHashSelection(Expression expression) {
+        this.hashSelection=new HashMap<>();
         expression.accept(this);
         return hashSelection;
     }
 
     public HashMap<TableCouple, Expression> getHashJoin(Expression expression) {
+        this.hashJoin=new HashMap<>();
         expression.accept(this);
         return hashJoin;
     }

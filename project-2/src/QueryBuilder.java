@@ -13,18 +13,16 @@ import operators.physical.ScanOperator;
 import query.BreakWhereBuilder;
 import query.TableCouple;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class QueryBuilder {
 	private Database DB;
 
-	private Map<Table, Expression> mhashSelection;
-    private Map<TableCouple, Expression> mhashJoin;
-
 	public QueryBuilder(Database db) {
 		this.DB = db;
-		this.mhashJoin = new HashMap<>();
-		this.mhashSelection = new HashMap<>();
 	}
 
 	/**
@@ -41,89 +39,9 @@ public class QueryBuilder {
 		Table fromItem = (Table) query.getFromItem();
 		List<Join> joinItems = query.getJoins();
 		Expression whereItem = query.getWhere();
+		Operator rootNode;
 
-		// Keep reference to current root
-		Operator rootNode = null;
-
-		List<Table> allTables = buildTableList(fromItem, joinItems);
-
-		preprocessWhereClause(whereItem);
-
-		// Build a left-to-right join tree between all required tables (no reordering)
-		for (Table table : allTables) {
-		    Operator tableOp = new ScanOperator(DB.getTable(table.getName()));
-
-            // If an alias is given, just rename the table internally
-            // We can do this because we are allowed to assume the original name will not be used in the query
-            if (table.getAlias() != null) {
-                tableOp = new RenameOperator(tableOp, table.getAlias());
-            }
-
-            // TODO: add Selection operators when needed
-
-            // Add table operator to the tree
-            if (rootNode == null) {
-                rootNode = tableOp;
-            } else {
-                // TODO: conditional join if needed
-                rootNode = new JoinOperator(rootNode, tableOp);
-            }
-        }
-
-		// Add joins as needed
-        // TODO: move all logic to preprocessMethod
-        if (joinItems != null) {
-			BreakWhereBuilder bwb = new BreakWhereBuilder();
-			HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin(query.getWhere());
-			HashMap<Table, Expression> hashSelection = bwb.getHashSelection(query.getWhere());
-
-			HashMap<Table,Boolean> alreadyJoinedTables =new HashMap<>();
-			while (!hashJoin.isEmpty()){
-				Iterator<TableCouple> iterator = hashJoin.keySet().iterator();
-				while (iterator.hasNext()){
-					TableCouple tc = iterator.next();
-					Table table1=tc.getTable1();
-					Table table2=tc.getTable2();
-					if (alreadyJoinedTables.containsKey(table1)){
-						if (hashSelection.containsKey(table2)){
-
-						}
-
-
-						hashJoin.remove(tc);
-						alreadyJoinedTables.put(table2,true);
-					}
-					else{
-						if (alreadyJoinedTables.containsKey(table2)){
-
-						}
-					}
-			}
-
-
-			}
-
-
-            for (Join join : joinItems) {
-                Table joinTable = (Table) join.getRightItem();
-                Operator rightOp = new ScanOperator(DB.getTable(joinTable.getName()));
-                if (joinTable.getAlias() != null) {
-                	rightOp = new RenameOperator(rightOp, joinTable.getAlias());
-				}
-
-                rootNode = new JoinOperator(rootNode, rightOp);
-            }
-        }
-
-		if (whereItem != null) {
-			rootNode = new SelectionOperator(rootNode, whereItem);
-		}
-
-
-
-
-
-
+		rootNode=processWhereClause(whereItem, joinItems, fromItem);
 
 		if (!(selectItems.get(0) instanceof AllColumns)) {
 			List<String> tableNames = new ArrayList<>();
@@ -159,17 +77,74 @@ public class QueryBuilder {
 
     /**
      * Build the internal maps used to link every part of the WHERE clause to the table they reference
-     * @param rootExpression the query WHERE clause
+     *
      */
-    private void preprocessWhereClause(Expression rootExpression) {
-	    if (rootExpression == null) {
-	        return;
+    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table fromItem ) {
+        HashMap<Table,Boolean> alreadyJoinedTables =new HashMap<>();
+        alreadyJoinedTables.put(fromItem, true);
+        List<Table> allTables = buildTableList(fromItem, joinItems);
+        HashMap<Table,Boolean> tablesToBeJoined= new HashMap<>();
+        for (Table t : allTables){
+            tablesToBeJoined.put(t,true);
         }
 
-        BreakWhereBuilder builder = new BreakWhereBuilder();
-	    mhashJoin = builder.getHashJoin(rootExpression);
-	    mhashSelection = builder.getHashSelection(rootExpression);
+        Operator rootNode = new ScanOperator(DB.getTable(fromItem.getName()));
 
-	    // TODO: add rest of logic here
+        if (rootExpression!=null){
+            BreakWhereBuilder bwb = new BreakWhereBuilder();
+            HashMap<Table, Expression> hashSelection = bwb.getHashSelection(rootExpression);
+            if (hashSelection.containsKey(fromItem)){
+                rootNode = new SelectionOperator(rootNode, hashSelection.get(fromItem));
+            }
+            tablesToBeJoined.remove(fromItem);
+        }
+
+
+
+
+
+        if (joinItems != null) {
+            BreakWhereBuilder bwb = new BreakWhereBuilder();
+            HashMap<Table, Expression> hashSelection = bwb.getHashSelection(rootExpression);
+            HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin(rootExpression);
+            while (!hashJoin.isEmpty()){
+                Iterator<TableCouple> iterator = hashJoin.keySet().iterator();
+                while (iterator.hasNext()){
+                    TableCouple tc = iterator.next();
+                    Table table1=tc.getTable1();
+                    Table table2=tc.getTable2();
+                    if (alreadyJoinedTables.containsKey(table1)){
+                        Operator rightOp = new ScanOperator(DB.getTable(table2.getName()));
+                        if (hashSelection.containsKey(table2)){
+                            rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
+                        }
+                        if (table2.getAlias() != null) {
+                            rightOp = new RenameOperator(rightOp, table2.getAlias());
+                        }
+                        rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
+                        hashJoin.remove(tc);
+                        alreadyJoinedTables.put(table2,true);
+                        tablesToBeJoined.remove(table2);
+                    }
+                    else{
+                        Operator rightOp = new ScanOperator(DB.getTable(table1.getName()));
+                        if (hashSelection.containsKey(table1)){
+                            rightOp = new SelectionOperator(rightOp, hashSelection.get(table1));
+                        }
+                        if (table1.getAlias() != null) {
+                            rightOp = new RenameOperator(rightOp, table1.getAlias());
+                        }
+                        rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
+                        hashJoin.remove(tc);
+                        alreadyJoinedTables.put(table1,true);
+                        tablesToBeJoined.remove(table1);
+                    }
+                }
+            }
+        }
+        while(!tablesToBeJoined.isEmpty()){
+
+        }
+        return rootNode;
     }
 }
