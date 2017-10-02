@@ -44,13 +44,21 @@ public interface Operator {
      * @param stream The print stream to which the table is written.
      * @return The number of tuples outputted.
      */
-    default int dump(PrintStream stream) {
-        stream.println(this.getHeader());
+    default int dump(PrintStream stream, boolean extended) {
+        if (extended) {
+            stream.println(this.getHeader());
+        }
 
         int i = 0;
         Tuple record;
         while ((record = this.getNextTuple()) != null) {
-            stream.println(++i + ": " + record);
+            if (extended) {
+                stream.println(++i + ": " + record);
+            } else {
+                // Not the most efficient but will do
+                String output = record.fields.toString();
+                stream.println(output.substring(1, output.length() - 1).replace(" ", ""));
+            }
         }
 
         return i;
