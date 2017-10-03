@@ -1,4 +1,4 @@
-package query;
+package db.query;
 
 import db.Utilities;
 import db.datastore.Database;

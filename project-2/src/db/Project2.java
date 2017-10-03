@@ -6,7 +6,7 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import query.QueryBuilder;
+import db.query.QueryBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
