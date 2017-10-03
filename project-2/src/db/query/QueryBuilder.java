@@ -70,12 +70,40 @@ public class QueryBuilder {
         // The spec allows handling sorting and duplicate elimination after projection
 
         if (orderBy != null) {
-            List<Column> orderByColumns = new ArrayList<>();
+            Set<String> alreadySortedColumns = new HashSet<>();
+
+            List<String> aliases = new ArrayList<>();
+            List<String> columns = new ArrayList<>();
+
             for (OrderByElement element : orderBy) {
-                orderByColumns.add((Column) element.getExpression());
+                Column columnInstance = (Column) element.getExpression();
+
+                String alias = Utilities.getIdentifier(columnInstance.getTable());
+                String column = columnInstance.getColumnName();
+                String fullName = alias + "." + column;
+
+                if (!alreadySortedColumns.contains(fullName)) {
+                    aliases.add(alias);
+                    columns.add(column);
+                    alreadySortedColumns.add(fullName);
+                }
             }
 
-            TableHeader sortHeader = TableHeader.fromColumns(orderByColumns);
+
+            TableHeader header = rootNode.getHeader();
+            for (int i = 0; i < header.columnAliases.size(); i++) {
+                String alias = header.columnAliases.get(i);
+                String column = header.columnHeaders.get(i);
+                String fullName = alias + "." + column;
+
+                if (!alreadySortedColumns.contains(fullName)) {
+                    aliases.add(alias);
+                    columns.add(column);
+                    alreadySortedColumns.add(fullName);
+                }
+            }
+
+            TableHeader sortHeader = new TableHeader(aliases, columns);
             rootNode = new SortOperator(rootNode, sortHeader);
         }
 

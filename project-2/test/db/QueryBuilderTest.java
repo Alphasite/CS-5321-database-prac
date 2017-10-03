@@ -11,7 +11,7 @@ import db.operators.physical.ScanOperator;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import query.QueryBuilder;
+import db.query.QueryBuilder;
 
 import java.nio.file.Paths;
 
