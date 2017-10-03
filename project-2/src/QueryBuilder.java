@@ -91,8 +91,10 @@ public class QueryBuilder {
         return rootNode;
     }
 
-    /** TODO
+    /**
+     * TODO
      * Collapse all tables referenced in FROM clause for easier handling
+     *
      * @param fromItem
      * @param joins
      * @return
@@ -109,8 +111,10 @@ public class QueryBuilder {
         return list;
     }
 
-    /** TODO
+    /**
+     * TODO
      * Build the internal maps used to link every part of the WHERE clause to the table they reference
+     *
      * @param rootExpression
      * @param joinItems
      * @param fromItem
@@ -144,19 +148,14 @@ public class QueryBuilder {
             HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
             HashMap<TableCouple, Expression> hashJoin = bwb.getHashJoin();
 
-            while (!hashJoin.isEmpty()){
-                for (TableCouple tc : hashJoin.keySet()){
-                    Table table1=tc.getTable1();
-                    Table table2=tc.getTable2();
-                    if (alreadyJoinedTables.containsKey(getIdentifier(table1))){
-                        Operator rightOp=null;
-                        for (Join join : joinItems){
-                            if (getIdentifier((Table) join.getRightItem()).equals(getIdentifier(table2))){
-                                rightOp = this.getScanAndMaybeRename(table2);
-                            }
-                        }
+            while (!hashJoin.isEmpty()) {
+                for (TableCouple tc : hashJoin.keySet()) {
+                    Table table1 = tc.getTable1();
+                    Table table2 = tc.getTable2();
+                    if (alreadyJoinedTables.containsKey(getIdentifier(table1))) {
+                        Operator rightOp = this.getScanAndMaybeRename(table2);
 
-                        if (hashSelection.containsKey(table2)){
+                        if (hashSelection.containsKey(table2)) {
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
                         }
 
@@ -168,16 +167,10 @@ public class QueryBuilder {
                         hashJoin.remove(tc);
                         alreadyJoinedTables.put(getIdentifier(table2), true);
                         tablesToBeJoined.remove(getIdentifier(table2));
-                    }
-                    else{
-                        Operator rightOp=null;
-                        for (Join join : joinItems){
-                            if (getIdentifier((Table) join.getRightItem()).equals(getIdentifier(table1))){
-                                rightOp = this.getScanAndMaybeRename(table1);
-                            }
-                        }
+                    } else {
+                        Operator rightOp = this.getScanAndMaybeRename(table1);
 
-                        if (hashSelection.containsKey(table1)){
+                        if (hashSelection.containsKey(table1)) {
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table1));
                         }
 
