@@ -12,6 +12,8 @@ import java.util.List;
 /**
  * This operator performs a join between the tuples of the two child db.operators.
  *
+ * It uses the tuple nested loop join.
+ *
  * @inheritDoc
  */
 public class JoinOperator implements Operator {
