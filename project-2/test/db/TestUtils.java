@@ -17,11 +17,11 @@ import static org.hamcrest.core.IsEqual.equalTo;
 public class TestUtils {
 
     /**
-     * A method to compare the output of two db.operators, e.g. a reference and processed.
+     * A method to compare the tuple output of two db.operators, e.g. a reference and processed.
      * @param reference The expected output operator
      * @param tested The generated operator
      */
-    public static void compareOperators(Operator reference, Operator tested) {
+    public static void compareTuples(Operator reference, Operator tested) {
         System.out.println(tested.getHeader());
 
 

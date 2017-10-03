@@ -121,7 +121,6 @@ public class QueryBuilder {
     }
 
     /**
-     * TODO
      * Build the internal maps used to link every part of the WHERE clause to the table they reference
      *
      * @param rootExpression the where expression
