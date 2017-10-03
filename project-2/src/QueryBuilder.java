@@ -13,8 +13,8 @@ import operators.bag.SelectionOperator;
 import operators.extended.DistinctOperator;
 import operators.extended.SortOperator;
 import operators.physical.ScanOperator;
-import query.WhereDecomposer;
 import query.TableCouple;
+import query.WhereDecomposer;
 
 import java.util.*;
 
@@ -23,9 +23,13 @@ import java.util.*;
  */
 public class QueryBuilder {
     private Database db;
+    private Map<String, Expression> selectionExpressions;
+    private Map<TableCouple, Expression> joinExpressions;
 
     public QueryBuilder(Database db) {
         this.db = db;
+        this.selectionExpressions = new HashMap<>();
+        this.joinExpressions = new HashMap<>();
     }
 
     /**
@@ -36,8 +40,6 @@ public class QueryBuilder {
      * @return The root operator of the query execution plan tree
      */
     public Operator buildQuery(PlainSelect query) {
-        // TODO: later on optimize by breaking down SELECT into multiple OPs evaluated as early as possible
-
         // Store ref to all needed query tokens
         List<SelectItem> selectItems = query.getSelectItems();
         Table fromItem = (Table) query.getFromItem();
@@ -123,11 +125,12 @@ public class QueryBuilder {
 
         if (rootExpression != null) {
             WhereDecomposer bwb = new WhereDecomposer(rootExpression);
-            HashMap<String, Expression> selectionExpression = bwb.getSelectionExpressions();
+            selectionExpressions = bwb.getSelectionExpressions();
+            joinExpressions = bwb.getJoinExpressions();
+        }
 
-            if (selectionExpression.containsKey(rootTabledentifier)) {
-                rootNode = new SelectionOperator(rootNode, selectionExpression.get(rootTabledentifier));
-            }
+        if (selectionExpressions.containsKey(rootTabledentifier)) {
+            rootNode = new SelectionOperator(rootNode, selectionExpressions.get(rootTabledentifier));
         }
 
         // Add all of the joined tables
@@ -135,12 +138,8 @@ public class QueryBuilder {
         // Add any other expressions below the join.
 
         if (joinItems != null) {
-            WhereDecomposer bwb = new WhereDecomposer(rootExpression);
-            HashMap<String, Expression> hashSelection = bwb.getSelectionExpressions();
-            HashMap<TableCouple, Expression> hashJoin = bwb.getJoinExpressions();
-
-            while (!hashJoin.isEmpty()) {
-                for (TableCouple tc : hashJoin.keySet()) {
+            while (!joinExpressions.isEmpty()) {
+                for (TableCouple tc : joinExpressions.keySet()) {
                     Table table1 = tc.getTable1();
                     Table table2 = tc.getTable2();
 
@@ -155,13 +154,13 @@ public class QueryBuilder {
 
                     Operator rightOp = tablesToBeJoined.get(identifier);
 
-                    if (hashSelection.containsKey(identifier)) {
-                        rightOp = new SelectionOperator(rightOp, hashSelection.get(identifier));
+                    if (selectionExpressions.containsKey(identifier)) {
+                        rightOp = new SelectionOperator(rightOp, selectionExpressions.get(identifier));
                     }
 
-                    rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
+                    rootNode = new JoinOperator(rootNode, rightOp, joinExpressions.get(tc));
 
-                    hashJoin.remove(tc);
+                    joinExpressions.remove(tc);
 
                     alreadyJoinedTables.add(identifier);
                     tablesToBeJoined.remove(identifier);
