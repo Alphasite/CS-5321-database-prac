@@ -1,5 +1,6 @@
 import datastore.Database;
 import datastore.TableHeader;
+import db.Utilities;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -15,9 +16,7 @@ import operators.physical.ScanOperator;
 import query.BreakWhereBuilder;
 import query.TableCouple;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * TODO
@@ -117,84 +116,90 @@ public class QueryBuilder {
      *
      * @param rootExpression
      * @param joinItems
-     * @param fromItem
+     * @param rootTable
      * @return
      */
-    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table fromItem) {
+    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table rootTable) {
 
-        HashMap<String, Boolean> alreadyJoinedTables = new HashMap<>();
-        alreadyJoinedTables.put(getIdentifier(fromItem), true);
+        // First create the root node.
+        Set<String> alreadyJoinedTables = new HashSet<>();
+        String rootTabledentifier = Utilities.getIdentifier(rootTable);
+        alreadyJoinedTables.add(rootTabledentifier);
 
-        HashMap<String, Boolean> tablesToBeJoined = new HashMap<>();
+        Operator rootNode = this.getScanAndMaybeRename(rootTable);
+
+        // Then find which other tables exist.
+        // then store them in a list of tables which haven't yet been joined.
+
+        HashMap<String, Operator> tablesToBeJoined = new HashMap<>();
         if (joinItems != null) {
             for (Join join : joinItems) {
-                tablesToBeJoined.put(getIdentifier((Table) join.getRightItem()), true);
+                Table table = (Table) join.getRightItem();
+                tablesToBeJoined.put(Utilities.getIdentifier(table), this.getScanAndMaybeRename(table));
             }
         }
 
-        Operator rootNode = this.getScanAndMaybeRename(fromItem);
+        // Find any expressions for the root element
 
         if (rootExpression != null) {
             BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
-            HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
+            HashMap<String, Expression> electionExpression = bwb.getSelectionExpressions();
 
-            if (hashSelection.containsKey(getIdentifier(fromItem))) {
-                rootNode = new SelectionOperator(rootNode, hashSelection.get(fromItem));
+            if (electionExpression.containsKey(rootTabledentifier)) {
+                rootNode = new SelectionOperator(rootNode, electionExpression.get(rootTabledentifier));
             }
         }
 
+        // Add all of the joined table
+        // Add any join expressions to the join operator
+        // Add any other expressions below the join.
+
         if (joinItems != null) {
             BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
-            HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
-            HashMap<TableCouple, Expression> hashJoin = bwb.getHashJoin();
+            HashMap<String, Expression> hashSelection = bwb.getSelectionExpressions();
+            HashMap<TableCouple, Expression> hashJoin = bwb.getJoinExpressions();
 
             while (!hashJoin.isEmpty()) {
                 for (TableCouple tc : hashJoin.keySet()) {
                     Table table1 = tc.getTable1();
                     Table table2 = tc.getTable2();
-                    if (alreadyJoinedTables.containsKey(getIdentifier(table1))) {
-                        Operator rightOp = this.getScanAndMaybeRename(table2);
 
-                        if (hashSelection.containsKey(table2)) {
-                            rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
-                        }
-
-                        if (table2.getAlias() != null) {
-                            rightOp = new RenameOperator(rightOp, table2.getAlias());
-                        }
-
-                        rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
-                        hashJoin.remove(tc);
-                        alreadyJoinedTables.put(getIdentifier(table2), true);
-                        tablesToBeJoined.remove(getIdentifier(table2));
+                    Table table;
+                    if (alreadyJoinedTables.contains(Utilities.getIdentifier(table1))) {
+                        table = table2;
                     } else {
-                        Operator rightOp = this.getScanAndMaybeRename(table1);
+                        table = table1;
+                    }
 
-                        if (hashSelection.containsKey(table1)) {
-                            rightOp = new SelectionOperator(rightOp, hashSelection.get(table1));
-                        }
+                    String identifier = Utilities.getIdentifier(table);
 
-                        if (table1.getAlias() != null) {
-                            rightOp = new RenameOperator(rightOp, table1.getAlias());
-                        }
+                    Operator rightOp = tablesToBeJoined.get(identifier);
 
-                        rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
-                        hashJoin.remove(tc);
-                        alreadyJoinedTables.put(getIdentifier(table1), true);
-                        tablesToBeJoined.remove(getIdentifier(table1));
+                    if (hashSelection.containsKey(identifier)) {
+                        rightOp = new SelectionOperator(rightOp, hashSelection.get(identifier));
+                    }
+
+                    rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
+
+                    hashJoin.remove(tc);
+
+                    alreadyJoinedTables.add(identifier);
+                    tablesToBeJoined.remove(identifier);
+                }
+            }
+
+            if (!tablesToBeJoined.isEmpty()) {
+                for (Join join : joinItems) {
+                    String identifier = Utilities.getIdentifier((Table) join.getRightItem());
+
+                    if (tablesToBeJoined.containsKey(identifier)) {
+                        Operator rightOp = tablesToBeJoined.get(identifier);
+                        rootNode = new JoinOperator(rootNode, rightOp);
                     }
                 }
             }
         }
 
-        if (!tablesToBeJoined.isEmpty()) {
-            for (Join join : joinItems) {
-                if (tablesToBeJoined.containsKey(getIdentifier((Table) join.getRightItem()))) {
-                    Operator rightOp = this.getScanAndMaybeRename((Table) join.getRightItem());
-                    rootNode = new JoinOperator(rootNode, rightOp);
-                }
-            }
-        }
         return rootNode;
     }
 
@@ -214,17 +219,4 @@ public class QueryBuilder {
         }
     }
 
-    /**
-     * Get the real identifier of the table, so resolve aliases if they exist, etc.
-     *
-     * @param table The table to have its name retrieved.
-     * @return The tables 'real' name.
-     */
-    private String getIdentifier(Table table) {
-        if (table.getAlias() != null) {
-            return table.getAlias();
-        } else {
-            return table.getName();
-        }
-    }
 }

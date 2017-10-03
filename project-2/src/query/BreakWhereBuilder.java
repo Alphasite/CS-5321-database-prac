@@ -1,5 +1,6 @@
 package query;
 
+import db.Utilities;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -13,24 +14,24 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.HashMap;
 
 public class BreakWhereBuilder implements ExpressionVisitor {
-    HashMap<Table, Expression> hashSelection;
-    HashMap<TableCouple, Expression> hashJoin;
+    HashMap<String, Expression> selectionExpressions;
+    HashMap<TableCouple, Expression> joinExpressions;
 
 
     public BreakWhereBuilder(Expression expression) {
-        this.hashSelection = new HashMap<>();
-        this.hashJoin = new HashMap<>();
+        this.selectionExpressions = new HashMap<>();
+        this.joinExpressions = new HashMap<>();
         expression.accept(this);
 
 
     }
 
-    public HashMap<Table, Expression> getHashSelection() {
-        return hashSelection;
+    public HashMap<String, Expression> getSelectionExpressions() {
+        return selectionExpressions;
     }
 
-    public HashMap<TableCouple, Expression> getHashJoin() {
-        return hashJoin;
+    public HashMap<TableCouple, Expression> getJoinExpressions() {
+        return joinExpressions;
     }
 
     @Override
@@ -86,28 +87,28 @@ public class BreakWhereBuilder implements ExpressionVisitor {
 
     private void comparisonOperator(BinaryExpression comparator) {
         if (comparator.getLeftExpression() instanceof Column && comparator.getRightExpression() instanceof Column) {
+            // TODO generify this to support flipped joins and multiple join conditions?
             Table table1 = ((Column) comparator.getLeftExpression()).getTable();
             Table table2 = ((Column) comparator.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1, table2), comparator);
+            joinExpressions.put(new TableCouple(table1, table2), comparator);
         } else {
+            Table table;
+
             if (comparator.getLeftExpression() instanceof Column) {
-                Table table = ((Column) comparator.getLeftExpression()).getTable();
-                if (hashSelection.containsKey(table)) {
-                    AndExpression andExpression = new AndExpression(comparator, hashSelection.get(table));
-                    hashSelection.put(table, andExpression);
-                } else {
-                    hashSelection.put(table, comparator);
-                }
+                table = ((Column) comparator.getLeftExpression()).getTable();
+            } else if (comparator.getRightExpression() instanceof Column) {
+                table = ((Column) comparator.getRightExpression()).getTable();
             } else {
-                if (comparator.getRightExpression() instanceof Column) {
-                    Table table = ((Column) comparator.getRightExpression()).getTable();
-                    if (hashSelection.containsKey(table)) {
-                        AndExpression andExpression = new AndExpression(comparator, hashSelection.get(table));
-                        hashSelection.put(table, andExpression);
-                    } else {
-                        hashSelection.put(table, comparator);
-                    }
-                } else throw new NotImplementedException();
+                throw new NotImplementedException();
+            }
+
+            String identifier = Utilities.getIdentifier(table);
+
+            if (selectionExpressions.containsKey(identifier)) {
+                AndExpression andExpression = new AndExpression(comparator, selectionExpressions.get(identifier));
+                selectionExpressions.put(identifier, andExpression);
+            } else {
+                selectionExpressions.put(identifier, comparator);
             }
         }
     }
