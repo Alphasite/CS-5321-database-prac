@@ -36,7 +36,7 @@ public class SimpleIntegrationTest {
         ScanOperator reservesScan = new ScanOperator(reserves);
 
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
-        assertThat(join.dump(System.out, false), is(5 * 6));
+        assertThat(join.dump(System.out, true), is(5 * 6));
     }
 
     @Test
@@ -59,6 +59,6 @@ public class SimpleIntegrationTest {
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
         ProjectionOperator projection = new ProjectionOperator(tableHeader, join);
 
-        assertThat(projection.dump(System.out, false), is(5 * 6));
+        assertThat(projection.dump(System.out, true), is(5 * 6));
     }
 }
