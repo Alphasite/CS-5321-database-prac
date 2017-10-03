@@ -17,7 +17,6 @@ public class WhereDecomposer implements ExpressionVisitor {
     HashMap<String, Expression> selectionExpressions;
     HashMap<TableCouple, Expression> joinExpressions;
 
-
     public WhereDecomposer(Expression expression) {
         this.selectionExpressions = new HashMap<>();
         this.joinExpressions = new HashMap<>();
@@ -90,7 +89,14 @@ public class WhereDecomposer implements ExpressionVisitor {
             // TODO generify this to support flipped joins and multiple join conditions?
             Table table1 = ((Column) comparator.getLeftExpression()).getTable();
             Table table2 = ((Column) comparator.getRightExpression()).getTable();
-            joinExpressions.put(new TableCouple(table1, table2), comparator);
+            TableCouple couple = new TableCouple(table1, table2);
+
+            if (joinExpressions.containsKey(couple)) {
+                AndExpression andExpression = new AndExpression(comparator, joinExpressions.get(couple));
+                joinExpressions.put(couple, andExpression);
+            } else {
+                joinExpressions.put(couple, comparator);
+            }
         } else {
             Table table;
 
