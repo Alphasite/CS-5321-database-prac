@@ -12,25 +12,23 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class WhereDecomposer implements ExpressionVisitor {
-    HashMap<String, Expression> selectionExpressions;
-    HashMap<TableCouple, Expression> joinExpressions;
-
+    private Map<String, Expression> selectionExpressions;
+    private Map<TableCouple, Expression> joinExpressions;
 
     public WhereDecomposer(Expression expression) {
         this.selectionExpressions = new HashMap<>();
         this.joinExpressions = new HashMap<>();
         expression.accept(this);
-
-
     }
 
-    public HashMap<String, Expression> getSelectionExpressions() {
+    public Map<String, Expression> getSelectionExpressions() {
         return selectionExpressions;
     }
 
-    public HashMap<TableCouple, Expression> getJoinExpressions() {
+    public Map<TableCouple, Expression> getJoinExpressions() {
         return joinExpressions;
     }
 
@@ -90,7 +88,14 @@ public class WhereDecomposer implements ExpressionVisitor {
             // TODO generify this to support flipped joins and multiple join conditions?
             Table table1 = ((Column) comparator.getLeftExpression()).getTable();
             Table table2 = ((Column) comparator.getRightExpression()).getTable();
-            joinExpressions.put(new TableCouple(table1, table2), comparator);
+
+            TableCouple key = new TableCouple(table1, table2);
+            if (joinExpressions.containsKey(key)) {
+                AndExpression andExpression = new AndExpression(comparator, joinExpressions.get(key));
+                joinExpressions.put(key, andExpression);
+            } else {
+                joinExpressions.put(key, comparator);
+            }
         } else {
             Table table;
 
