@@ -13,12 +13,12 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 
-public class BreakWhereBuilder implements ExpressionVisitor {
+public class WhereDecomposer implements ExpressionVisitor {
     HashMap<String, Expression> selectionExpressions;
     HashMap<TableCouple, Expression> joinExpressions;
 
 
-    public BreakWhereBuilder(Expression expression) {
+    public WhereDecomposer(Expression expression) {
         this.selectionExpressions = new HashMap<>();
         this.joinExpressions = new HashMap<>();
         expression.accept(this);

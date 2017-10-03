@@ -13,7 +13,7 @@ import operators.bag.SelectionOperator;
 import operators.extended.DistinctOperator;
 import operators.extended.SortOperator;
 import operators.physical.ScanOperator;
-import query.BreakWhereBuilder;
+import query.WhereDecomposer;
 import query.TableCouple;
 
 import java.util.*;
@@ -92,32 +92,12 @@ public class QueryBuilder {
 
     /**
      * TODO
-     * Collapse all tables referenced in FROM clause for easier handling
-     *
-     * @param fromItem
-     * @param joins
-     * @return
-     */
-    private List<Table> buildTableList(Table fromItem, List<Join> joins) {
-        List<Table> list = new ArrayList<>();
-        list.add(fromItem);
-
-        if (joins != null) {
-            for (Join join : joins) {
-                list.add((Table) join.getRightItem());
-            }
-        }
-        return list;
-    }
-
-    /**
-     * TODO
      * Build the internal maps used to link every part of the WHERE clause to the table they reference
      *
-     * @param rootExpression
-     * @param joinItems
-     * @param rootTable
-     * @return
+     * @param rootExpression the where expression
+     * @param joinItems the non root joined tables and their aliases
+     * @param rootTable the root table, special cased for some reason.
+     * @return The root node of the sql tree formed from the where and from conditions
      */
     private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table rootTable) {
 
@@ -139,23 +119,23 @@ public class QueryBuilder {
             }
         }
 
-        // Find any expressions for the root element
+        // Decompose the expression tree and then add the root nodes expressions to the root node.
 
         if (rootExpression != null) {
-            BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
-            HashMap<String, Expression> electionExpression = bwb.getSelectionExpressions();
+            WhereDecomposer bwb = new WhereDecomposer(rootExpression);
+            HashMap<String, Expression> selectionExpression = bwb.getSelectionExpressions();
 
-            if (electionExpression.containsKey(rootTabledentifier)) {
-                rootNode = new SelectionOperator(rootNode, electionExpression.get(rootTabledentifier));
+            if (selectionExpression.containsKey(rootTabledentifier)) {
+                rootNode = new SelectionOperator(rootNode, selectionExpression.get(rootTabledentifier));
             }
         }
 
-        // Add all of the joined table
+        // Add all of the joined tables
         // Add any join expressions to the join operator
         // Add any other expressions below the join.
 
         if (joinItems != null) {
-            BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
+            WhereDecomposer bwb = new WhereDecomposer(rootExpression);
             HashMap<String, Expression> hashSelection = bwb.getSelectionExpressions();
             HashMap<TableCouple, Expression> hashJoin = bwb.getJoinExpressions();
 
