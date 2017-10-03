@@ -1,20 +1,20 @@
-import datastore.Database;
-import datastore.TableHeader;
+package query;
+
 import db.Utilities;
+import db.datastore.Database;
+import db.datastore.TableHeader;
+import db.operators.Operator;
+import db.operators.bag.JoinOperator;
+import db.operators.bag.ProjectionOperator;
+import db.operators.bag.RenameOperator;
+import db.operators.bag.SelectionOperator;
+import db.operators.extended.DistinctOperator;
+import db.operators.extended.SortOperator;
+import db.operators.physical.ScanOperator;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
-import operators.Operator;
-import operators.bag.JoinOperator;
-import operators.bag.ProjectionOperator;
-import operators.bag.RenameOperator;
-import operators.bag.SelectionOperator;
-import operators.extended.DistinctOperator;
-import operators.extended.SortOperator;
-import operators.physical.ScanOperator;
-import query.TableCouple;
-import query.WhereDecomposer;
 
 import java.util.*;
 

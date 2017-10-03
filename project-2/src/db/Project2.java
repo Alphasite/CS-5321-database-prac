@@ -1,11 +1,12 @@
 package db;
 
 import db.datastore.Database;
+import db.operators.Operator;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import db.operators.Operator;
+import query.QueryBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -54,7 +55,7 @@ public class Project2 {
 				queryPlanRoot.dump(System.out, true);
 
 				// Write output to file
-				File outputFile = new File(OUTPUT_PATH + "/db/query" + i++);
+				File outputFile = new File(OUTPUT_PATH + "/query" + i++);
 				PrintStream stream = new PrintStream(new FileOutputStream(outputFile));
 
 				queryPlanRoot.reset();

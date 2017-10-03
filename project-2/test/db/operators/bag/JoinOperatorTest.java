@@ -1,6 +1,6 @@
 package db.operators.bag;
 
-import db.Utilities;
+import db.TestUtils;
 import db.datastore.TableHeader;
 import db.datastore.Tuple;
 import db.operators.DummyOperator;
@@ -75,7 +75,7 @@ public class JoinOperatorTest {
 
     @Test
     public void testFiltering() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
         JoinOperator join = new JoinOperator(opA, opB, tokens.getWhere());
 
         List<Tuple> tuples = new ArrayList<>();

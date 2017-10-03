@@ -14,7 +14,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 /**
  * A collection of utility methods for the testing suite.
  */
-public class Utilities {
+public class TestUtils {
 
     /**
      * A method to compare the output of two db.operators, e.g. a reference and processed.

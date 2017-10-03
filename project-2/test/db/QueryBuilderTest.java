@@ -1,10 +1,6 @@
 package db;
 
-import db.Project2;
-import db.QueryBuilder;
-import db.Utilities;
 import db.datastore.Database;
-import net.sf.jsqlparser.statement.select.PlainSelect;
 import db.operators.Operator;
 import db.operators.bag.JoinOperator;
 import db.operators.bag.ProjectionOperator;
@@ -12,8 +8,10 @@ import db.operators.bag.SelectionOperator;
 import db.operators.extended.DistinctOperator;
 import db.operators.extended.SortOperator;
 import db.operators.physical.ScanOperator;
+import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import query.QueryBuilder;
 
 import java.nio.file.Paths;
 
@@ -33,7 +31,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testSimpleScan() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Sailors;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);
@@ -43,7 +41,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testSimpleSelection() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Boats WHERE Boats.D = 4;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Boats WHERE Boats.D = 4;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);
@@ -55,7 +53,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testSimpleProjection() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT Sailors.A FROM Sailors;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT Sailors.A FROM Sailors;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);
@@ -68,7 +66,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testConditionalJoin() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);
@@ -84,7 +82,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testAliases() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT S.C FROM Sailors S;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT S.C FROM Sailors S;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);
@@ -100,7 +98,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testOrderBy() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Sailors S ORDER BY S.C;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors S ORDER BY S.C;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);
@@ -112,7 +110,7 @@ public class QueryBuilderTest {
         assertEquals("3 | 100 | 105", root.getNextTuple().toString());
         assertEquals("2 | 200 | 200", root.getNextTuple().toString());
 
-        tokens = Utilities.parseQuery("SELECT * FROM Sailors S ORDER BY S.B, S.C;");
+        tokens = TestUtils.parseQuery("SELECT * FROM Sailors S ORDER BY S.B, S.C;");
         root = builder.buildQuery(tokens);
 
         assertEquals("4 | 100 | 50", root.getNextTuple().toString());
@@ -123,7 +121,7 @@ public class QueryBuilderTest {
 
     @Test
     public void testDistinct() {
-        PlainSelect tokens = Utilities.parseQuery("SELECT DISTINCT Sailors.B FROM Sailors;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT DISTINCT Sailors.B FROM Sailors;");
         QueryBuilder builder = new QueryBuilder(DB);
 
         Operator root = builder.buildQuery(tokens);

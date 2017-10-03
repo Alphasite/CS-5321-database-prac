@@ -1,12 +1,11 @@
 package db;
 
-import db.Utilities;
 import db.datastore.TableHeader;
 import db.datastore.Tuple;
+import db.query.ExpressionEvaluator;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import db.query.ExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,13 +39,13 @@ public class ExpressionEvaluatorTest {
 	 */
 	@Test
 	public void testNakedCondition() {
-		PlainSelect tokens = Utilities.parseQuery("SELECT * FROM a WHERE 2 * 3 = 6 OR 2 = 6 - 3;");
+		PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM a WHERE 2 * 3 = 6 OR 2 = 6 - 3;");
 		ExpressionEvaluator whereEvaluator = new ExpressionEvaluator(tokens.getWhere(), header);
 		for (Tuple T : tuples) {
 			assertTrue(whereEvaluator.matches(T));
 		}
 
-		tokens = Utilities.parseQuery("SELECT * FROM a WHERE 1 + 2 = 3 AND 6 = 5 - 1;");
+		tokens = TestUtils.parseQuery("SELECT * FROM a WHERE 1 + 2 = 3 AND 6 = 5 - 1;");
 		whereEvaluator = new ExpressionEvaluator(tokens.getWhere(), header);
 		for (Tuple T : tuples) {
 			assertFalse(whereEvaluator.matches(T));
@@ -58,7 +57,7 @@ public class ExpressionEvaluatorTest {
 	 */
 	@Test
 	public void testSingleColumnReferences() {
-		PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Sailors WHERE Sailors.B = 100;");
+		PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors WHERE Sailors.B = 100;");
 		ExpressionEvaluator e = new ExpressionEvaluator(tokens.getWhere(), header);
 		assertFalse(e.matches(tuples.get(0)));
 		assertFalse(e.matches(tuples.get(1)));
@@ -67,7 +66,7 @@ public class ExpressionEvaluatorTest {
 		assertTrue(e.matches(tuples.get(4)));
 		assertFalse(e.matches(tuples.get(5)));
 
-		tokens = Utilities.parseQuery("SELECT * FROM Sailors WHERE Sailors.C > 100 AND Sailors.B <= 200;");
+		tokens = TestUtils.parseQuery("SELECT * FROM Sailors WHERE Sailors.C > 100 AND Sailors.B <= 200;");
 		e = new ExpressionEvaluator(tokens.getWhere(), header);
 		assertFalse(e.matches(tuples.get(0)));
 		assertTrue(e.matches(tuples.get(1)));
@@ -82,7 +81,7 @@ public class ExpressionEvaluatorTest {
 	 */
 	@Test
 	public void testMultipleColumnReferences() {
-		PlainSelect tokens = Utilities.parseQuery("SELECT * FROM Sailors WHERE Sailors.B < Sailors.C;");
+		PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors WHERE Sailors.B < Sailors.C;");
 		ExpressionEvaluator e = new ExpressionEvaluator(tokens.getWhere(), header);
 		assertFalse(e.matches(tuples.get(0)));
 		assertFalse(e.matches(tuples.get(1)));
