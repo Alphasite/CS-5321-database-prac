@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+
 dependencies {
     // https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser
     compile fileTree(dir: 'lib', include: '*.jar')
