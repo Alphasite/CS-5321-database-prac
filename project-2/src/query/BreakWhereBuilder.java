@@ -13,13 +13,13 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.HashMap;
 
 public class BreakWhereBuilder implements ExpressionVisitor {
-    HashMap<Table,Expression> hashSelection;
+    HashMap<Table, Expression> hashSelection;
     HashMap<TableCouple, Expression> hashJoin;
 
 
     public BreakWhereBuilder(Expression expression) {
-        this.hashSelection=new HashMap<>();
-        this.hashJoin=new HashMap<>();
+        this.hashSelection = new HashMap<>();
+        this.hashJoin = new HashMap<>();
         expression.accept(this);
 
 
@@ -34,10 +34,14 @@ public class BreakWhereBuilder implements ExpressionVisitor {
     }
 
     @Override
-    public void visit(Column column) {throw new NotImplementedException();}
+    public void visit(Column column) {
+        throw new NotImplementedException();
+    }
 
     @Override
-    public void visit(LongValue longValue) {throw new NotImplementedException();}
+    public void visit(LongValue longValue) {
+        throw new NotImplementedException();
+    }
 
     @Override
     public void visit(Parenthesis parenthesis) {
@@ -45,16 +49,24 @@ public class BreakWhereBuilder implements ExpressionVisitor {
     }
 
     @Override
-    public void visit(Addition addition) {throw new NotImplementedException();}
+    public void visit(Addition addition) {
+        throw new NotImplementedException();
+    }
 
     @Override
-    public void visit(Division division) {throw new NotImplementedException();}
+    public void visit(Division division) {
+        throw new NotImplementedException();
+    }
 
     @Override
-    public void visit(Multiplication multiplication) {throw new NotImplementedException();}
+    public void visit(Multiplication multiplication) {
+        throw new NotImplementedException();
+    }
 
     @Override
-    public void visit(Subtraction subtraction) {throw new NotImplementedException();}
+    public void visit(Subtraction subtraction) {
+        throw new NotImplementedException();
+    }
 
     @Override
     public void visit(AndExpression andExpression) {
@@ -63,7 +75,9 @@ public class BreakWhereBuilder implements ExpressionVisitor {
     }
 
     @Override
-    public void visit(OrExpression orExpression) {throw new NotImplementedException();}
+    public void visit(OrExpression orExpression) {
+        throw new NotImplementedException();
+    }
 
     @Override
     public void visit(EqualsTo equalsTo) {
@@ -71,34 +85,29 @@ public class BreakWhereBuilder implements ExpressionVisitor {
     }
 
     private void comparisonOperator(BinaryExpression comparator) {
-        if (comparator.getLeftExpression()instanceof Column &&  comparator.getRightExpression()instanceof Column){
-            Table table1= ((Column) comparator.getLeftExpression()).getTable();
-            Table table2= ((Column) comparator.getRightExpression()).getTable();
-            hashJoin.put(new TableCouple(table1,table2), comparator);
-        }
-        else{
-            if (comparator.getLeftExpression()instanceof Column){
-                Table table= ((Column) comparator.getLeftExpression()).getTable();
-                if (hashSelection.containsKey(table)){
-                    AndExpression andExpression = new AndExpression(comparator,hashSelection.get(table));
+        if (comparator.getLeftExpression() instanceof Column && comparator.getRightExpression() instanceof Column) {
+            Table table1 = ((Column) comparator.getLeftExpression()).getTable();
+            Table table2 = ((Column) comparator.getRightExpression()).getTable();
+            hashJoin.put(new TableCouple(table1, table2), comparator);
+        } else {
+            if (comparator.getLeftExpression() instanceof Column) {
+                Table table = ((Column) comparator.getLeftExpression()).getTable();
+                if (hashSelection.containsKey(table)) {
+                    AndExpression andExpression = new AndExpression(comparator, hashSelection.get(table));
                     hashSelection.put(table, andExpression);
-                }
-                else{
+                } else {
                     hashSelection.put(table, comparator);
                 }
-            }
-            else{
-                if (comparator.getRightExpression()instanceof Column){
-                    Table table= ((Column) comparator.getRightExpression()).getTable();
-                    if (hashSelection.containsKey(table)){
-                        AndExpression andExpression = new AndExpression(comparator,hashSelection.get(table));
+            } else {
+                if (comparator.getRightExpression() instanceof Column) {
+                    Table table = ((Column) comparator.getRightExpression()).getTable();
+                    if (hashSelection.containsKey(table)) {
+                        AndExpression andExpression = new AndExpression(comparator, hashSelection.get(table));
                         hashSelection.put(table, andExpression);
-                    }
-                    else{
+                    } else {
                         hashSelection.put(table, comparator);
                     }
-                }
-                else throw new NotImplementedException();
+                } else throw new NotImplementedException();
             }
         }
     }

@@ -19,111 +19,122 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * TODO
+ */
 public class QueryBuilder {
-	private Database DB;
+    private Database db;
 
-	public QueryBuilder(Database db) {
-		this.DB = db;
-	}
+    public QueryBuilder(Database db) {
+        this.db = db;
+    }
 
-	/**
-	 * Builds an optimized execution plan for the given query using a tree of operators
-	 * The results of the query can be computed by iterating over the resulting root operator
-	 * @param query The parsed query object
-	 * @return The root operator of the query execution plan tree
-	 */
-	public Operator buildQuery(PlainSelect query) {
-		// TODO: later on optimize by breaking down SELECT into multiple OPs evaluated as early as possible
+    /**
+     * Builds an optimized execution plan for the given query using a tree of operators
+     * The results of the query can be computed by iterating over the resulting root operator
+     *
+     * @param query The parsed query object
+     * @return The root operator of the query execution plan tree
+     */
+    public Operator buildQuery(PlainSelect query) {
+        // TODO: later on optimize by breaking down SELECT into multiple OPs evaluated as early as possible
 
-		// Store ref to all needed query tokens
-		List<SelectItem> selectItems = query.getSelectItems();
-		Table fromItem = (Table) query.getFromItem();
-		List<Join> joinItems = query.getJoins();
-		Expression whereItem = query.getWhere();
-		List<OrderByElement> orderBy = query.getOrderByElements();
-		boolean isDistinct = query.getDistinct() != null;
+        // Store ref to all needed query tokens
+        List<SelectItem> selectItems = query.getSelectItems();
+        Table fromItem = (Table) query.getFromItem();
+        List<Join> joinItems = query.getJoins();
+        Expression whereItem = query.getWhere();
+        List<OrderByElement> orderBy = query.getOrderByElements();
+        boolean isDistinct = query.getDistinct() != null;
 
-		// Keep reference to current root
-		Operator rootNode;
+        // Keep reference to current root
+        Operator rootNode;
 
-		rootNode=processWhereClause(whereItem, joinItems, fromItem);
+        rootNode = processWhereClause(whereItem, joinItems, fromItem);
 
-		// Projection
-		if (!(selectItems.get(0) instanceof AllColumns)) {
-			List<String> tableNames = new ArrayList<>();
-			List<String> columnNames = new ArrayList<>();
+        // Projection
+        if (!(selectItems.get(0) instanceof AllColumns)) {
+            List<String> tableNames = new ArrayList<>();
+            List<String> columnNames = new ArrayList<>();
 
-			for (SelectItem item : selectItems) {
-				Column columnRef = (Column) ((SelectExpressionItem) item).getExpression();
-				tableNames.add(columnRef.getTable().getName());
-				columnNames.add(columnRef.getColumnName());
-			}
+            for (SelectItem item : selectItems) {
+                Column columnRef = (Column) ((SelectExpressionItem) item).getExpression();
+                tableNames.add(columnRef.getTable().getName());
+                columnNames.add(columnRef.getColumnName());
+            }
 
-			rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
-		}
+            rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
+        }
 
-		// The spec allows handling sorting and duplicate elimination after projection
+        // The spec allows handling sorting and duplicate elimination after projection
 
         if (orderBy != null) {
-		    List<Column> orderByColumns = new ArrayList<>();
-		    for (OrderByElement element : orderBy) {
-		        orderByColumns.add((Column) element.getExpression());
+            List<Column> orderByColumns = new ArrayList<>();
+            for (OrderByElement element : orderBy) {
+                orderByColumns.add((Column) element.getExpression());
             }
 
             TableHeader sortHeader = TableHeader.fromColumns(orderByColumns);
-		    rootNode = new SortOperator(rootNode, sortHeader);
+            rootNode = new SortOperator(rootNode, sortHeader);
         }
 
         if (isDistinct) {
-			// Current implementation requires sorted queries
-			if (orderBy == null) {
-				// Sort all fields
-				rootNode = new SortOperator(rootNode, rootNode.getHeader());
-			}
+            // Current implementation requires sorted queries
+            if (orderBy == null) {
+                // Sort all fields
+                rootNode = new SortOperator(rootNode, rootNode.getHeader());
+            }
 
-			rootNode = new DistinctOperator(rootNode);
-		}
+            rootNode = new DistinctOperator(rootNode);
+        }
 
-		return rootNode;
-	}
+        return rootNode;
+    }
 
-    /**
-     *  Collapse all tables referenced in FROM clause for easier handling
+    /** TODO
+     * Collapse all tables referenced in FROM clause for easier handling
+     * @param fromItem
+     * @param joins
+     * @return
      */
-	private List<Table> buildTableList(Table fromItem, List<Join> joins) {
-	    List<Table> list = new ArrayList<>();
-	    list.add(fromItem);
+    private List<Table> buildTableList(Table fromItem, List<Join> joins) {
+        List<Table> list = new ArrayList<>();
+        list.add(fromItem);
 
-	    if (joins != null) {
+        if (joins != null) {
             for (Join join : joins) {
                 list.add((Table) join.getRightItem());
             }
         }
-	    return list;
+        return list;
     }
 
-    /**
+    /** TODO
      * Build the internal maps used to link every part of the WHERE clause to the table they reference
-     *
+     * @param rootExpression
+     * @param joinItems
+     * @param fromItem
+     * @return
      */
-    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table fromItem ) {
+    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table fromItem) {
 
-        HashMap<String,Boolean> alreadyJoinedTables =new HashMap<>();
+        HashMap<String, Boolean> alreadyJoinedTables = new HashMap<>();
         alreadyJoinedTables.put(getIdentifier(fromItem), true);
 
-        HashMap<String,Boolean> tablesToBeJoined= new HashMap<>();
+        HashMap<String, Boolean> tablesToBeJoined = new HashMap<>();
         if (joinItems != null) {
             for (Join join : joinItems) {
                 tablesToBeJoined.put(getIdentifier((Table) join.getRightItem()), true);
             }
         }
 
-        Operator rootNode = new ScanOperator(DB.getTable(fromItem.getName()));
+        Operator rootNode = this.getScanAndMaybeRename(fromItem);
 
-        if (rootExpression!=null){
+        if (rootExpression != null) {
             BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
             HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
-            if (hashSelection.containsKey(getIdentifier(fromItem))){
+
+            if (hashSelection.containsKey(getIdentifier(fromItem))) {
                 rootNode = new SelectionOperator(rootNode, hashSelection.get(fromItem));
             }
         }
@@ -131,7 +142,7 @@ public class QueryBuilder {
         if (joinItems != null) {
             BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
             HashMap<Table, Expression> hashSelection = bwb.getHashSelection();
-            HashMap<TableCouple,Expression> hashJoin = bwb.getHashJoin();
+            HashMap<TableCouple, Expression> hashJoin = bwb.getHashJoin();
 
             while (!hashJoin.isEmpty()){
                 for (TableCouple tc : hashJoin.keySet()){
@@ -141,45 +152,52 @@ public class QueryBuilder {
                         Operator rightOp=null;
                         for (Join join : joinItems){
                             if (getIdentifier((Table) join.getRightItem()).equals(getIdentifier(table2))){
-                                rightOp = new ScanOperator(DB.getTable(((Table) join.getRightItem()).getName()));
+                                rightOp = this.getScanAndMaybeRename(table2);
                             }
                         }
+
                         if (hashSelection.containsKey(table2)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
                         }
+
                         if (table2.getAlias() != null) {
                             rightOp = new RenameOperator(rightOp, table2.getAlias());
                         }
+
                         rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
                         hashJoin.remove(tc);
-                        alreadyJoinedTables.put(getIdentifier(table2),true);
+                        alreadyJoinedTables.put(getIdentifier(table2), true);
                         tablesToBeJoined.remove(getIdentifier(table2));
                     }
                     else{
                         Operator rightOp=null;
                         for (Join join : joinItems){
                             if (getIdentifier((Table) join.getRightItem()).equals(getIdentifier(table1))){
-                                rightOp = new ScanOperator(DB.getTable(((Table) join.getRightItem()).getName()));
+                                rightOp = this.getScanAndMaybeRename(table1);
                             }
                         }
+
                         if (hashSelection.containsKey(table1)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table1));
                         }
+
                         if (table1.getAlias() != null) {
                             rightOp = new RenameOperator(rightOp, table1.getAlias());
                         }
+
                         rootNode = new JoinOperator(rootNode, rightOp, hashJoin.get(tc));
                         hashJoin.remove(tc);
-                        alreadyJoinedTables.put(getIdentifier(table1),true);
+                        alreadyJoinedTables.put(getIdentifier(table1), true);
                         tablesToBeJoined.remove(getIdentifier(table1));
                     }
                 }
             }
         }
-        if(!tablesToBeJoined.isEmpty()){
-            for (Join join : joinItems){
-                if (tablesToBeJoined.containsKey(getIdentifier((Table) join.getRightItem()))){
-                    Operator rightOp = new ScanOperator(DB.getTable(getIdentifier((Table) join.getRightItem())));
+
+        if (!tablesToBeJoined.isEmpty()) {
+            for (Join join : joinItems) {
+                if (tablesToBeJoined.containsKey(getIdentifier((Table) join.getRightItem()))) {
+                    Operator rightOp = this.getScanAndMaybeRename((Table) join.getRightItem());
                     rootNode = new JoinOperator(rootNode, rightOp);
                 }
             }
@@ -187,11 +205,32 @@ public class QueryBuilder {
         return rootNode;
     }
 
-    public String getIdentifier (Table table){
-        if (table.getAlias()!=null){
-            return table.getAlias();
+    /**
+     * Build the scan operator for this table and add a rename step if required.
+     *
+     * @param table The table to be read/renamed.
+     * @return the scan +/- the rename operator.
+     */
+    private Operator getScanAndMaybeRename(Table table) {
+        ScanOperator scan = new ScanOperator(db.getTable(table.getName()));
+
+        if (table.getAlias() == null) {
+            return scan;
+        } else {
+            return new RenameOperator(scan, table.getAlias());
         }
-        else{
+    }
+
+    /**
+     * Get the real identifier of the table, so resolve aliases if they exist, etc.
+     *
+     * @param table The table to have its name retrieved.
+     * @return The tables 'real' name.
+     */
+    private String getIdentifier(Table table) {
+        if (table.getAlias() != null) {
+            return table.getAlias();
+        } else {
             return table.getName();
         }
     }
