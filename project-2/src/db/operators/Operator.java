@@ -52,8 +52,10 @@ public interface Operator {
         int i = 0;
         Tuple record;
         while ((record = this.getNextTuple()) != null) {
+            i += 1;
+
             if (extended) {
-                stream.println(++i + ": " + record);
+                stream.println(i + ": " + record);
             } else {
                 // Not the most efficient but will do
                 String output = record.fields.toString();

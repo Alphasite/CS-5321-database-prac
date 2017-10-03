@@ -29,6 +29,8 @@ public class TableHeader {
 
     /**
      * Creates a TableHeader from a list of Column objects containing info about a column and its source table
+     * @param columns The tables to use to form the table header.
+     * @return The new table header object.
      */
     public static TableHeader fromColumns(List<Column> columns) {
         List<String> tableNames = new ArrayList<>();
@@ -49,6 +51,13 @@ public class TableHeader {
         return this.columnHeaders.size();
     }
 
+    /**
+     * Find the index of the alias, name combo.
+     *
+     * @param alias  The table name
+     * @param column The column name
+     * @return The index of the alias, name combo.
+     */
     public Optional<Integer> resolve(String alias, String column) {
         boolean notRequireAliasMatch = alias.equals("");
 
