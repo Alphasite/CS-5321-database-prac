@@ -118,7 +118,7 @@ public class QueryBuilder {
             }
         }
 
-        Operator rootNode = new ScanOperator(DB.getTable(getIdentifier(fromItem)));
+        Operator rootNode = new ScanOperator(DB.getTable(fromItem.getName()));
 
         if (rootExpression!=null){
             BreakWhereBuilder bwb = new BreakWhereBuilder(rootExpression);
@@ -138,7 +138,12 @@ public class QueryBuilder {
                     Table table1=tc.getTable1();
                     Table table2=tc.getTable2();
                     if (alreadyJoinedTables.containsKey(getIdentifier(table1))){
-                        Operator rightOp = new ScanOperator(DB.getTable(getIdentifier(table2)));
+                        Operator rightOp=null;
+                        for (Join join : joinItems){
+                            if (getIdentifier((Table) join.getRightItem()).equals(getIdentifier(table2))){
+                                rightOp = new ScanOperator(DB.getTable(((Table) join.getRightItem()).getName()));
+                            }
+                        }
                         if (hashSelection.containsKey(table2)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table2));
                         }
@@ -151,7 +156,12 @@ public class QueryBuilder {
                         tablesToBeJoined.remove(getIdentifier(table2));
                     }
                     else{
-                        Operator rightOp = new ScanOperator(DB.getTable(getIdentifier(table1)));
+                        Operator rightOp=null;
+                        for (Join join : joinItems){
+                            if (getIdentifier((Table) join.getRightItem()).equals(getIdentifier(table1))){
+                                rightOp = new ScanOperator(DB.getTable(((Table) join.getRightItem()).getName()));
+                            }
+                        }
                         if (hashSelection.containsKey(table1)){
                             rightOp = new SelectionOperator(rightOp, hashSelection.get(table1));
                         }
