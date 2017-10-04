@@ -14,6 +14,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Another expression visitor, handles breaking the WHERE clause into multiple tokens and classify them based
+ * on which tables they reference
+ */
 public class WhereDecomposer implements ExpressionVisitor {
     private Map<String, Expression> selectionExpressions;
     private Map<TableCouple, Expression> joinExpressions;
@@ -30,6 +34,85 @@ public class WhereDecomposer implements ExpressionVisitor {
 
     public Map<TableCouple, Expression> getJoinExpressions() {
         return joinExpressions;
+    }
+
+    private void processComparator(BinaryExpression comparator) {
+        // Handle join predicates
+        if (comparator.getLeftExpression() instanceof Column && comparator.getRightExpression() instanceof Column) {
+            Table table1 = ((Column) comparator.getLeftExpression()).getTable();
+            Table table2 = ((Column) comparator.getRightExpression()).getTable();
+
+            TableCouple key = new TableCouple(table1, table2);
+            if (joinExpressions.containsKey(key)) {
+                // If a condition already exists for this key, compose it with an AND
+                AndExpression andExpression = new AndExpression(comparator, joinExpressions.get(key));
+                joinExpressions.put(key, andExpression);
+            } else {
+                joinExpressions.put(key, comparator);
+            }
+        } else {
+            // Handle selection predicates
+            Table table;
+
+            if (comparator.getLeftExpression() instanceof Column) {
+                table = ((Column) comparator.getLeftExpression()).getTable();
+            } else if (comparator.getRightExpression() instanceof Column) {
+                table = ((Column) comparator.getRightExpression()).getTable();
+            } else {
+                throw new NotImplementedException();
+            }
+
+            String identifier = Utilities.getIdentifier(table);
+
+            if (selectionExpressions.containsKey(identifier)) {
+                // If a condition already exists for this key, compose it with an AND
+                AndExpression andExpression = new AndExpression(comparator, selectionExpressions.get(identifier));
+                selectionExpressions.put(identifier, andExpression);
+            } else {
+                selectionExpressions.put(identifier, comparator);
+            }
+        }
+    }
+
+    @Override
+    public void visit(AndExpression andExpression) {
+        andExpression.getLeftExpression().accept(this);
+        andExpression.getRightExpression().accept(this);
+    }
+
+    @Override
+    public void visit(OrExpression orExpression) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void visit(EqualsTo equalsTo) {
+        processComparator(equalsTo);
+    }
+
+    @Override
+    public void visit(GreaterThan greaterThan) {
+        processComparator(greaterThan);
+    }
+
+    @Override
+    public void visit(GreaterThanEquals greaterThanEquals) {
+        processComparator(greaterThanEquals);
+    }
+
+    @Override
+    public void visit(MinorThan minorThan) {
+        processComparator(minorThan);
+    }
+
+    @Override
+    public void visit(MinorThanEquals minorThanEquals) {
+        processComparator(minorThanEquals);
+    }
+
+    @Override
+    public void visit(NotEqualsTo notEqualsTo) {
+        processComparator(notEqualsTo);
     }
 
     @Override
@@ -65,82 +148,6 @@ public class WhereDecomposer implements ExpressionVisitor {
     @Override
     public void visit(Subtraction subtraction) {
         throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(AndExpression andExpression) {
-        andExpression.getLeftExpression().accept(this);
-        andExpression.getRightExpression().accept(this);
-    }
-
-    @Override
-    public void visit(OrExpression orExpression) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(EqualsTo equalsTo) {
-        comparisonOperator(equalsTo);
-    }
-
-    private void comparisonOperator(BinaryExpression comparator) {
-        if (comparator.getLeftExpression() instanceof Column && comparator.getRightExpression() instanceof Column) {
-            // TODO generify this to support flipped joins and multiple join conditions?
-            Table table1 = ((Column) comparator.getLeftExpression()).getTable();
-            Table table2 = ((Column) comparator.getRightExpression()).getTable();
-
-            TableCouple key = new TableCouple(table1, table2);
-            if (joinExpressions.containsKey(key)) {
-                AndExpression andExpression = new AndExpression(comparator, joinExpressions.get(key));
-                joinExpressions.put(key, andExpression);
-            } else {
-                joinExpressions.put(key, comparator);
-            }
-        } else {
-            Table table;
-
-            if (comparator.getLeftExpression() instanceof Column) {
-                table = ((Column) comparator.getLeftExpression()).getTable();
-            } else if (comparator.getRightExpression() instanceof Column) {
-                table = ((Column) comparator.getRightExpression()).getTable();
-            } else {
-                throw new NotImplementedException();
-            }
-
-            String identifier = Utilities.getIdentifier(table);
-
-            if (selectionExpressions.containsKey(identifier)) {
-                AndExpression andExpression = new AndExpression(comparator, selectionExpressions.get(identifier));
-                selectionExpressions.put(identifier, andExpression);
-            } else {
-                selectionExpressions.put(identifier, comparator);
-            }
-        }
-    }
-
-    @Override
-    public void visit(GreaterThan greaterThan) {
-        comparisonOperator(greaterThan);
-    }
-
-    @Override
-    public void visit(GreaterThanEquals greaterThanEquals) {
-        comparisonOperator(greaterThanEquals);
-    }
-
-    @Override
-    public void visit(MinorThan minorThan) {
-        comparisonOperator(minorThan);
-    }
-
-    @Override
-    public void visit(MinorThanEquals minorThanEquals) {
-        comparisonOperator(minorThanEquals);
-    }
-
-    @Override
-    public void visit(NotEqualsTo notEqualsTo) {
-        comparisonOperator(notEqualsTo);
     }
 
     @Override

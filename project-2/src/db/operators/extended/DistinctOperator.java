@@ -13,7 +13,7 @@ import java.util.Objects;
  * @inheritDoc
  */
 public class DistinctOperator implements Operator {
-    final Operator source;
+    private final Operator source;
 
     private Tuple previous;
 
@@ -29,18 +29,16 @@ public class DistinctOperator implements Operator {
      */
     @Override
     public Tuple getNextTuple() {
-        //TODO:
-        while (true) {
-            Tuple next = this.source.getNextTuple();
-            if (next == null) {
-                return null;
-            } else {
-                if (!Objects.equals(this.previous, next)) {
-                    this.previous = next;
-                    return next;
-                }
+        Tuple next;
+
+        while ((next = this.source.getNextTuple()) != null) {
+            if (!Objects.equals(this.previous, next)) {
+                this.previous = next;
+                return next;
             }
         }
+
+        return null;
     }
 
     /**

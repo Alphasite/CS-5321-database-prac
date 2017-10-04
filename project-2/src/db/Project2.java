@@ -2,11 +2,11 @@ package db;
 
 import db.datastore.Database;
 import db.operators.Operator;
+import db.query.QueryBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import db.query.QueryBuilder;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -17,7 +17,8 @@ import java.nio.file.Paths;
 
 /**
  * Startup class for db.Project2
- * Loads the database and the queries file, runs all queries
+ * Loads the database and the queries file, runs all queries and outputs
+ * results in specified output folder
  */
 public class Project2 {
 	public static String INPUT_PATH = "resources/samples/input";
@@ -25,6 +26,9 @@ public class Project2 {
 
 	public static String OUTPUT_PATH = "resources/samples/output";
 
+	/**
+	 * @param args If present : [inputFolder] [outputFolder]
+	 */
 	public static void main(String args[]) {
 		if (args.length >= 2) {
 			INPUT_PATH = args[0];

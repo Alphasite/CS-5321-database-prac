@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 /** An operator which reads a file and parses it according to the schema in the catalogue, producing tuples.
+ *
  * @inheritDoc
  */
 public class ScanOperator implements Operator {

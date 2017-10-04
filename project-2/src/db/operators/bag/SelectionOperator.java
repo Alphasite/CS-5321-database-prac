@@ -2,15 +2,17 @@ package db.operators.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.Tuple;
-import net.sf.jsqlparser.expression.Expression;
 import db.operators.Operator;
 import db.query.ExpressionEvaluator;
+import net.sf.jsqlparser.expression.Expression;
 
 /**
+ * This operator filters its input according to a predicate specified as an {@link Expression}
+ *
  * @inheritDoc
  */
 public class SelectionOperator implements Operator {
-    final Operator source;
+    private final Operator source;
 
     private ExpressionEvaluator evaluator;
 
@@ -36,7 +38,6 @@ public class SelectionOperator implements Operator {
                 return next;
         }
         return null;
-
     }
 
     /**

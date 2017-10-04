@@ -5,6 +5,9 @@ import java.util.List;
 
 /**
  * A class which represents just 1 tuple, with convenience methods.
+ *
+ * This class overrides {@link #equals(Object)} and {@link #hashCode()} so it can be used in hashmaps.
+ * The internal data is not immutable however so proceed with care.
  */
 public class Tuple {
     public final List<Integer> fields;

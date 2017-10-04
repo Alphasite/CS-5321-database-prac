@@ -8,12 +8,14 @@ import java.util.ArrayList;
 
 /** Rename the table of the child tuples' schema.
  *
- * This operator changes the alias field of the header.
+ * This operator changes the alias field of the header, so that all parent operator nodes
+ * can reference the new alias instead of the original name.
+ * This assumes that the queries do not use the original name once an alias has been defined.
  *
  * @inheritDoc
  */
 public class RenameOperator implements Operator {
-    final Operator child;
+    private final Operator child;
 
     private String newTableName;
     private TableHeader header;

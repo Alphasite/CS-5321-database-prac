@@ -5,6 +5,8 @@ import net.sf.jsqlparser.schema.Table;
 
 /**
  * A pair class to encapsulate a pair of tables.
+ *
+ * Implements {@link #equals(Object)} and {@link #hashCode()}
  */
 public class TableCouple {
     private Table table1;

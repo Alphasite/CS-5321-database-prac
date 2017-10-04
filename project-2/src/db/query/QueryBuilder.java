@@ -19,11 +19,18 @@ import net.sf.jsqlparser.statement.select.*;
 import java.util.*;
 
 /**
- * TODO
+ * Query plan generator
+ *
+ * This class reads the tokens from the parsed SQL query and generates an tree of {@link Operator}
+ * that can then be used to retrieve all matching records.
+ *
+ * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY
  */
 public class QueryBuilder {
     private Database db;
+    /** Map Table name to corresponding selection predicate */
     private Map<String, Expression> selectionExpressions;
+    /** Map (Table1, Table2) couples to corresponding joining predicates */
     private Map<TableCouple, Expression> joinExpressions;
 
     public QueryBuilder(Database db) {
@@ -51,9 +58,10 @@ public class QueryBuilder {
         // Keep reference to current root
         Operator rootNode;
 
+        // Build the scan-select-join tree structure
         rootNode = processWhereClause(whereItem, joinItems, fromItem);
 
-        // Projection
+        // Add projections
         if (!(selectItems.get(0) instanceof AllColumns)) {
             List<String> tableNames = new ArrayList<>();
             List<String> columnNames = new ArrayList<>();
@@ -89,13 +97,13 @@ public class QueryBuilder {
                 }
             }
 
-
             TableHeader header = rootNode.getHeader();
             for (int i = 0; i < header.columnAliases.size(); i++) {
                 String alias = header.columnAliases.get(i);
                 String column = header.columnHeaders.get(i);
                 String fullName = alias + "." + column;
 
+                // Append non specified columns so that they are used to break ties
                 if (!alreadySortedColumns.contains(fullName)) {
                     aliases.add(alias);
                     columns.add(column);

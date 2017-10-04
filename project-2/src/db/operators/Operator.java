@@ -6,7 +6,7 @@ import db.datastore.Tuple;
 import java.io.PrintStream;
 
 /**
- * This class represents an operator, which is an object which generates a stream of tuples which can then be operated
+ * Interface for an operator, which is an object which generates a stream of tuples which can then be operated
  * upon. It also provides a schema for the tuple as created by this operator.
  *
  * The operator can be reset back to a zero state, reading from the top of the origin table.

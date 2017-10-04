@@ -2,9 +2,9 @@ package db.operators.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.Tuple;
-import net.sf.jsqlparser.expression.Expression;
 import db.operators.Operator;
 import db.query.ExpressionEvaluator;
+import net.sf.jsqlparser.expression.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +17,8 @@ import java.util.List;
  * @inheritDoc
  */
 public class JoinOperator implements Operator {
-    final Operator left;
-    final Operator right;
+    private final Operator left;
+    private final Operator right;
 
     private Tuple leftTupleCache;
     private TableHeader tableHeader;
@@ -117,7 +117,7 @@ public class JoinOperator implements Operator {
     }
 
 
-    /** This method trys to get the next left hand tuple and then resets the right hand operator,
+    /** This method tries to get the next left hand tuple and then resets the right hand operator,
      * so that it can try generate more tuples.
      *
      * @return A boolean indicating whether or not tuple generation is done.

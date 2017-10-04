@@ -16,6 +16,6 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'Project2'
+        attributes 'Main-Class': 'db.Project2'
     }
 }

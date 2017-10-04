@@ -10,10 +10,13 @@ import java.util.List;
 import java.util.Optional;
 
 /**
+ * This operator sorts input tuples in ascending order, based on the columns referenced by a specified header.
+ * In case of a tie, order is determined based on the other columns in left-to-right order.
+ *
  * @inheritDoc
  */
 public class SortOperator implements Operator {
-    final Operator source;
+    private final Operator source;
 
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
