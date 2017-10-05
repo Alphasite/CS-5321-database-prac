@@ -1,2 +1,3 @@
 include ':project-1'
 include ':project-2'
+include ':project-3'

@@ -1,0 +1,7 @@
+/bin/
+/out/
+/build/
+
+/resources/samples/output/
+
+.settings/

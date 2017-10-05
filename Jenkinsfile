@@ -23,7 +23,11 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh "./gradlew clean assemble"
+                parallel(
+                    Project1: { sh "./gradlew :project-1:clean assemble" },
+                    Project2: { sh "./gradlew :project-2:clean assemble" },
+                    Project3: { sh "./gradlew :project-3:clean assemble" },
+                )
             }
         }
 
