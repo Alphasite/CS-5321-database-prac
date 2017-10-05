@@ -29,9 +29,9 @@ pipeline {
         stage('Test') {
             steps {
                 parallel(
-                    Project-1: { sh "./gradlew :project-1:test jacocoTestReport" },
-                    Project-2: { sh "./gradlew :project-2:test jacocoTestReport" },
-                    Project-3: { sh "./gradlew :project-3:test jacocoTestReport" },
+                    Project1: { sh "./gradlew :project-1:test jacocoTestReport" },
+                    Project2: { sh "./gradlew :project-2:test jacocoTestReport" },
+                    Project3: { sh "./gradlew :project-3:test jacocoTestReport" },
                 )            
             }
         }
@@ -39,9 +39,9 @@ pipeline {
         stage('Findbugs') {
             steps {
                 parallel(
-                    Project-1: { sh "./gradlew :project-1:findbugsMain" },
-                    Project-2: { sh "./gradlew :project-2:findbugsMain" },
-                    Project-3: { sh "./gradlew :project-3:findbugsMain" },
+                    Project1: { sh "./gradlew :project-1:findbugsMain" },
+                    Project2: { sh "./gradlew :project-2:findbugsMain" },
+                    Project3: { sh "./gradlew :project-3:findbugsMain" },
                 )
             }
         }
