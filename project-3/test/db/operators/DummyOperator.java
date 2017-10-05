@@ -2,6 +2,7 @@ package db.operators;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.physcial.Operator;
 
 import java.util.List;
 

@@ -1,10 +1,10 @@
-package db.operators.bag;
+package db.operators.physcial.bag;
 
 import db.TestUtils;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
-import db.operators.Operator;
+import db.operators.physcial.Operator;
 import org.junit.Before;
 import org.junit.Test;
 

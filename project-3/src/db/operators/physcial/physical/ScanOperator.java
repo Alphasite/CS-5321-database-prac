@@ -1,4 +1,4 @@
-package db.operators.physical;
+package db.operators.physcial.physical;
 
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
@@ -6,7 +6,7 @@ import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.string.StringTupleReader;
-import db.operators.Operator;
+import db.operators.physcial.Operator;
 
 /**
  * An operator which reads a file and parses it according to the schema in the catalogue, producing tuples.

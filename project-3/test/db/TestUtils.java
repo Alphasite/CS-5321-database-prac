@@ -1,7 +1,7 @@
 package db;
 
 import db.datastore.tuple.Tuple;
-import db.operators.Operator;
+import db.operators.physcial.Operator;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.select.PlainSelect;

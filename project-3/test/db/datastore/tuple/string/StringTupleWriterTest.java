@@ -8,7 +8,7 @@ import db.datastore.tuple.Tuple;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.operators.DummyOperator;
-import db.operators.physical.ScanOperator;
+import db.operators.physcial.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
 
