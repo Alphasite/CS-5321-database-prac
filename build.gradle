@@ -26,6 +26,10 @@ subprojects {
         }
     }
 
+    test {
+        workingDir = projectDir
+    }
+
     findbugsMain {
         ignoreFailures = true
 
