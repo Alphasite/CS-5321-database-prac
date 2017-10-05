@@ -45,7 +45,7 @@ pipeline {
             steps {
                 junit '**/test-results/test/TEST-*.xml'
 
-                archiveArtifacts artifacts: '*/build/distributions/*.zip'
+                archiveArtifacts artifacts: '*/build/libs/*.jar'
 
                 zip zipFile: 'coverage.zip', glob: '*/build/reports/jacoco/', archive: true
 
