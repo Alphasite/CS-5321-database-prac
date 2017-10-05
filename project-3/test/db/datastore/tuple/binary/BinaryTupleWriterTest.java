@@ -6,7 +6,7 @@ import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
-import db.operators.physcial.physical.ScanOperator;
+import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
 

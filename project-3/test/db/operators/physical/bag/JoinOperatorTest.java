@@ -1,4 +1,4 @@
-package db.operators.physcial.bag;
+package db.operators.physical.bag;
 
 import db.TestUtils;
 import db.datastore.TableHeader;

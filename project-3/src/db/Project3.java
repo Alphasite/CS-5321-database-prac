@@ -1,7 +1,7 @@
 package db;
 
 import db.datastore.Database;
-import db.operators.physcial.Operator;
+import db.operators.physical.Operator;
 import db.query.QueryBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;

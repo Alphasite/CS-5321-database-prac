@@ -1,13 +1,13 @@
 package db;
 
 import db.datastore.Database;
-import db.operators.physcial.Operator;
-import db.operators.physcial.bag.JoinOperator;
-import db.operators.physcial.bag.ProjectionOperator;
-import db.operators.physcial.bag.SelectionOperator;
-import db.operators.physcial.extended.DistinctOperator;
-import db.operators.physcial.extended.SortOperator;
-import db.operators.physcial.physical.ScanOperator;
+import db.operators.physical.Operator;
+import db.operators.physical.bag.JoinOperator;
+import db.operators.physical.bag.ProjectionOperator;
+import db.operators.physical.bag.SelectionOperator;
+import db.operators.physical.extended.DistinctOperator;
+import db.operators.physical.extended.SortOperator;
+import db.operators.physical.physical.ScanOperator;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.BeforeClass;
 import org.junit.Test;

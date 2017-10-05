@@ -3,9 +3,9 @@ package db;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
-import db.operators.physcial.bag.JoinOperator;
-import db.operators.physcial.bag.ProjectionOperator;
-import db.operators.physcial.physical.ScanOperator;
+import db.operators.physical.bag.JoinOperator;
+import db.operators.physical.bag.ProjectionOperator;
+import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
 

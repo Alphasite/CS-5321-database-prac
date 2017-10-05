@@ -1,9 +1,9 @@
-package db.operators.physcial.extended;
+package db.operators.physical.extended;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
-import db.operators.physcial.Operator;
+import db.operators.physical.Operator;
 import org.junit.Before;
 import org.junit.Test;
 

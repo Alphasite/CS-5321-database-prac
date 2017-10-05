@@ -1,8 +1,8 @@
-package db.operators.physcial.extended;
+package db.operators.physical.extended;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.operators.physcial.Operator;
+import db.operators.physical.Operator;
 
 import java.util.ArrayList;
 import java.util.Iterator;
