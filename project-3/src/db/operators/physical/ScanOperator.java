@@ -3,12 +3,10 @@ package db.operators.physical;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
+import db.datastore.tuple.TupleReader;
+import db.datastore.tuple.binary.BinaryTupleReader;
+import db.datastore.tuple.string.StringTupleReader;
 import db.operators.Operator;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Scanner;
 
 /**
  * An operator which reads a file and parses it according to the schema in the catalogue, producing tuples.
@@ -17,7 +15,7 @@ import java.util.Scanner;
  */
 public class ScanOperator implements Operator {
     private final TableInfo table;
-    private Scanner tableFile;
+    private TupleReader reader;
 
     public ScanOperator(TableInfo tableInfo) {
         this.table = tableInfo;
@@ -32,21 +30,7 @@ public class ScanOperator implements Operator {
      */
     @Override
     public Tuple getNextTuple() {
-
-        if (this.tableFile.hasNextLine()) {
-            int cellNumber = this.table.header.columnHeaders.size();
-            ArrayList<Integer> row = new ArrayList<>();
-
-            for (int i = 0; i < cellNumber; i++) {
-                if (this.tableFile.hasNextInt()) {
-                    row.add(this.tableFile.nextInt());
-                }
-            }
-
-            return (new Tuple(row));
-        } else {
-            return null;
-        }
+        return this.reader.next();
     }
 
     /**
@@ -68,13 +52,12 @@ public class ScanOperator implements Operator {
      */
     @Override
     public boolean reset() {
-        try {
-            this.tableFile = new Scanner(new FileInputStream(this.table.file.toFile()));
-            this.tableFile.useDelimiter(",|\\s+");
-            return true;
-        } catch (FileNotFoundException e) {
-            System.out.println("Failed to load table file; file not found: " + table.file);
-            return false;
+        if (this.table.binary) {
+            this.reader = BinaryTupleReader.get(this.table);
+        } else {
+            this.reader = StringTupleReader.get(this.table);
         }
+
+        return this.reader != null;
     }
 }

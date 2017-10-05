@@ -47,12 +47,14 @@ public interface Operator {
     /**
      * Write the table header and rows to the provided print stream.
      *
-     * @param stream The print stream to which the table is written.
+     * @param stream The print stream to which the table is written. If null no output is written.
      * @return The number of tuples outputted.
      */
     default int dump(PrintStream stream, boolean extended) {
-        if (extended) {
-            stream.println(this.getHeader());
+        if (stream != null) {
+            if (extended) {
+                stream.println(this.getHeader());
+            }
         }
 
         int i = 0;
@@ -60,12 +62,14 @@ public interface Operator {
         while ((record = this.getNextTuple()) != null) {
             i += 1;
 
-            if (extended) {
-                stream.println(i + ": " + record);
-            } else {
-                // Not the most efficient but will do
-                String output = record.fields.toString();
-                stream.println(output.substring(1, output.length() - 1).replace(" ", ""));
+            if (stream != null) {
+                if (extended) {
+                    stream.println(i + ": " + record);
+                } else {
+                    // Not the most efficient but will do
+                    String output = record.fields.toString();
+                    stream.println(output.substring(1, output.length() - 1).replace(" ", ""));
+                }
             }
         }
 

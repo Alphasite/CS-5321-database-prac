@@ -6,6 +6,7 @@ import org.junit.Test;
 public class Project3Test {
     @Before
     public void setUp() throws Exception {
+        Project3.DUMP = false;
     }
 
     @Test

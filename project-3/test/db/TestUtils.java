@@ -10,6 +10,7 @@ import java.io.StringReader;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNull.notNullValue;
 
 /**
  * A collection of utility methods for the testing suite.
@@ -55,5 +56,17 @@ public class TestUtils {
         }
 
         return select;
+    }
+
+    public static int countNotNullTuples(Operator op) {
+        int i = 0;
+        Tuple record;
+        while ((record = op.getNextTuple()) != null) {
+            i += 1;
+
+            assertThat(record, notNullValue());
+        }
+
+        return i;
     }
 }

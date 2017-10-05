@@ -26,6 +26,8 @@ public class Project3 {
 
     public static String OUTPUT_PATH = "resources/samples/output";
 
+    public static boolean DUMP = true;
+
     /**
      * @param args If present : [inputFolder] [outputFolder]
      */
@@ -56,14 +58,24 @@ public class Project3 {
 
                 // Run db.query and print output
                 Operator queryPlanRoot = builder.buildQuery(select);
-                queryPlanRoot.dump(System.out, true);
+
+                if (DUMP) {
+                    queryPlanRoot.dump(System.out, true);
+                } else {
+                    queryPlanRoot.dump(null, true);
+                }
 
                 // Write output to file
                 File outputFile = new File(OUTPUT_PATH + "/query" + i++);
                 PrintStream stream = new PrintStream(new FileOutputStream(outputFile));
 
                 queryPlanRoot.reset();
-                queryPlanRoot.dump(stream, false);
+
+                if (DUMP) {
+                    queryPlanRoot.dump(stream, false);
+                } else {
+                    queryPlanRoot.dump(null, false);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

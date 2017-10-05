@@ -76,8 +76,8 @@ public class QueryBuilderTest {
         assertEquals("Sailors.A | Sailors.B | Sailors.C | Reserves.G | Reserves.H", join.getHeader().toString());
         assertEquals(tokens.getWhere(), join.getPredicate());
 
-        assertEquals("1 | 200 | 50 | 1 | 101", root.getNextTuple().toString());
-        assertEquals("1 | 200 | 50 | 1 | 102", root.getNextTuple().toString());
+        assertEquals("64 | 113 | 139 | 64 | 156", root.getNextTuple().toString());
+        assertEquals("64 | 113 | 139 | 64 | 70", root.getNextTuple().toString());
     }
 
     @Test
@@ -105,18 +105,18 @@ public class QueryBuilderTest {
 
         assertTrue(root instanceof SortOperator);
 
-        assertEquals("1 | 200 | 50", root.getNextTuple().toString());
-        assertEquals("4 | 100 | 50", root.getNextTuple().toString());
-        assertEquals("3 | 100 | 105", root.getNextTuple().toString());
-        assertEquals("2 | 200 | 200", root.getNextTuple().toString());
+        assertEquals("4 | 77 | 1", root.getNextTuple().toString());
+        assertEquals("111 | 42 | 1", root.getNextTuple().toString());
+        assertEquals("123 | 116 | 1", root.getNextTuple().toString());
+        assertEquals("141 | 61 | 1", root.getNextTuple().toString());
 
         tokens = TestUtils.parseQuery("SELECT * FROM Sailors S ORDER BY S.B, S.C;");
         root = builder.buildQuery(tokens);
 
-        assertEquals("4 | 100 | 50", root.getNextTuple().toString());
-        assertEquals("3 | 100 | 105", root.getNextTuple().toString());
-        assertEquals("5 | 100 | 500", root.getNextTuple().toString());
-        assertEquals("1 | 200 | 50", root.getNextTuple().toString());
+        assertEquals("130 | 0 | 7", root.getNextTuple().toString());
+        assertEquals("109 | 0 | 24", root.getNextTuple().toString());
+        assertEquals("192 | 0 | 29", root.getNextTuple().toString());
+        assertEquals("156 | 0 | 64", root.getNextTuple().toString());
     }
 
     @Test
@@ -128,8 +128,8 @@ public class QueryBuilderTest {
 
         assertTrue(root instanceof DistinctOperator);
 
-        assertEquals("100", root.getNextTuple().toString());
-        assertEquals("200", root.getNextTuple().toString());
-        assertEquals("300", root.getNextTuple().toString());
+        assertEquals("0", root.getNextTuple().toString());
+        assertEquals("1", root.getNextTuple().toString());
+        assertEquals("2", root.getNextTuple().toString());
     }
 }

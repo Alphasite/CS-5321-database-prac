@@ -9,9 +9,11 @@ import java.nio.file.Path;
 public class TableInfo {
     public final Path file;
     public final TableHeader header;
+    public final boolean binary;
 
-    public TableInfo(TableHeader header, Path file) {
+    public TableInfo(TableHeader header, Path file, Boolean binary) {
         this.header = header;
         this.file = file;
+        this.binary = binary;
     }
 }

@@ -38,7 +38,7 @@ public class SimpleIntegrationTest {
         ScanOperator reservesScan = new ScanOperator(reserves);
 
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
-        assertThat(join.dump(System.out, true), is(5 * 6));
+        assertThat(TestUtils.countNotNullTuples(join), is(1000 * 1000));
     }
 
     @Test
@@ -61,6 +61,6 @@ public class SimpleIntegrationTest {
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
         ProjectionOperator projection = new ProjectionOperator(tableHeader, join);
 
-        assertThat(projection.dump(System.out, true), is(5 * 6));
+        assertThat(TestUtils.countNotNullTuples(projection), is(1000 * 1000));
     }
 }

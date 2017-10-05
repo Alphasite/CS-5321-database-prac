@@ -178,7 +178,7 @@ public class QueryBuilder {
 
         if (joinItems != null) {
             while (!joinExpressions.isEmpty()) {
-                for (TableCouple tc : joinExpressions.keySet()) {
+                for (TableCouple tc : new HashMap<>(joinExpressions).keySet()) {
                     Table table1 = tc.getTable1();
                     Table table2 = tc.getTable2();
 

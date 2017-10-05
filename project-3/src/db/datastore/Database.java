@@ -51,7 +51,7 @@ public class Database {
                 }
 
                 TableHeader header = new TableHeader(alias, columns);
-                TableInfo tableInfo = new TableInfo(header, data.resolve(tableName));
+                TableInfo tableInfo = new TableInfo(header, data.resolve(tableName), true);
                 tables.put(tableName, tableInfo);
             }
         } catch (FileNotFoundException e) {

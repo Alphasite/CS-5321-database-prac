@@ -3,6 +3,7 @@ package db.operators.physical;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
+import db.datastore.tuple.Tuple;
 import org.junit.Test;
 
 import java.nio.file.Path;
@@ -11,8 +12,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.*;
 
 public class ScanOperatorTest {
 
@@ -26,10 +28,14 @@ public class ScanOperatorTest {
         ScanOperator scan = new ScanOperator(sailors);
 
         List<Integer> tuple1 = new ArrayList<>();
-        tuple1.add(1);
-        tuple1.add(200);
-        tuple1.add(50);
-        assertTrue(tuple1.equals(scan.getNextTuple().fields));
+        tuple1.add(64);
+        tuple1.add(113);
+        tuple1.add(139);
+
+        Tuple nextTuple = scan.getNextTuple();
+
+        assertThat(nextTuple, notNullValue());
+        assertThat(nextTuple.fields, equalTo(tuple1));
     }
 
     @Test
