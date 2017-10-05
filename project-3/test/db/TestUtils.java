@@ -32,7 +32,7 @@ public class TestUtils {
             Tuple ref = reference.getNextTuple();
             Tuple test = tested.getNextTuple();
 
-            assertThat(ref, equalTo(test));
+            assertThat(test, equalTo(ref));
 
             if (ref == null || test == null) {
                 break;

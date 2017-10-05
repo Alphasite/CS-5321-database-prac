@@ -39,6 +39,8 @@ public class StringTupleReader implements TupleReader {
             for (int i = 0; i < cellNumber; i++) {
                 if (this.tableFile.hasNextInt()) {
                     row.add(this.tableFile.nextInt());
+                } else {
+                    return null;
                 }
             }
 
