@@ -91,9 +91,9 @@ public class QueryBuilderTest {
         assertEquals("S", root.getHeader().columnAliases.get(0));
         assertEquals("C", root.getHeader().columnHeaders.get(0));
 
-        assertEquals("50", root.getNextTuple().toString());
-        assertEquals("200", root.getNextTuple().toString());
-        assertEquals("105", root.getNextTuple().toString());
+        assertEquals("139", root.getNextTuple().toString());
+        assertEquals("129", root.getNextTuple().toString());
+        assertEquals("118", root.getNextTuple().toString());
     }
 
     @Test
