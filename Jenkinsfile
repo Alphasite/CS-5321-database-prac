@@ -17,6 +17,7 @@ pipeline {
                 checkout scm
                 sh "rm -f pit-test.zip"
                 sh "rm -f coverage.zip"
+                sh "chmod +x gradlew"
             }
         }
 
