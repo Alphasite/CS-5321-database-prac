@@ -25,9 +25,9 @@ pipeline {
         stage('Test') {
             steps {
                 parallel(
-                    Project1: { sh "./gradlew :project-1:test :project-1:jacocoTestReport" },
-                    Project2: { sh "./gradlew :project-2:test :project-2:jacocoTestReport" },
-                    Project3: { sh "./gradlew :project-3:test :project-3:jacocoTestReport" },
+                    Project1: { sh "./gradlew :project-1:test" },
+                    Project2: { sh "./gradlew :project-2:test" },
+                    Project3: { sh "./gradlew :project-3:test" },
                 )
             }
         }
@@ -44,6 +44,7 @@ pipeline {
 
         stage('Results') {
             steps {
+                sh "./gradlew jacocoTestReport"
                 junit '**/test-results/test/TEST-*.xml'
                 jacoco exclusionPattern: '**/classes/java/test/**/*.class', sourcePattern: '**/src/'
                 archiveArtifacts artifacts: '*/build/libs/*.jar'
