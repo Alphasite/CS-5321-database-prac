@@ -8,15 +8,16 @@ pipeline {
                 sh "rm -f pit-test.zip"
                 sh "rm -f coverage.zip"
                 sh "chmod +x gradlew"
+                sh "./gradlew clean"
             }
         }
 
         stage('Build') {
             steps {
                 parallel(
-                    Project1: { sh "./gradlew :project-1:clean assemble" },
-                    Project2: { sh "./gradlew :project-2:clean assemble" },
-                    Project3: { sh "./gradlew :project-3:clean assemble" },
+                    Project1: { sh "./gradlew :project-1:assemble" },
+                    Project2: { sh "./gradlew :project-2:assemble" },
+                    Project3: { sh "./gradlew :project-3:assemble" },
                 )
             }
         }
@@ -24,10 +25,11 @@ pipeline {
         stage('Test') {
             steps {
                 parallel(
-                    Project1: { sh "./gradlew :project-1:test jacocoTestReport" },
-                    Project2: { sh "./gradlew :project-2:test jacocoTestReport" },
-                    Project3: { sh "./gradlew :project-3:test jacocoTestReport" },
-                )            
+                    Project1: { sh "./gradlew :project-1:test" },
+                    Project2: { sh "./gradlew :project-2:test" },
+                    Project3: { sh "./gradlew :project-3:test" },
+                )
+                sh "./gradlew jacocoTestReport"
             }
         }
 
