@@ -2,7 +2,7 @@ package db.operators.logical;
 
 import db.datastore.TableHeader;
 
-public class LogicalSortOperator {
+public class LogicalSortOperator implements LogicalOperator {
     private final LogicalOperator source;
     private TableHeader sortHeader;
 

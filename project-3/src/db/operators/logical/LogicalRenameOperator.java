@@ -5,7 +5,7 @@ import db.operators.physical.Operator;
 
 import java.util.ArrayList;
 
-public class LogicalRenameOperator {
+public class LogicalRenameOperator implements LogicalOperator {
     private final LogicalOperator child;
     private String newTableName;
 
