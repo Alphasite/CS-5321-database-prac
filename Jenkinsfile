@@ -45,6 +45,8 @@ pipeline {
             steps {
                 junit '**/test-results/test/TEST-*.xml'
 
+                jacoco exclusionPattern: '**/classes/java/test/**/*.class', sourcePattern: '**/src/'
+
                 archiveArtifacts artifacts: '*/build/libs/*.jar'
 
                 zip zipFile: 'coverage.zip', glob: '*/build/reports/jacoco/', archive: true
