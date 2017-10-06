@@ -2,9 +2,8 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.logical.LogicalRenameOperator;
 import db.operators.physical.Operator;
-
-import java.util.ArrayList;
 
 /**
  * Rename the table of the child tuples' schema.
@@ -30,12 +29,7 @@ public class RenameOperator implements Operator {
         this.child = child;
         this.newTableName = newTableName;
 
-        ArrayList<String> newAliases = new ArrayList<>();
-        for (int i = 0; i < this.child.getHeader().size(); i++) {
-            newAliases.add(this.newTableName);
-        }
-
-        this.header = new TableHeader(newAliases, child.getHeader().columnHeaders);
+        this.header = LogicalRenameOperator.computeHeader(child, newTableName);
     }
 
     /**

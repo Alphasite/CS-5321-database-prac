@@ -1,13 +1,13 @@
 package db.operators.logical;
 
-import java.util.List;
+import db.datastore.TableHeader;
 
 public class LogicalSortOperator {
     private final LogicalOperator source;
-    private List<Integer> tupleSortPriorityIndex;
+    private TableHeader sortHeader;
 
-    public LogicalSortOperator(LogicalOperator source, List<Integer> tupleSortPriorityIndex) {
+    public LogicalSortOperator(LogicalOperator source, TableHeader sortHeader) {
         this.source = source;
-        this.tupleSortPriorityIndex = tupleSortPriorityIndex;
+        this.sortHeader = sortHeader;
     }
 }

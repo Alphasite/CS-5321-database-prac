@@ -2,12 +2,10 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.logical.LogicalJoinOperator;
 import db.operators.physical.Operator;
 import db.query.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * This operator performs a join between the tuples of the two child db.operators.
@@ -35,18 +33,7 @@ public class JoinOperator implements Operator {
         this.right = right;
         this.reset();
 
-        int tableWidth = left.getHeader().size() + right.getHeader().size();
-
-        List<String> headings = new ArrayList<>(tableWidth);
-        List<String> aliases = new ArrayList<>(tableWidth);
-
-        headings.addAll(left.getHeader().columnHeaders);
-        headings.addAll(right.getHeader().columnHeaders);
-
-        aliases.addAll(left.getHeader().columnAliases);
-        aliases.addAll(right.getHeader().columnAliases);
-
-        this.tableHeader = new TableHeader(aliases, headings);
+        this.tableHeader = LogicalJoinOperator.computeHeader(left, right);
     }
 
     /**
