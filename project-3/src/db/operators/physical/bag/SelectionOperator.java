@@ -2,6 +2,7 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
 import db.operators.physical.Operator;
 import db.query.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
@@ -11,7 +12,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class SelectionOperator implements Operator {
+public class SelectionOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
 
     private ExpressionEvaluator evaluator;
@@ -60,5 +61,10 @@ public class SelectionOperator implements Operator {
 
     public Expression getPredicate() {
         return evaluator.getExpression();
+    }
+
+    @Override
+    public Operator getChild() {
+        return source;
     }
 }

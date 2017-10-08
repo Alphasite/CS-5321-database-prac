@@ -3,14 +3,8 @@ package db.query;
 import db.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
+import db.operators.logical.*;
 import db.operators.physical.Operator;
-import db.operators.physical.bag.JoinOperator;
-import db.operators.physical.bag.ProjectionOperator;
-import db.operators.physical.bag.RenameOperator;
-import db.operators.physical.bag.SelectionOperator;
-import db.operators.physical.extended.DistinctOperator;
-import db.operators.physical.extended.SortOperator;
-import db.operators.physical.physical.ScanOperator;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -50,7 +44,7 @@ public class QueryBuilder {
      * @param query The parsed query object
      * @return The root operator of the query execution plan tree
      */
-    public Operator buildQuery(PlainSelect query) {
+    public LogicalOperator buildQuery(PlainSelect query) {
         // Store ref to all needed query tokens
         List<SelectItem> selectItems = query.getSelectItems();
         Table fromItem = (Table) query.getFromItem();
@@ -60,7 +54,7 @@ public class QueryBuilder {
         boolean isDistinct = query.getDistinct() != null;
 
         // Keep reference to current root
-        Operator rootNode;
+        LogicalOperator rootNode;
 
         // Build the scan-select-join tree structure
         rootNode = processWhereClause(whereItem, joinItems, fromItem);
@@ -76,7 +70,7 @@ public class QueryBuilder {
                 columnNames.add(columnRef.getColumnName());
             }
 
-            rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
+            rootNode = new LogicalProjectOperator(rootNode, new TableHeader(tableNames, columnNames));
         }
 
         // The spec allows handling sorting and duplicate elimination after projection
@@ -116,17 +110,17 @@ public class QueryBuilder {
             }
 
             TableHeader sortHeader = new TableHeader(aliases, columns);
-            rootNode = new SortOperator(rootNode, sortHeader);
+            rootNode = new LogicalSortOperator(rootNode, sortHeader);
         }
 
         if (isDistinct) {
             // Current implementation requires sorted queries
             if (orderBy == null) {
                 // Sort all fields
-                rootNode = new SortOperator(rootNode, rootNode.getHeader());
+                rootNode = new LogicalSortOperator(rootNode, rootNode.getHeader());
             }
 
-            rootNode = new DistinctOperator(rootNode);
+            rootNode = new LogicalDistinctOperator(rootNode);
         }
 
         return rootNode;
@@ -140,19 +134,19 @@ public class QueryBuilder {
      * @param rootTable      the root table, special cased for some reason.
      * @return The root node of the sql tree formed from the where and from conditions
      */
-    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table rootTable) {
+    private LogicalOperator processWhereClause(Expression rootExpression, List<Join> joinItems, Table rootTable) {
 
         // First create the root node.
         Set<String> alreadyJoinedTables = new HashSet<>();
         String rootTabledentifier = Utilities.getIdentifier(rootTable);
         alreadyJoinedTables.add(rootTabledentifier);
 
-        Operator rootNode = this.getScanAndMaybeRename(rootTable);
+        LogicalOperator rootNode = this.getScanAndMaybeRename(rootTable);
 
         // Then find which other tables exist.
         // then store them in a list of tables which haven't yet been joined.
 
-        HashMap<String, Operator> tablesToBeJoined = new HashMap<>();
+        HashMap<String, LogicalOperator> tablesToBeJoined = new HashMap<>();
         if (joinItems != null) {
             for (Join join : joinItems) {
                 Table table = (Table) join.getRightItem();
@@ -169,7 +163,7 @@ public class QueryBuilder {
         }
 
         if (selectionExpressions.containsKey(rootTabledentifier)) {
-            rootNode = new SelectionOperator(rootNode, selectionExpressions.get(rootTabledentifier));
+            rootNode = new LogicalSelectOperator(rootNode, selectionExpressions.get(rootTabledentifier));
         }
 
         // Add all of the joined tables
@@ -191,13 +185,13 @@ public class QueryBuilder {
 
                     String identifier = Utilities.getIdentifier(table);
 
-                    Operator rightOp = tablesToBeJoined.get(identifier);
+                    LogicalOperator rightOp = tablesToBeJoined.get(identifier);
 
                     if (selectionExpressions.containsKey(identifier)) {
-                        rightOp = new SelectionOperator(rightOp, selectionExpressions.get(identifier));
+                        rightOp = new LogicalSelectOperator(rightOp, selectionExpressions.get(identifier));
                     }
 
-                    rootNode = new JoinOperator(rootNode, rightOp, joinExpressions.get(tc));
+                    rootNode = new LogicalJoinOperator(rootNode, rightOp, joinExpressions.get(tc));
 
                     joinExpressions.remove(tc);
 
@@ -211,8 +205,8 @@ public class QueryBuilder {
                     String identifier = Utilities.getIdentifier((Table) join.getRightItem());
 
                     if (tablesToBeJoined.containsKey(identifier)) {
-                        Operator rightOp = tablesToBeJoined.get(identifier);
-                        rootNode = new JoinOperator(rootNode, rightOp);
+                        LogicalOperator rightOp = tablesToBeJoined.get(identifier);
+                        rootNode = new LogicalJoinOperator(rootNode, rightOp, null);
                     }
                 }
             }
@@ -227,13 +221,13 @@ public class QueryBuilder {
      * @param table The table to be read/renamed.
      * @return the scan +/- the rename operator.
      */
-    private Operator getScanAndMaybeRename(Table table) {
-        ScanOperator scan = new ScanOperator(db.getTable(table.getName()));
+    private LogicalOperator getScanAndMaybeRename(Table table) {
+        LogicalScanOperator scan = new LogicalScanOperator(db.getTable(table.getName()));
 
         if (table.getAlias() == null) {
             return scan;
         } else {
-            return new RenameOperator(scan, table.getAlias());
+            return new LogicalRenameOperator(scan, table.getAlias());
         }
     }
 

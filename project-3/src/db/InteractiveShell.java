@@ -6,29 +6,21 @@ import db.operators.physical.Operator;
 import db.query.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
+import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.PrintStream;
-import java.nio.file.Files;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Paths;
+import java.util.Scanner;
 
-/**
- * Startup class for db.Project3
- * Loads the database and the queries file, runs all queries and outputs
- * results in specified output folder
- */
-public class Project3 {
+public class InteractiveShell {
     public static String INPUT_PATH = "resources/samples/input";
     public static String DB_PATH = INPUT_PATH + "/db";
 
     public static String OUTPUT_PATH = "resources/samples/output";
-
-    public static boolean DUMP = true;
 
     /**
      * @param args If present : [inputFolder] [outputFolder]
@@ -45,16 +37,17 @@ public class Project3 {
         QueryBuilder builder = new QueryBuilder(DB);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
 
-        try {
-            CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + "/queries.sql"));
-            Statement statement;
-            int i = 1;
+        Scanner scanner = new Scanner(System.in);
 
-            // Create output directory if needed
-            Files.createDirectories(Paths.get(OUTPUT_PATH));
+        while (true) {
+            System.out.print("> ");
+            String input = scanner.nextLine();
+            Reader stringReader = new StringReader(input);
 
-            while ((statement = parser.Statement()) != null) {
-                System.out.println("Read statement: " + statement);
+            CCJSqlParser parser = new CCJSqlParser(stringReader);
+
+            try {
+                Statement statement = parser.Statement();
 
                 // Get select body from statement
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
@@ -65,27 +58,10 @@ public class Project3 {
                 // Create physical plan optimized for query on given data
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
-                if (DUMP) {
-                    queryPlanRoot.dump(System.out, true);
-                } else {
-                    queryPlanRoot.dump(null, true);
-                }
-
-                // Write output to file
-                File outputFile = new File(OUTPUT_PATH + "/query" + i++);
-                PrintStream stream = new PrintStream(new FileOutputStream(outputFile));
-
-                queryPlanRoot.reset();
-
-                if (DUMP) {
-                    queryPlanRoot.dump(stream, false);
-                } else {
-                    queryPlanRoot.dump(null, false);
-                }
+                queryPlanRoot.dump(System.out, true);
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
-
 }

@@ -2,6 +2,7 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
 import db.operators.logical.LogicalRenameOperator;
 import db.operators.physical.Operator;
 
@@ -14,7 +15,7 @@ import db.operators.physical.Operator;
  *
  * @inheritDoc
  */
-public class RenameOperator implements Operator {
+public class RenameOperator implements Operator, UnaryNode<Operator> {
     private final Operator child;
 
     private String newTableName;
@@ -29,7 +30,7 @@ public class RenameOperator implements Operator {
         this.child = child;
         this.newTableName = newTableName;
 
-        this.header = LogicalRenameOperator.computeHeader(child, newTableName);
+        this.header = LogicalRenameOperator.computeHeader(child.getHeader(), newTableName);
     }
 
     /**
@@ -54,5 +55,10 @@ public class RenameOperator implements Operator {
     @Override
     public boolean reset() {
         return this.child.reset();
+    }
+
+    @Override
+    public Operator getChild() {
+        return child;
     }
 }

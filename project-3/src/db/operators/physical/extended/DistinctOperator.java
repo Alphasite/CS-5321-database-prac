@@ -2,6 +2,7 @@ package db.operators.physical.extended;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
 import db.operators.physical.Operator;
 
 import java.util.Objects;
@@ -13,7 +14,7 @@ import java.util.Objects;
  *
  * @inheritDoc
  */
-public class DistinctOperator implements Operator {
+public class DistinctOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
 
     private Tuple previous;
@@ -58,4 +59,8 @@ public class DistinctOperator implements Operator {
         return this.source.reset();
     }
 
+    @Override
+    public Operator getChild() {
+        return source;
+    }
 }

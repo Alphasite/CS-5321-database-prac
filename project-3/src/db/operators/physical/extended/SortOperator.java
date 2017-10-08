@@ -2,6 +2,7 @@ package db.operators.physical.extended;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
 import db.operators.physical.Operator;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import java.util.Optional;
  *
  * @inheritDoc
  */
-public class SortOperator implements Operator {
+public class SortOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
 
     private List<Tuple> buffer;
@@ -114,5 +115,10 @@ public class SortOperator implements Operator {
         });
 
         this.reset();
+    }
+
+    @Override
+    public Operator getChild() {
+        return source;
     }
 }
