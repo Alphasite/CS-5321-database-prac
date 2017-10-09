@@ -146,7 +146,7 @@ public class QueryBuilder {
         // Then find which other tables exist.
         // then store them in a list of tables which haven't yet been joined.
 
-        HashMap<String, LogicalOperator> tablesToBeJoined = new HashMap<>();
+        Map<String, LogicalOperator> tablesToBeJoined = new HashMap<>();
         if (joinItems != null) {
             for (Join join : joinItems) {
                 Table table = (Table) join.getRightItem();
@@ -172,18 +172,16 @@ public class QueryBuilder {
 
         if (joinItems != null) {
             while (!joinExpressions.isEmpty()) {
-                for (TableCouple tc : new HashMap<>(joinExpressions).keySet()) {
-                    Table table1 = tc.getTable1();
-                    Table table2 = tc.getTable2();
+                for (TableCouple tc : joinExpressions.keySet()) {
+                    String table1 = tc.getTable1();
+                    String table2 = tc.getTable2();
 
-                    Table table;
-                    if (alreadyJoinedTables.contains(Utilities.getIdentifier(table1))) {
-                        table = table2;
+                    String identifier;
+                    if (alreadyJoinedTables.contains(table1)) {
+                        identifier = table2;
                     } else {
-                        table = table1;
+                        identifier = table1;
                     }
-
-                    String identifier = Utilities.getIdentifier(table);
 
                     LogicalOperator rightOp = tablesToBeJoined.get(identifier);
 

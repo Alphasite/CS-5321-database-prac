@@ -9,8 +9,8 @@ import net.sf.jsqlparser.schema.Table;
  * Implements {@link #equals(Object)} and {@link #hashCode()}
  */
 public class TableCouple {
-    private Table table1;
-    private Table table2;
+    private String table1;
+    private String table2;
 
     /**
      * This pair class will sort Table1 and table 2 class, by lexical order,
@@ -19,9 +19,9 @@ public class TableCouple {
      * @param table1 The first table
      * @param table2 The second table
      */
-    public TableCouple(Table table1, Table table2) {
-        String id1 = Utilities.getIdentifier(table1);
-        String id2 = Utilities.getIdentifier(table2);
+    public TableCouple(String id1, String id2) {
+//        String id1 = Utilities.getIdentifier(table1);
+//        String id2 = Utilities.getIdentifier(table2);
 
         // This ensures that this always has tables in the same order.
         // This allows equals and hash to work correctly.
@@ -34,11 +34,11 @@ public class TableCouple {
         }
     }
 
-    public Table getTable1() {
+    public String getTable1() {
         return table1;
     }
 
-    public Table getTable2() {
+    public String getTable2() {
         return table2;
     }
 
@@ -55,13 +55,14 @@ public class TableCouple {
 
         TableCouple that = (TableCouple) o;
 
-        String table1Id1 = Utilities.getIdentifier(table1);
-        String table1Id2 = Utilities.getIdentifier(table2);
+//        String table1Id1 = Utilities.getIdentifier(table1);
+//        String table1Id2 = Utilities.getIdentifier(table2);
+//
+//        String table2Id1 = Utilities.getIdentifier(that.table1);
+//        String table2Id2 = Utilities.getIdentifier(that.table2);
 
-        String table2Id1 = Utilities.getIdentifier(that.table1);
-        String table2Id2 = Utilities.getIdentifier(that.table2);
-
-        return table1Id1.equals(table2Id1) && table1Id2.equals(table2Id2);
+//        return table1Id1.equals(table2Id1) && table1Id2.equals(table2Id2);
+        return table1.equals(that.table1) && table2.equals(that.table2);
     }
 
     /**
@@ -71,11 +72,11 @@ public class TableCouple {
      */
     @Override
     public int hashCode() {
-        String id1 = Utilities.getIdentifier(table1);
-        String id2 = Utilities.getIdentifier(table2);
+//        String id1 = Utilities.getIdentifier(table1);
+//        String id2 = Utilities.getIdentifier(table2);
 
-        int result = id1.hashCode();
-        result = 31 * result + id2.hashCode();
+        int result = table1.hashCode();
+        result = 31 * result + table2.hashCode();
         return result;
     }
 }
