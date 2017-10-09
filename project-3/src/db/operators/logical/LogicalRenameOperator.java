@@ -32,7 +32,7 @@ public class LogicalRenameOperator implements LogicalOperator, UnaryNode<Logical
 
     @Override
     public TableHeader getHeader() {
-        return null;
+        return outputHeader;
     }
 
     @Override

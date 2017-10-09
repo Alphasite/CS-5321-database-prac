@@ -34,14 +34,17 @@ public class InteractiveShell {
         }
 
         Database DB = Database.loadDatabase(Paths.get(DB_PATH));
-        QueryBuilder builder = new QueryBuilder(DB);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
 
         Scanner scanner = new Scanner(System.in);
 
         while (true) {
             System.out.print("> ");
             String input = scanner.nextLine();
+
+            if (input.equals("exit")) {
+                return;
+            }
+
             Reader stringReader = new StringReader(input);
 
             CCJSqlParser parser = new CCJSqlParser(stringReader);
@@ -52,10 +55,12 @@ public class InteractiveShell {
                 // Get select body from statement
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
 
-                // Run db.query and print output
+                // Build logical query plan
+                QueryBuilder builder = new QueryBuilder(DB);
                 LogicalOperator logicalPlan = builder.buildQuery(select);
 
                 // Create physical plan optimized for query on given data
+                PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 queryPlanRoot.dump(System.out, true);
