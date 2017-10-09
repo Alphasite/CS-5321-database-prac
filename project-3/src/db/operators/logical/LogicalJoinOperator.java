@@ -35,6 +35,10 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
         return new TableHeader(aliases, headings);
     }
 
+    public Expression getJoinCondition() {
+        return joinCondition;
+    }
+
     @Override
     public TableHeader getHeader() {
         return outputSchema;

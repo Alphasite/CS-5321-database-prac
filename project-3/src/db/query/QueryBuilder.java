@@ -37,6 +37,11 @@ public class QueryBuilder {
         this.joinExpressions = new HashMap<>();
     }
 
+    private void reset() {
+        this.selectionExpressions = new HashMap<>();
+        this.joinExpressions = new HashMap<>();
+    }
+
     /**
      * Builds an optimized execution plan for the given query using a tree of operators
      * The results of the query can be computed by iterating over the resulting root operator
@@ -45,6 +50,8 @@ public class QueryBuilder {
      * @return The root operator of the query execution plan tree
      */
     public LogicalOperator buildQuery(PlainSelect query) {
+        this.reset();
+
         // Store ref to all needed query tokens
         List<SelectItem> selectItems = query.getSelectItems();
         Table fromItem = (Table) query.getFromItem();

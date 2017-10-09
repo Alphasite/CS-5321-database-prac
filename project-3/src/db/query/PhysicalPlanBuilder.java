@@ -40,7 +40,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         Operator rightOp = operators.pollLast();
         Operator leftOp = operators.pollLast();
 
-        Operator join = new JoinOperator(leftOp, rightOp, node.getHeader());
+        Operator join = new JoinOperator(leftOp, rightOp, node.getJoinCondition());
         operators.add(join);
     }
 

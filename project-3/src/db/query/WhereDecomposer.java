@@ -140,7 +140,6 @@ public class WhereDecomposer implements ExpressionVisitor {
 
     @Override
     public void visit(LongValue longValue) {
-        throw new NotImplementedException();
     }
 
     @Override

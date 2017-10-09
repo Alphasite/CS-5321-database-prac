@@ -1,8 +1,5 @@
 package db.query;
 
-import db.Utilities;
-import net.sf.jsqlparser.schema.Table;
-
 /**
  * A pair class to encapsulate a pair of tables.
  * <p>
@@ -22,6 +19,8 @@ public class TableCouple {
     public TableCouple(String id1, String id2) {
 //        String id1 = Utilities.getIdentifier(table1);
 //        String id2 = Utilities.getIdentifier(table2);
+        this.table1 = id1;
+        this.table2 = id2;
 
         // This ensures that this always has tables in the same order.
         // This allows equals and hash to work correctly.
