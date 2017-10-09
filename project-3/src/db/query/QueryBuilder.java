@@ -179,7 +179,8 @@ public class QueryBuilder {
 
         if (joinItems != null) {
             while (!joinExpressions.isEmpty()) {
-                for (TableCouple tc : joinExpressions.keySet()) {
+                // Iterate over a copy to allow removing from original
+                for (TableCouple tc : new HashMap<>(joinExpressions).keySet()) {
                     String table1 = tc.getTable1();
                     String table2 = tc.getTable2();
 
