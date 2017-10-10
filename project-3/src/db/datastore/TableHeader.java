@@ -1,7 +1,5 @@
 package db.datastore;
 
-import net.sf.jsqlparser.schema.Column;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -34,24 +32,6 @@ public class TableHeader {
     public TableHeader(List<String> columnAlias, List<String> columnHeaders) {
         this.columnAliases = columnAlias;
         this.columnHeaders = columnHeaders;
-    }
-
-    /**
-     * Creates a TableHeader from a list of Column objects containing info about a column and its source table
-     *
-     * @param columns The tables to use to form the table header.
-     * @return The new table header object.
-     */
-    public static TableHeader fromColumns(List<Column> columns) {
-        List<String> tableNames = new ArrayList<>();
-        List<String> columnNames = new ArrayList<>();
-
-        for (Column c : columns) {
-            tableNames.add(c.getTable().getName());
-            columnNames.add(c.getColumnName());
-        }
-
-        return new TableHeader(tableNames, columnNames);
     }
 
     /**
