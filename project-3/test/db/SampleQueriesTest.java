@@ -2,7 +2,6 @@ package db;
 
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.binary.BinaryTupleReader;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
@@ -15,17 +14,9 @@ public class SampleQueriesTest {
     private static String OUTPUT_PATH = "resources/samples/output";
     private static String EXPECTED_PATH = "resources/samples/expected";
 
-    @Before
-    public void setUp() throws Exception {
-        Project3.DUMP = false;
-    }
-
     @Test
     public void testSampleQueries() throws Exception {
-        Project3.main(new String[]{});
-
-        File[] outputFiles = new File(OUTPUT_PATH).listFiles();
-        File[] expectedFiles = new File(EXPECTED_PATH).listFiles();
+        Project3.main(new String[0]);
 
         for (int i = 1; i <= 15; i++) {
             System.out.println("Checking file 'query" + i + "'...");
