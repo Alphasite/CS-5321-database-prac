@@ -3,7 +3,9 @@ package db;
 import db.datastore.Database;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.binary.BinaryTupleReader;
+import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
+import db.query.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
@@ -32,12 +34,14 @@ public class SampleQueriesTest {
     private static String OUTPUT_PATH = "resources/samples/output";
     private static String EXPECTED_PATH = "resources/samples/expected";
 
-    @Parameters(name = "{1}")
+    @Parameters(name = "{1}: {2}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
         Database DB = Database.loadDatabase(Paths.get(INPUT_PATH + File.separator + "db"));
         QueryBuilder builder = new QueryBuilder(DB);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
+
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + File.separator + "queries.sql"));
@@ -46,11 +50,11 @@ public class SampleQueriesTest {
 
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
-                Operator queryPlanRoot = builder.buildQuery(select);
-
+                LogicalOperator logicalPlan = builder.buildQuery(select);
+                Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 File expectedFile = new File(EXPECTED_PATH + File.separator + "query" + i);
-                testCases.add(new Object[]{queryPlanRoot, expectedFile});
+                testCases.add(new Object[]{queryPlanRoot, expectedFile, statement.toString()});
 
                 i++;
             }
@@ -64,7 +68,7 @@ public class SampleQueriesTest {
     private Operator queryPlanRoot;
     private BinaryTupleReader reader;
 
-    public SampleQueriesTest(Operator queryPlanRoot, File expectedFile) {
+    public SampleQueriesTest(Operator queryPlanRoot, File expectedFile, String query) {
         this.queryPlanRoot = queryPlanRoot;
 
         try {
