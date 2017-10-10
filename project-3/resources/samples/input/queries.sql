@@ -1,3 +1,5 @@
+SELECT * FROM Sailors S1, Sailors S2 WHERE S1.A < S2.A;
+
 SELECT * FROM Sailors;
 SELECT Sailors.A FROM Sailors;
 SELECT Boats.F, Boats.D FROM Boats;

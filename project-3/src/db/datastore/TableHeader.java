@@ -17,6 +17,13 @@ public class TableHeader {
     public final List<String> columnAliases;
     public final List<String> columnHeaders;
 
+    /**
+     * A no args constructor for sorting by no criteria.
+     */
+    public TableHeader() {
+        this.columnAliases = new ArrayList<>();
+        this.columnHeaders = new ArrayList<>();
+    }
 
     /**
      * The table alias names and column names of the table.

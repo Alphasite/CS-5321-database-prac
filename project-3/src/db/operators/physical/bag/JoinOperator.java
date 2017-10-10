@@ -50,7 +50,12 @@ public class JoinOperator implements Operator, BinaryNode<Operator> {
      */
     public JoinOperator(Operator left, Operator right, Expression expression) {
         this(left, right);
-        this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
+
+        if (expression != null) {
+            this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
+        } else {
+            this.evaluator = null;
+        }
     }
 
     /**

@@ -22,24 +22,9 @@ import java.util.*;
  */
 public class QueryBuilder {
     private Database db;
-    /**
-     * Map Table name to corresponding selection predicate
-     */
-    private Map<String, Expression> selectionExpressions;
-    /**
-     * Map (Table1, Table2) couples to corresponding joining predicates
-     */
-    private Map<TableCouple, Expression> joinExpressions;
 
     public QueryBuilder(Database db) {
         this.db = db;
-        this.selectionExpressions = new HashMap<>();
-        this.joinExpressions = new HashMap<>();
-    }
-
-    private void reset() {
-        this.selectionExpressions = new HashMap<>();
-        this.joinExpressions = new HashMap<>();
     }
 
     /**
@@ -50,8 +35,6 @@ public class QueryBuilder {
      * @return The root operator of the query execution plan tree
      */
     public LogicalOperator buildQuery(PlainSelect query) {
-        this.reset();
-
         // Store ref to all needed query tokens
         List<SelectItem> selectItems = query.getSelectItems();
         Table fromItem = (Table) query.getFromItem();
@@ -83,8 +66,6 @@ public class QueryBuilder {
         // The spec allows handling sorting and duplicate elimination after projection
 
         if (orderBy != null) {
-            Set<String> alreadySortedColumns = new HashSet<>();
-
             List<String> aliases = new ArrayList<>();
             List<String> columns = new ArrayList<>();
 
@@ -93,27 +74,9 @@ public class QueryBuilder {
 
                 String alias = Utilities.getIdentifier(columnInstance.getTable());
                 String column = columnInstance.getColumnName();
-                String fullName = alias + "." + column;
 
-                if (!alreadySortedColumns.contains(fullName)) {
-                    aliases.add(alias);
-                    columns.add(column);
-                    alreadySortedColumns.add(fullName);
-                }
-            }
-
-            TableHeader header = rootNode.getHeader();
-            for (int i = 0; i < header.columnAliases.size(); i++) {
-                String alias = header.columnAliases.get(i);
-                String column = header.columnHeaders.get(i);
-                String fullName = alias + "." + column;
-
-                // Append non specified columns so that they are used to break ties
-                if (!alreadySortedColumns.contains(fullName)) {
-                    aliases.add(alias);
-                    columns.add(column);
-                    alreadySortedColumns.add(fullName);
-                }
+                aliases.add(alias);
+                columns.add(column);
             }
 
             TableHeader sortHeader = new TableHeader(aliases, columns);
@@ -124,7 +87,7 @@ public class QueryBuilder {
             // Current implementation requires sorted queries
             if (orderBy == null) {
                 // Sort all fields
-                rootNode = new LogicalSortOperator(rootNode, rootNode.getHeader());
+                rootNode = new LogicalSortOperator(rootNode, new TableHeader());
             }
 
             rootNode = new LogicalDistinctOperator(rootNode);
@@ -145,77 +108,81 @@ public class QueryBuilder {
 
         // First create the root node.
         Set<String> alreadyJoinedTables = new HashSet<>();
-        String rootTabledentifier = Utilities.getIdentifier(rootTable);
-        alreadyJoinedTables.add(rootTabledentifier);
 
-        LogicalOperator rootNode = this.getScanAndMaybeRename(rootTable);
+        LogicalOperator rootNode = null;
 
         // Then find which other tables exist.
         // then store them in a list of tables which haven't yet been joined.
 
         Map<String, LogicalOperator> tablesToBeJoined = new HashMap<>();
+        Set<String> unjoinedTables = new HashSet<>();
+
+        unjoinedTables.add(Utilities.getIdentifier(rootTable));
+        tablesToBeJoined.put(Utilities.getIdentifier(rootTable), this.getScanAndMaybeRename(rootTable));
+
         if (joinItems != null) {
             for (Join join : joinItems) {
                 Table table = (Table) join.getRightItem();
-                tablesToBeJoined.put(Utilities.getIdentifier(table), this.getScanAndMaybeRename(table));
+                String identifier = Utilities.getIdentifier(table);
+                tablesToBeJoined.put(identifier, this.getScanAndMaybeRename(table));
+                unjoinedTables.add(identifier);
             }
         }
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.
+        Map<String, Expression> selectionExpressions = new HashMap<>();
+        Map<TableCouple, Expression> joinExpressions = new HashMap<>();
 
         if (rootExpression != null) {
             WhereDecomposer bwb = new WhereDecomposer(rootExpression);
-            selectionExpressions = bwb.getSelectionExpressions();
-            joinExpressions = bwb.getJoinExpressions();
+            selectionExpressions.putAll(bwb.getSelectionExpressions());
+            joinExpressions.putAll(bwb.getJoinExpressions());
         }
 
-        if (selectionExpressions.containsKey(rootTabledentifier)) {
-            rootNode = new LogicalSelectOperator(rootNode, selectionExpressions.get(rootTabledentifier));
-        }
+        TriFunction<LogicalOperator, String, Expression, LogicalOperator> joinTable = (root, tableName, expression) -> {
+            LogicalOperator rightOp = tablesToBeJoined.get(tableName);
+
+            if (selectionExpressions.containsKey(tableName)) {
+                rightOp = new LogicalSelectOperator(rightOp, selectionExpressions.get(tableName));
+            }
+
+            alreadyJoinedTables.add(tableName);
+            unjoinedTables.remove(tableName);
+
+            if (root != null) {
+                return new LogicalJoinOperator(root, rightOp, expression);
+            } else {
+                return rightOp;
+            }
+        };
 
         // Add all of the joined tables
         // Add any join expressions to the join operator
         // Add any other expressions below the join.
 
         if (joinItems != null) {
-            while (!joinExpressions.isEmpty()) {
-                // Iterate over a copy to allow removing from original
-                for (TableCouple tc : new HashMap<>(joinExpressions).keySet()) {
-                    String table1 = tc.getTable1();
-                    String table2 = tc.getTable2();
+            // Iterate over a copy to allow removing from original
+            for (TableCouple tc : joinExpressions.keySet()) {
+                String table1 = tc.getTable1();
+                String table2 = tc.getTable2();
 
-                    String identifier;
-                    if (alreadyJoinedTables.contains(table1)) {
-                        identifier = table2;
-                    } else {
-                        identifier = table1;
-                    }
+                Expression expression = joinExpressions.get(tc);
 
-                    LogicalOperator rightOp = tablesToBeJoined.get(identifier);
-
-                    if (selectionExpressions.containsKey(identifier)) {
-                        rightOp = new LogicalSelectOperator(rightOp, selectionExpressions.get(identifier));
-                    }
-
-                    rootNode = new LogicalJoinOperator(rootNode, rightOp, joinExpressions.get(tc));
-
-                    joinExpressions.remove(tc);
-
-                    alreadyJoinedTables.add(identifier);
-                    tablesToBeJoined.remove(identifier);
+                if (!alreadyJoinedTables.contains(table1) && !alreadyJoinedTables.contains(table2)) {
+                    rootNode = joinTable.apply(rootNode, table1, null);
+                    rootNode = joinTable.apply(rootNode, table2, expression);
+                } else if (!alreadyJoinedTables.contains(table1)) {
+                    rootNode = joinTable.apply(rootNode, table1, expression);
+                } else if (!alreadyJoinedTables.contains(table2)) {
+                    rootNode = joinTable.apply(rootNode, table2, expression);
+                } else {
+                    rootNode = new LogicalSelectOperator(rootNode, expression);
                 }
             }
+        }
 
-            if (!tablesToBeJoined.isEmpty()) {
-                for (Join join : joinItems) {
-                    String identifier = Utilities.getIdentifier((Table) join.getRightItem());
-
-                    if (tablesToBeJoined.containsKey(identifier)) {
-                        LogicalOperator rightOp = tablesToBeJoined.get(identifier);
-                        rootNode = new LogicalJoinOperator(rootNode, rightOp, null);
-                    }
-                }
-            }
+        for (String table : unjoinedTables) {
+            rootNode = joinTable.apply(rootNode, table, null);
         }
 
         return rootNode;
@@ -236,5 +203,4 @@ public class QueryBuilder {
             return new LogicalRenameOperator(scan, table.getAlias());
         }
     }
-
 }

@@ -16,15 +16,13 @@ public class TableCouple {
      * @param table1 The first table
      * @param table2 The second table
      */
-    public TableCouple(String id1, String id2) {
-//        String id1 = Utilities.getIdentifier(table1);
-//        String id2 = Utilities.getIdentifier(table2);
-        this.table1 = id1;
-        this.table2 = id2;
+    public TableCouple(String table1, String table2) {
+        this.table1 = table1;
+        this.table2 = table2;
 
         // This ensures that this always has tables in the same order.
         // This allows equals and hash to work correctly.
-        if (id1.compareTo(id2) > 0) {
+        if (table1.compareTo(table2) > 0) {
             this.table1 = table1;
             this.table2 = table2;
         } else {
@@ -54,13 +52,6 @@ public class TableCouple {
 
         TableCouple that = (TableCouple) o;
 
-//        String table1Id1 = Utilities.getIdentifier(table1);
-//        String table1Id2 = Utilities.getIdentifier(table2);
-//
-//        String table2Id1 = Utilities.getIdentifier(that.table1);
-//        String table2Id2 = Utilities.getIdentifier(that.table2);
-
-//        return table1Id1.equals(table2Id1) && table1Id2.equals(table2Id2);
         return table1.equals(that.table1) && table2.equals(that.table2);
     }
 
@@ -71,9 +62,6 @@ public class TableCouple {
      */
     @Override
     public int hashCode() {
-//        String id1 = Utilities.getIdentifier(table1);
-//        String id2 = Utilities.getIdentifier(table2);
-
         int result = table1.hashCode();
         result = 31 * result + table2.hashCode();
         return result;
