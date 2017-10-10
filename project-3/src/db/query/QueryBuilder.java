@@ -44,6 +44,10 @@ public class QueryBuilder {
         List<OrderByElement> orderBy = query.getOrderByElements();
         boolean isDistinct = query.getDistinct() != null;
 
+        if (joinItems == null) {
+            joinItems = new ArrayList<>();
+        }
+
         // Keep reference to current root
         LogicalOperator rootNode;
 
@@ -62,6 +66,34 @@ public class QueryBuilder {
             }
 
             rootNode = new LogicalProjectOperator(rootNode, new TableHeader(tableNames, columnNames));
+        } else {
+            // If all columns is selected, the joins may have been reordered, so we need to reproject them in the
+            // expected order, as specified by the join statements.
+
+            List<String> aliases = new ArrayList<>();
+            List<String> columns = new ArrayList<>();
+
+            TableHeader header = rootNode.getHeader();
+
+            List<String> tableNames = new ArrayList<>();
+
+            tableNames.add(Utilities.getIdentifier(fromItem));
+
+            for (Join joinItem : joinItems) {
+                String alias = Utilities.getIdentifier((Table) joinItem.getRightItem());
+                tableNames.add(alias);
+            }
+
+            for (String alias : tableNames) {
+                for (int i = 0; i < header.size(); i++) {
+                    if (header.columnAliases.get(i).equals(alias)) {
+                        aliases.add(alias);
+                        columns.add(header.columnHeaders.get(i));
+                    }
+                }
+            }
+
+            rootNode = new LogicalProjectOperator(rootNode, new TableHeader(aliases, columns));
         }
 
         // The spec allows handling sorting and duplicate elimination after projection
@@ -121,13 +153,11 @@ public class QueryBuilder {
         unjoinedTables.add(Utilities.getIdentifier(joinRootTable));
         joinableTableInstances.put(Utilities.getIdentifier(joinRootTable), this.getScanAndMaybeRename(joinRootTable));
 
-        if (rightJoinExpressions != null) {
-            for (Join join : rightJoinExpressions) {
-                Table table = (Table) join.getRightItem();
-                String identifier = Utilities.getIdentifier(table);
-                joinableTableInstances.put(identifier, this.getScanAndMaybeRename(table));
-                unjoinedTables.add(identifier);
-            }
+        for (Join join : rightJoinExpressions) {
+            Table table = (Table) join.getRightItem();
+            String identifier = Utilities.getIdentifier(table);
+            joinableTableInstances.put(identifier, this.getScanAndMaybeRename(table));
+            unjoinedTables.add(identifier);
         }
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.

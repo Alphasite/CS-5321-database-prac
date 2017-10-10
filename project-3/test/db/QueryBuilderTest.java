@@ -50,7 +50,9 @@ public class QueryBuilderTest {
         LogicalOperator logRoot = logicalBuilder.buildQuery(tokens);
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
-        assertTrue(root instanceof ScanOperator);
+        assertTrue(root instanceof ProjectionOperator);
+        assertTrue(((ProjectionOperator) root).getChild() instanceof ScanOperator);
+
     }
 
     @Test
@@ -60,8 +62,9 @@ public class QueryBuilderTest {
         LogicalOperator logRoot = logicalBuilder.buildQuery(tokens);
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
-        assertTrue(root instanceof SelectionOperator);
-        SelectionOperator select = (SelectionOperator) root;
+        assertTrue(root instanceof ProjectionOperator);
+        assertTrue(((ProjectionOperator) root).getChild() instanceof SelectionOperator);
+        SelectionOperator select = (SelectionOperator) ((ProjectionOperator) root).getChild();
         assertEquals(tokens.getWhere(), select.getPredicate());
     }
 
@@ -85,10 +88,11 @@ public class QueryBuilderTest {
         LogicalOperator logRoot = logicalBuilder.buildQuery(tokens);
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
-        assertTrue(root instanceof JoinOperator);
-        JoinOperator join = (JoinOperator) root;
-        assertEquals("Sailors.A | Sailors.B | Sailors.C | Reserves.G | Reserves.H", join.getHeader().toString());
-        assertEquals(tokens.getWhere(), join.getPredicate());
+        assertTrue(root instanceof ProjectionOperator);
+        assertTrue(((ProjectionOperator) root).getChild() instanceof JoinOperator);
+        JoinOperator operator = (JoinOperator) ((ProjectionOperator) root).getChild();
+        assertEquals("Sailors.A | Sailors.B | Sailors.C | Reserves.G | Reserves.H", operator.getHeader().toString());
+        assertEquals(tokens.getWhere(), operator.getPredicate());
 
         assertEquals("64 | 113 | 139 | 64 | 156", root.getNextTuple().toString());
         assertEquals("64 | 113 | 139 | 64 | 70", root.getNextTuple().toString());
