@@ -23,26 +23,31 @@ public class SampleQueriesTest {
 
             File outputFile = new File(OUTPUT_PATH + File.separator + "query" + i);
 
-            assertTrue("Error: file 'query" + i + "' is not in output directory", outputFile.exists());
+            assertTrue("file 'query" + i + "' is not in output directory", outputFile.exists());
 
             File expectedFile = new File(EXPECTED_PATH + File.separator + "query" + i);
 
             BinaryTupleReader outputReader = new BinaryTupleReader(null, new FileInputStream(outputFile).getChannel());
             BinaryTupleReader expectedReader = new BinaryTupleReader(null, new FileInputStream(expectedFile).getChannel());
 
-            Tuple outputTuple;
+            Tuple outputTuple = null;
             Tuple expectedTuple;
 
             while (true) {
-                outputTuple = outputReader.next();
                 expectedTuple = expectedReader.next();
+
+                try {
+                    outputTuple = outputReader.next();
+                } catch (OutOfMemoryError e) {
+                    fail("tuple has invalid medidata");
+                }
 
                 if (outputTuple == null && expectedTuple == null) {
                     break;
                 } else if (outputTuple == null) {
-                    fail("Error: output file has fewer pages than expected");
+                    fail("output file has fewer pages than expected");
                 } else if (expectedTuple == null) {
-                    fail("Error: output file has more pages than expected");
+                    fail("output file has more pages than expected");
                 } else {
                     assertEquals(expectedTuple, outputTuple);
                 }
