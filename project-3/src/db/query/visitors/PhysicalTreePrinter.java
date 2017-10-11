@@ -58,7 +58,7 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
 
     @Override
     public void visit(ScanOperator node) {
-        lines.add(pad("Scan (" + node.getTable().file.getFileName() + ")"));
+        lines.add(pad("Scan " + node.getTable().file.getFileName()));
     }
 
     @Override

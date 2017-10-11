@@ -85,7 +85,6 @@ public class SampleQueriesTest {
 
     @Test
     public void printQuery() throws Exception {
-        System.out.println("\n");
         System.out.println("Query: " + this.query);
     }
 
