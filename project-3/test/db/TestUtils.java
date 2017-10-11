@@ -47,6 +47,7 @@ public class TestUtils {
                 assertThat(test, equalTo(ref));
             }
 
+            i++;
 //            System.out.println("[OK] " + ++i + " " + ref.toString());
         }
 
@@ -90,6 +91,7 @@ public class TestUtils {
         int i = 0;
         for (String testedTuple : testedTuples) {
             assertThat(referenceTuples.contains(testedTuple), equalTo(true));
+            i++;
         }
 
         System.out.println("ALL OKAY: checked " + i + " rows.");

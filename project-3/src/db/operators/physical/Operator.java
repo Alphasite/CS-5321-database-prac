@@ -43,6 +43,13 @@ public interface Operator {
      */
     boolean reset();
 
+    /**
+     * Accept a visitor
+     *
+     * @param visitor the visitor to be accepted.
+     */
+    void accept(PhysicalTreeVisitor visitor);
+
 
     /**
      * Write the table header and rows to the provided print stream.

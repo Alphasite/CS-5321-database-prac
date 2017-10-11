@@ -1,4 +1,4 @@
-package db.query;
+package db.query.visitors;
 
 import db.operators.logical.*;
 import db.operators.physical.Operator;

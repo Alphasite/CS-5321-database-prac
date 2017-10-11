@@ -3,7 +3,7 @@ package db;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
-import db.query.PhysicalPlanBuilder;
+import db.query.visitors.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;

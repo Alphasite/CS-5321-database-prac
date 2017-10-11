@@ -1,5 +1,6 @@
-package db.query;
+package db.query.visitors;
 
+import db.query.TableCouple;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;

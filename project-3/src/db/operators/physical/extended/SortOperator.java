@@ -4,6 +4,7 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
 import db.operators.physical.Operator;
+import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -18,6 +19,8 @@ import java.util.Optional;
  */
 public class SortOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
+
+    private final TableHeader sortHeader;
 
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
@@ -36,6 +39,7 @@ public class SortOperator implements Operator, UnaryNode<Operator> {
      */
     public SortOperator(Operator source, TableHeader sortHeaders) {
         this.source = source;
+        this.sortHeader = sortHeaders;
         this.tupleSortPriorityIndex = new ArrayList<>();
 
         for (int i = 0; i < sortHeaders.size(); i++) {
@@ -118,7 +122,19 @@ public class SortOperator implements Operator, UnaryNode<Operator> {
     }
 
     @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
     public Operator getChild() {
         return source;
+    }
+
+    /**
+     * @return The table which is indicates the sort order.
+     */
+    public TableHeader getSortHeader() {
+        return sortHeader;
     }
 }

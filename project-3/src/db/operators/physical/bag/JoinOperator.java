@@ -5,7 +5,8 @@ import db.datastore.tuple.Tuple;
 import db.operators.BinaryNode;
 import db.operators.logical.LogicalJoinOperator;
 import db.operators.physical.Operator;
-import db.query.ExpressionEvaluator;
+import db.operators.physical.PhysicalTreeVisitor;
+import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -113,6 +114,11 @@ public class JoinOperator implements Operator, BinaryNode<Operator> {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
     }
 
 

@@ -5,6 +5,7 @@ import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
 import db.operators.logical.LogicalRenameOperator;
 import db.operators.physical.Operator;
+import db.operators.physical.PhysicalTreeVisitor;
 
 /**
  * Rename the table of the child tuples' schema.
@@ -58,7 +59,19 @@ public class RenameOperator implements Operator, UnaryNode<Operator> {
     }
 
     @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
     public Operator getChild() {
         return child;
+    }
+
+    /**
+     * @return The new name of the table.
+     */
+    public String getNewTableName() {
+        return newTableName;
     }
 }

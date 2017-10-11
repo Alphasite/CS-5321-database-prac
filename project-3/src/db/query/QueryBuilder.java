@@ -5,6 +5,7 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
+import db.query.visitors.WhereDecomposer;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;

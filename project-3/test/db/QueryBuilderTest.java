@@ -9,7 +9,7 @@ import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
-import db.query.PhysicalPlanBuilder;
+import db.query.visitors.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.Before;

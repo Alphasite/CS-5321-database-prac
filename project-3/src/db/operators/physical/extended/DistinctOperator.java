@@ -4,6 +4,7 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
 import db.operators.physical.Operator;
+import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.Objects;
 
@@ -57,6 +58,11 @@ public class DistinctOperator implements Operator, UnaryNode<Operator> {
     @Override
     public boolean reset() {
         return this.source.reset();
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
     }
 
     @Override

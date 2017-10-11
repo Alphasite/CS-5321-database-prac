@@ -1,4 +1,4 @@
-package db.query;
+package db.query.visitors;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;

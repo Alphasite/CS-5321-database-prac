@@ -4,7 +4,8 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
 import db.operators.physical.Operator;
-import db.query.ExpressionEvaluator;
+import db.operators.physical.PhysicalTreeVisitor;
+import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -57,6 +58,11 @@ public class SelectionOperator implements Operator, UnaryNode<Operator> {
     @Override
     public boolean reset() {
         return this.source.reset();
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
     }
 
     public Expression getPredicate() {

@@ -3,6 +3,7 @@ package db.operators;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.physical.Operator;
+import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.List;
 
@@ -32,5 +33,10 @@ public class DummyOperator implements Operator {
     public boolean reset() {
         this.i = 0;
         return true;
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        // Not used for the mock class.
     }
 }
