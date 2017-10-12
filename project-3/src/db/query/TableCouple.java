@@ -3,7 +3,7 @@ package db.query;
 /**
  * A pair class to encapsulate a pair of tables.
  * <p>
- * Implements {@link #equals(Object)} and {@link #hashCode()}
+ * Implements {@link #equals(Object)} and {@link #hashCode()} to allow use as a key in hash tables.
  */
 public class TableCouple {
     private String table1;

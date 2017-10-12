@@ -13,6 +13,11 @@ import db.operators.physical.physical.ScanOperator;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/**
+ * Physical query plan builder, implemented as a Logical operator tree visitor
+ *
+ * For now convert each logical op to the corresponding physical one, later will implement proper query optimization
+ */
 public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
     /**

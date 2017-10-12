@@ -4,7 +4,6 @@ import db.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
-import db.operators.physical.Operator;
 import db.query.visitors.WhereDecomposer;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
@@ -16,7 +15,7 @@ import java.util.*;
 /**
  * Query plan generator
  * <p>
- * This class reads the tokens from the parsed SQL query and generates an tree of {@link Operator}
+ * This class reads the tokens from the parsed SQL query and generates a tree of {@link LogicalOperator}
  * that can then be used to retrieve all matching records.
  * <p>
  * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY
@@ -24,16 +23,20 @@ import java.util.*;
 public class QueryBuilder {
     private Database db;
 
+    /**
+     * Initialize query builder using the provided database object as a source for Table schema information
+     */
     public QueryBuilder(Database db) {
         this.db = db;
     }
 
     /**
-     * Builds an optimized execution plan for the given query using a tree of operators
-     * The results of the query can be computed by iterating over the resulting root operator
+     * Builds an optimized Relational Algebra execution plan for the given query using a tree of logical operators.
+     * Optimizations performed at this stage include evaluating predicates as early as possible.
+     * It is necessary to convert the resulting tree to a physical plan in order to execute the query.
      *
      * @param query The parsed query object
-     * @return The root operator of the query execution plan tree
+     * @return The root operator of the logical query plan
      */
     @SuppressWarnings("unchecked")
     public LogicalOperator buildQuery(PlainSelect query) {
@@ -219,8 +222,8 @@ public class QueryBuilder {
     /**
      * Build the scan operator for this table and add a rename step if required.
      *
-     * @param table The table to be read/renamed.
-     * @return the scan +/- the rename operator.
+     * @param table The table token extracted from the SQL FROM clause to be read/renamed.
+     * @return scan operator with an optional rename to handle aliases
      */
     private LogicalOperator getScanAndMaybeRename(Table table) {
         LogicalScanOperator scan = new LogicalScanOperator(db.getTable(table.getName()));

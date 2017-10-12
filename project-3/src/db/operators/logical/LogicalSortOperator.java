@@ -8,6 +8,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Logical operator for sorting : generates a header describing the order in which columns are used to sort tuples
+ */
 public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOperator> {
     private final LogicalOperator source;
     private TableHeader sortHeader;

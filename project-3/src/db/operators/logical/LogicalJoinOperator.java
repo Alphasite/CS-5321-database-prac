@@ -7,6 +7,9 @@ import net.sf.jsqlparser.expression.Expression;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Logical operator for join handling : keeps track of left and right tuple sources and optional join condition.
+ */
 public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalOperator> {
     private final LogicalOperator left;
     private final LogicalOperator right;
