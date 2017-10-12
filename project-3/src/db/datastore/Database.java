@@ -13,7 +13,6 @@ import java.util.*;
 public class Database {
     private final Map<String, TableInfo> tables;
 
-
     /**
      * Instantiate the catalogue.
      *
@@ -22,7 +21,6 @@ public class Database {
     private Database(Map<String, TableInfo> tables) {
         this.tables = tables;
     }
-
 
     /**
      * A convenience method which loads the catalogue file from disk and creates the database object.
@@ -60,7 +58,6 @@ public class Database {
 
         return (new Database(tables));
     }
-
 
     /**
      * Get information about a table by name.

@@ -2,7 +2,9 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
 import db.operators.physical.Operator;
+import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,7 @@ import java.util.Optional;
  *
  * @inheritDoc
  */
-public class ProjectionOperator implements Operator {
+public class ProjectionOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
 
     private final TableHeader newHeader;
@@ -31,7 +33,7 @@ public class ProjectionOperator implements Operator {
      *                  Alias' may be left blank, but headers must be filled.
      * @param source    The child operator for whom the tuples are projected.
      */
-    public ProjectionOperator(TableHeader newHeader, Operator source) {
+    public ProjectionOperator(Operator source, TableHeader newHeader) {
         this.source = source;
         this.newHeader = newHeader.clone();
         this.newToOldColumnMapping = new ArrayList<>();
@@ -87,5 +89,15 @@ public class ProjectionOperator implements Operator {
     @Override
     public boolean reset() {
         return this.source.reset();
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    @Override
+    public Operator getChild() {
+        return source;
     }
 }

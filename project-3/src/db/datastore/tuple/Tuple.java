@@ -16,7 +16,6 @@ public class Tuple {
         this.fields = fields;
     }
 
-
     /**
      * A method to join two tuples into a single tuple.
      *

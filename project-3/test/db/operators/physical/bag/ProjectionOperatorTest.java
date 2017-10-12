@@ -54,7 +54,7 @@ public class ProjectionOperatorTest {
                 Arrays.asList("A", "C")
         );
 
-        ProjectionOperator projectionOperator = new ProjectionOperator(header, opA);
+        ProjectionOperator projectionOperator = new ProjectionOperator(opA, header);
         assertEquals(projectionOperator.getHeader().toString(), opB.getHeader().toString());
     }
 
@@ -65,7 +65,7 @@ public class ProjectionOperatorTest {
                 Arrays.asList("A", "C")
         );
 
-        ProjectionOperator projectionOperator = new ProjectionOperator(header, opA);
+        ProjectionOperator projectionOperator = new ProjectionOperator(opA, header);
 
         TestUtils.compareTuples(opA, opB);
     }

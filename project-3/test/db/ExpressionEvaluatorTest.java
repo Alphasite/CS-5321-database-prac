@@ -2,7 +2,7 @@ package db;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.query.ExpressionEvaluator;
+import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.BeforeClass;
 import org.junit.Test;

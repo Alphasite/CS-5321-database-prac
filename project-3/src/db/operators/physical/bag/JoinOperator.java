@@ -2,9 +2,11 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.BinaryNode;
 import db.operators.logical.LogicalJoinOperator;
 import db.operators.physical.Operator;
-import db.query.ExpressionEvaluator;
+import db.operators.physical.PhysicalTreeVisitor;
+import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -14,12 +16,12 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class JoinOperator implements Operator {
+public class JoinOperator implements Operator, BinaryNode<Operator> {
     private final Operator left;
     private final Operator right;
 
     private Tuple leftTupleCache;
-    private TableHeader tableHeader;
+    private TableHeader resultHeader;
     private ExpressionEvaluator evaluator;
 
     /**
@@ -27,13 +29,17 @@ public class JoinOperator implements Operator {
      *
      * @param left  The operator which generates the left hand tuples.
      * @param right The operator which generates the right hand tuples.
+     * @param resultHeader The resulting tuple header
      */
-    public JoinOperator(Operator left, Operator right) {
+    public JoinOperator(Operator left, Operator right, TableHeader resultHeader) {
         this.left = left;
         this.right = right;
+        this.resultHeader = resultHeader;
         this.reset();
+    }
 
-        this.tableHeader = LogicalJoinOperator.computeHeader(left, right);
+    public JoinOperator(Operator left, Operator right) {
+        this(left, right, LogicalJoinOperator.computeHeader(left.getHeader(), right.getHeader()));
     }
 
     /**
@@ -45,7 +51,12 @@ public class JoinOperator implements Operator {
      */
     public JoinOperator(Operator left, Operator right, Expression expression) {
         this(left, right);
-        this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
+
+        if (expression != null) {
+            this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
+        } else {
+            this.evaluator = null;
+        }
     }
 
     /**
@@ -89,7 +100,7 @@ public class JoinOperator implements Operator {
      */
     @Override
     public TableHeader getHeader() {
-        return this.tableHeader;
+        return this.resultHeader;
     }
 
     /**
@@ -103,6 +114,11 @@ public class JoinOperator implements Operator {
         } else {
             return false;
         }
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
     }
 
 
@@ -125,5 +141,15 @@ public class JoinOperator implements Operator {
 
     public Expression getPredicate() {
         return evaluator.getExpression();
+    }
+
+    @Override
+    public Operator getLeft() {
+        return left;
+    }
+
+    @Override
+    public Operator getRight() {
+        return right;
     }
 }

@@ -1,7 +1,9 @@
 package db;
 
 import db.datastore.Database;
+import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
+import db.query.visitors.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
@@ -41,6 +43,7 @@ public class Project3 {
 
         Database DB = Database.loadDatabase(Paths.get(DB_PATH));
         QueryBuilder builder = new QueryBuilder(DB);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + "/queries.sql"));
@@ -57,7 +60,10 @@ public class Project3 {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
 
                 // Run db.query and print output
-                Operator queryPlanRoot = builder.buildQuery(select);
+                LogicalOperator logicalPlan = builder.buildQuery(select);
+
+                // Create physical plan optimized for query on given data
+                Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 if (DUMP) {
                     queryPlanRoot.dump(System.out, true);

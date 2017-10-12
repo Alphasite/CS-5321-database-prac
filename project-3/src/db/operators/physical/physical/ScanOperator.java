@@ -7,6 +7,7 @@ import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.string.StringTupleReader;
 import db.operators.physical.Operator;
+import db.operators.physical.PhysicalTreeVisitor;
 
 /**
  * An operator which reads a file and parses it according to the schema in the catalogue, producing tuples.
@@ -59,5 +60,17 @@ public class ScanOperator implements Operator {
         }
 
         return this.reader != null;
+    }
+
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    /**
+     * @return the underlying table info instance.
+     */
+    public TableInfo getTable() {
+        return table;
     }
 }

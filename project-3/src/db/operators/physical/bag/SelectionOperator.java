@@ -2,8 +2,10 @@ package db.operators.physical.bag;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
 import db.operators.physical.Operator;
-import db.query.ExpressionEvaluator;
+import db.operators.physical.PhysicalTreeVisitor;
+import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -11,7 +13,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class SelectionOperator implements Operator {
+public class SelectionOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
 
     private ExpressionEvaluator evaluator;
@@ -58,7 +60,17 @@ public class SelectionOperator implements Operator {
         return this.source.reset();
     }
 
+    @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
+    }
+
     public Expression getPredicate() {
         return evaluator.getExpression();
+    }
+
+    @Override
+    public Operator getChild() {
+        return source;
     }
 }

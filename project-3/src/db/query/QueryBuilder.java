@@ -3,14 +3,8 @@ package db.query;
 import db.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
-import db.operators.physical.Operator;
-import db.operators.physical.bag.JoinOperator;
-import db.operators.physical.bag.ProjectionOperator;
-import db.operators.physical.bag.RenameOperator;
-import db.operators.physical.bag.SelectionOperator;
-import db.operators.physical.extended.DistinctOperator;
-import db.operators.physical.extended.SortOperator;
-import db.operators.physical.physical.ScanOperator;
+import db.operators.logical.*;
+import db.query.visitors.WhereDecomposer;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -21,36 +15,31 @@ import java.util.*;
 /**
  * Query plan generator
  * <p>
- * This class reads the tokens from the parsed SQL query and generates an tree of {@link Operator}
+ * This class reads the tokens from the parsed SQL query and generates a tree of {@link LogicalOperator}
  * that can then be used to retrieve all matching records.
  * <p>
  * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY
  */
 public class QueryBuilder {
     private Database db;
-    /**
-     * Map Table name to corresponding selection predicate
-     */
-    private Map<String, Expression> selectionExpressions;
-    /**
-     * Map (Table1, Table2) couples to corresponding joining predicates
-     */
-    private Map<TableCouple, Expression> joinExpressions;
 
+    /**
+     * Initialize query builder using the provided database object as a source for Table schema information
+     */
     public QueryBuilder(Database db) {
         this.db = db;
-        this.selectionExpressions = new HashMap<>();
-        this.joinExpressions = new HashMap<>();
     }
 
     /**
-     * Builds an optimized execution plan for the given query using a tree of operators
-     * The results of the query can be computed by iterating over the resulting root operator
+     * Builds an optimized Relational Algebra execution plan for the given query using a tree of logical operators.
+     * Optimizations performed at this stage include evaluating predicates as early as possible.
+     * It is necessary to convert the resulting tree to a physical plan in order to execute the query.
      *
      * @param query The parsed query object
-     * @return The root operator of the query execution plan tree
+     * @return The root operator of the logical query plan
      */
-    public Operator buildQuery(PlainSelect query) {
+    @SuppressWarnings("unchecked")
+    public LogicalOperator buildQuery(PlainSelect query) {
         // Store ref to all needed query tokens
         List<SelectItem> selectItems = query.getSelectItems();
         Table fromItem = (Table) query.getFromItem();
@@ -59,11 +48,15 @@ public class QueryBuilder {
         List<OrderByElement> orderBy = query.getOrderByElements();
         boolean isDistinct = query.getDistinct() != null;
 
+        if (joinItems == null) {
+            joinItems = new ArrayList<>();
+        }
+
         // Keep reference to current root
-        Operator rootNode;
+        LogicalOperator rootNode;
 
         // Build the scan-select-join tree structure
-        rootNode = processWhereClause(whereItem, joinItems, fromItem);
+        rootNode = processWhereClause(whereItem, fromItem, joinItems);
 
         // Add projections
         if (!(selectItems.get(0) instanceof AllColumns)) {
@@ -76,14 +69,40 @@ public class QueryBuilder {
                 columnNames.add(columnRef.getColumnName());
             }
 
-            rootNode = new ProjectionOperator(new TableHeader(tableNames, columnNames), rootNode);
+            rootNode = new LogicalProjectOperator(rootNode, new TableHeader(tableNames, columnNames));
+        } else {
+            // If all columns is selected, the joins may have been reordered, so we need to reproject them in the
+            // expected order, as specified by the join statements.
+
+            List<String> aliases = new ArrayList<>();
+            List<String> columns = new ArrayList<>();
+
+            TableHeader header = rootNode.getHeader();
+
+            List<String> tableNames = new ArrayList<>();
+
+            tableNames.add(Utilities.getIdentifier(fromItem));
+
+            for (Join joinItem : joinItems) {
+                String alias = Utilities.getIdentifier((Table) joinItem.getRightItem());
+                tableNames.add(alias);
+            }
+
+            for (String alias : tableNames) {
+                for (int i = 0; i < header.size(); i++) {
+                    if (header.columnAliases.get(i).equals(alias)) {
+                        aliases.add(alias);
+                        columns.add(header.columnHeaders.get(i));
+                    }
+                }
+            }
+
+            rootNode = new LogicalProjectOperator(rootNode, new TableHeader(aliases, columns));
         }
 
         // The spec allows handling sorting and duplicate elimination after projection
 
         if (orderBy != null) {
-            Set<String> alreadySortedColumns = new HashSet<>();
-
             List<String> aliases = new ArrayList<>();
             List<String> columns = new ArrayList<>();
 
@@ -92,41 +111,23 @@ public class QueryBuilder {
 
                 String alias = Utilities.getIdentifier(columnInstance.getTable());
                 String column = columnInstance.getColumnName();
-                String fullName = alias + "." + column;
 
-                if (!alreadySortedColumns.contains(fullName)) {
-                    aliases.add(alias);
-                    columns.add(column);
-                    alreadySortedColumns.add(fullName);
-                }
-            }
-
-            TableHeader header = rootNode.getHeader();
-            for (int i = 0; i < header.columnAliases.size(); i++) {
-                String alias = header.columnAliases.get(i);
-                String column = header.columnHeaders.get(i);
-                String fullName = alias + "." + column;
-
-                // Append non specified columns so that they are used to break ties
-                if (!alreadySortedColumns.contains(fullName)) {
-                    aliases.add(alias);
-                    columns.add(column);
-                    alreadySortedColumns.add(fullName);
-                }
+                aliases.add(alias);
+                columns.add(column);
             }
 
             TableHeader sortHeader = new TableHeader(aliases, columns);
-            rootNode = new SortOperator(rootNode, sortHeader);
+            rootNode = new LogicalSortOperator(rootNode, sortHeader);
         }
 
         if (isDistinct) {
             // Current implementation requires sorted queries
             if (orderBy == null) {
                 // Sort all fields
-                rootNode = new SortOperator(rootNode, rootNode.getHeader());
+                rootNode = new LogicalSortOperator(rootNode, new TableHeader());
             }
 
-            rootNode = new DistinctOperator(rootNode);
+            rootNode = new LogicalDistinctOperator(rootNode);
         }
 
         return rootNode;
@@ -136,86 +137,83 @@ public class QueryBuilder {
      * Build the internal maps used to link every part of the WHERE clause to the table they reference
      *
      * @param rootExpression the where expression
-     * @param joinItems      the non root joined tables and their aliases
-     * @param rootTable      the root table, special cased for some reason.
+     * @param joinRootTable the left most table on the expression tree.
+     * @param rightJoinExpressions the non root joined tables and their aliases
      * @return The root node of the sql tree formed from the where and from conditions
      */
-    private Operator processWhereClause(Expression rootExpression, List<Join> joinItems, Table rootTable) {
-
-        // First create the root node.
-        Set<String> alreadyJoinedTables = new HashSet<>();
-        String rootTabledentifier = Utilities.getIdentifier(rootTable);
-        alreadyJoinedTables.add(rootTabledentifier);
-
-        Operator rootNode = this.getScanAndMaybeRename(rootTable);
+    private LogicalOperator processWhereClause(Expression rootExpression, Table joinRootTable, List<Join> rightJoinExpressions) {
+        // No root node.
+        LogicalOperator rootNode = null;
 
         // Then find which other tables exist.
         // then store them in a list of tables which haven't yet been joined.
 
-        HashMap<String, Operator> tablesToBeJoined = new HashMap<>();
-        if (joinItems != null) {
-            for (Join join : joinItems) {
-                Table table = (Table) join.getRightItem();
-                tablesToBeJoined.put(Utilities.getIdentifier(table), this.getScanAndMaybeRename(table));
-            }
+        Map<String, LogicalOperator> joinableTableInstances = new HashMap<>();
+
+        Set<String> joinedTables = new HashSet<>();
+        Set<String> unjoinedTables = new HashSet<>();
+
+        // Since the root table is a special case, handle that.
+        unjoinedTables.add(Utilities.getIdentifier(joinRootTable));
+        joinableTableInstances.put(Utilities.getIdentifier(joinRootTable), this.getScanAndMaybeRename(joinRootTable));
+
+        for (Join join : rightJoinExpressions) {
+            Table table = (Table) join.getRightItem();
+            String identifier = Utilities.getIdentifier(table);
+            joinableTableInstances.put(identifier, this.getScanAndMaybeRename(table));
+            unjoinedTables.add(identifier);
         }
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.
+        Map<String, Expression> selectionExpressions = new HashMap<>();
+        Map<TableCouple, Expression> joinExpressions = new HashMap<>();
 
         if (rootExpression != null) {
             WhereDecomposer bwb = new WhereDecomposer(rootExpression);
-            selectionExpressions = bwb.getSelectionExpressions();
-            joinExpressions = bwb.getJoinExpressions();
+            selectionExpressions.putAll(bwb.getSelectionExpressions());
+            joinExpressions.putAll(bwb.getJoinExpressions());
         }
 
-        if (selectionExpressions.containsKey(rootTabledentifier)) {
-            rootNode = new SelectionOperator(rootNode, selectionExpressions.get(rootTabledentifier));
-        }
+        TriFunction<LogicalOperator, String, Expression, LogicalOperator> joinTable = (root, tableName, expression) -> {
+            LogicalOperator rightOp = joinableTableInstances.get(tableName);
+
+            if (selectionExpressions.containsKey(tableName)) {
+                rightOp = new LogicalSelectOperator(rightOp, selectionExpressions.get(tableName));
+            }
+
+            joinedTables.add(tableName);
+            unjoinedTables.remove(tableName);
+
+            if (root != null) {
+                return new LogicalJoinOperator(root, rightOp, expression);
+            } else {
+                return rightOp;
+            }
+        };
 
         // Add all of the joined tables
         // Add any join expressions to the join operator
         // Add any other expressions below the join.
+        for (TableCouple tc : joinExpressions.keySet()) {
+            String table1 = tc.getTable1();
+            String table2 = tc.getTable2();
 
-        if (joinItems != null) {
-            while (!joinExpressions.isEmpty()) {
-                for (TableCouple tc : new HashMap<>(joinExpressions).keySet()) {
-                    Table table1 = tc.getTable1();
-                    Table table2 = tc.getTable2();
+            Expression expression = joinExpressions.get(tc);
 
-                    Table table;
-                    if (alreadyJoinedTables.contains(Utilities.getIdentifier(table1))) {
-                        table = table2;
-                    } else {
-                        table = table1;
-                    }
-
-                    String identifier = Utilities.getIdentifier(table);
-
-                    Operator rightOp = tablesToBeJoined.get(identifier);
-
-                    if (selectionExpressions.containsKey(identifier)) {
-                        rightOp = new SelectionOperator(rightOp, selectionExpressions.get(identifier));
-                    }
-
-                    rootNode = new JoinOperator(rootNode, rightOp, joinExpressions.get(tc));
-
-                    joinExpressions.remove(tc);
-
-                    alreadyJoinedTables.add(identifier);
-                    tablesToBeJoined.remove(identifier);
-                }
+            if (!joinedTables.contains(table1) && !joinedTables.contains(table2)) {
+                rootNode = joinTable.apply(rootNode, table1, null);
+                rootNode = joinTable.apply(rootNode, table2, expression);
+            } else if (!joinedTables.contains(table1)) {
+                rootNode = joinTable.apply(rootNode, table1, expression);
+            } else if (!joinedTables.contains(table2)) {
+                rootNode = joinTable.apply(rootNode, table2, expression);
+            } else {
+                rootNode = new LogicalSelectOperator(rootNode, expression);
             }
+        }
 
-            if (!tablesToBeJoined.isEmpty()) {
-                for (Join join : joinItems) {
-                    String identifier = Utilities.getIdentifier((Table) join.getRightItem());
-
-                    if (tablesToBeJoined.containsKey(identifier)) {
-                        Operator rightOp = tablesToBeJoined.get(identifier);
-                        rootNode = new JoinOperator(rootNode, rightOp);
-                    }
-                }
-            }
+        for (String table : unjoinedTables) {
+            rootNode = joinTable.apply(rootNode, table, null);
         }
 
         return rootNode;
@@ -224,17 +222,16 @@ public class QueryBuilder {
     /**
      * Build the scan operator for this table and add a rename step if required.
      *
-     * @param table The table to be read/renamed.
-     * @return the scan +/- the rename operator.
+     * @param table The table token extracted from the SQL FROM clause to be read/renamed.
+     * @return scan operator with an optional rename to handle aliases
      */
-    private Operator getScanAndMaybeRename(Table table) {
-        ScanOperator scan = new ScanOperator(db.getTable(table.getName()));
+    private LogicalOperator getScanAndMaybeRename(Table table) {
+        LogicalScanOperator scan = new LogicalScanOperator(db.getTable(table.getName()));
 
         if (table.getAlias() == null) {
             return scan;
         } else {
-            return new RenameOperator(scan, table.getAlias());
+            return new LogicalRenameOperator(scan, table.getAlias());
         }
     }
-
 }

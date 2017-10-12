@@ -59,7 +59,7 @@ public class SimpleIntegrationTest {
         tableHeader.columnHeaders.add("G");
 
         JoinOperator join = new JoinOperator(boatsScan, reservesScan);
-        ProjectionOperator projection = new ProjectionOperator(tableHeader, join);
+        ProjectionOperator projection = new ProjectionOperator(join, tableHeader);
 
         assertThat(TestUtils.countNotNullTuples(projection), is(1000 * 1000));
     }

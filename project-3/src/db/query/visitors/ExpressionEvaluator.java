@@ -1,4 +1,4 @@
-package db.query;
+package db.query.visitors;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
@@ -11,6 +11,9 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+/**
+ * An Expression visitor used to determine if a tuple matches a given predicate
+ */
 public class ExpressionEvaluator implements ExpressionVisitor {
 
     private boolean result;
@@ -20,6 +23,11 @@ public class ExpressionEvaluator implements ExpressionVisitor {
     private Tuple tuple;
     private TableHeader schema;
 
+    /**
+     * Setup evaluator
+     * @param expression The logical expression, assumed to be a AND combination of simple comparison operators
+     * @param schema The schema describing the tuples that will be evaluated
+     */
     public ExpressionEvaluator(Expression expression, TableHeader schema) {
         this.result = false;
         this.value = 0;
@@ -27,6 +35,11 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.schema = schema;
     }
 
+    /**
+     * Check whether the given tuple matches this expression
+     * @param tuple must match the provided schema
+     * @return Whether there is a match
+     */
     public boolean matches(Tuple tuple) {
         this.result = false;
         this.value = 0;

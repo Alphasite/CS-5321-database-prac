@@ -1,18 +1,19 @@
-package db.query;
+package db.query.visitors;
 
-import db.Utilities;
+import db.query.TableCouple;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.*;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * Another expression visitor, handles breaking the WHERE clause into multiple tokens and classify them based
@@ -22,9 +23,13 @@ public class WhereDecomposer implements ExpressionVisitor {
     private Map<String, Expression> selectionExpressions;
     private Map<TableCouple, Expression> joinExpressions;
 
+    private Queue<String> referencedTables;
+
     public WhereDecomposer(Expression expression) {
         this.selectionExpressions = new HashMap<>();
         this.joinExpressions = new HashMap<>();
+        this.referencedTables = new ArrayDeque<>();
+
         expression.accept(this);
     }
 
@@ -36,42 +41,61 @@ public class WhereDecomposer implements ExpressionVisitor {
         return joinExpressions;
     }
 
-    private void processComparator(BinaryExpression comparator) {
-        // Handle join predicates
-        if (comparator.getLeftExpression() instanceof Column && comparator.getRightExpression() instanceof Column) {
-            Table table1 = ((Column) comparator.getLeftExpression()).getTable();
-            Table table2 = ((Column) comparator.getRightExpression()).getTable();
-
-            TableCouple key = new TableCouple(table1, table2);
-            if (joinExpressions.containsKey(key)) {
-                // If a condition already exists for this key, compose it with an AND
-                AndExpression andExpression = new AndExpression(comparator, joinExpressions.get(key));
-                joinExpressions.put(key, andExpression);
-            } else {
-                joinExpressions.put(key, comparator);
-            }
+    private void addSelection(String tableId, Expression comparison) {
+        if (selectionExpressions.containsKey(tableId)) {
+            // If a condition already exists for this key, compose it with an AND
+            AndExpression andExpression = new AndExpression(comparison, selectionExpressions.get(tableId));
+            selectionExpressions.put(tableId, andExpression);
         } else {
-            // Handle selection predicates
-            Table table;
-
-            if (comparator.getLeftExpression() instanceof Column) {
-                table = ((Column) comparator.getLeftExpression()).getTable();
-            } else if (comparator.getRightExpression() instanceof Column) {
-                table = ((Column) comparator.getRightExpression()).getTable();
-            } else {
-                throw new NotImplementedException();
-            }
-
-            String identifier = Utilities.getIdentifier(table);
-
-            if (selectionExpressions.containsKey(identifier)) {
-                // If a condition already exists for this key, compose it with an AND
-                AndExpression andExpression = new AndExpression(comparator, selectionExpressions.get(identifier));
-                selectionExpressions.put(identifier, andExpression);
-            } else {
-                selectionExpressions.put(identifier, comparator);
-            }
+            selectionExpressions.put(tableId, comparison);
         }
+    }
+
+    private void addJoin(String leftId, String rightId, Expression comparison) {
+        TableCouple key = new TableCouple(leftId, rightId);
+
+        if (joinExpressions.containsKey(key)) {
+            // If a condition already exists for this key, compose it with an AND
+            AndExpression andExpression = new AndExpression(comparison, joinExpressions.get(key));
+            joinExpressions.put(key, andExpression);
+        } else {
+            joinExpressions.put(key, comparison);
+        }
+    }
+
+    /**
+     * Process a comparison node by retrieving referenced tables from the stack
+     * @param comparator
+     */
+    private void processComparator(BinaryExpression comparator) {
+        comparator.getLeftExpression().accept(this);
+        comparator.getRightExpression().accept(this);
+
+        // Retrieve child tables
+        String tableLeft = referencedTables.poll();
+        String tableRight = referencedTables.poll();
+
+        // Handle constant expressions
+        if (tableLeft == null) {
+            // TODO
+            throw new NotImplementedException();
+        }
+
+        if (tableRight == null) {
+            addSelection(tableLeft, comparator);
+            return;
+        }
+
+        if (tableLeft.equals(tableRight)) {
+            addSelection(tableLeft, comparator);
+        } else {
+            addJoin(tableLeft, tableRight, comparator);
+        }
+    }
+
+    @Override
+    public void visit(Column column) {
+        this.referencedTables.offer(column.getTable().getName());
     }
 
     @Override
@@ -116,13 +140,7 @@ public class WhereDecomposer implements ExpressionVisitor {
     }
 
     @Override
-    public void visit(Column column) {
-        throw new NotImplementedException();
-    }
-
-    @Override
     public void visit(LongValue longValue) {
-        throw new NotImplementedException();
     }
 
     @Override
