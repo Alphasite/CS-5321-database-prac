@@ -125,7 +125,7 @@ public class TestUtils {
     public static void generateRandomData(String dbFolderPath, int numRows, int randRange) throws IOException {
         Random rand = new Random();
         List<String> schema = Arrays.asList("Sailors A B C", "Boats D E F", "Reserves G H");
-        TableHeader header = new TableHeader(Arrays.asList("Sailors", "Sailors", "Sailors"), Arrays.asList("A", "B", "C"));
+        TableHeader header;
 
         // create db folder if it doesn't already exist
         Path dbFolder = Paths.get(dbFolderPath);
@@ -145,6 +145,7 @@ public class TestUtils {
         String sqlTemplate;
 
         // generate Sailors
+        header = new TableHeader(Arrays.asList("Sailors", "Sailors", "Sailors"), Arrays.asList("A", "B", "C"));
         binaryWriter = BinaryTupleWriter.get(header, dataFolder.resolve("Sailors"));
         stringWriter = StringTupleWriter.get(dataFolder.resolve("Sailors_humanreadable"));
         sqlWriter = new PrintStream(new FileOutputStream(dataFolder.resolve("Sailors_sql.sql").toFile()));
@@ -170,6 +171,7 @@ public class TestUtils {
 
 
         // generate Boats
+        header = new TableHeader(Arrays.asList("Boats", "Boats", "Boats"), Arrays.asList("D", "E", "F"));
         binaryWriter = BinaryTupleWriter.get(header, dataFolder.resolve("Boats"));
         stringWriter = StringTupleWriter.get(dataFolder.resolve("Boats_humanreadable"));
         sqlWriter = new PrintStream(new FileOutputStream(dataFolder.resolve("Boats_sql.sql").toFile()));
@@ -195,6 +197,7 @@ public class TestUtils {
 
 
         // generate Reserves
+        header = new TableHeader(Arrays.asList("Reserves", "Reserves"), Arrays.asList("G", "H"));
         binaryWriter = BinaryTupleWriter.get(header, dataFolder.resolve("Reserves"));
         stringWriter = StringTupleWriter.get(dataFolder.resolve("Reserves_humanreadable"));
         sqlWriter = new PrintStream(new FileOutputStream(dataFolder.resolve("Reserves_sql.sql").toFile()));
@@ -219,9 +222,12 @@ public class TestUtils {
 
     }
 
-    public static BufferedReader executeBashCmd(String command) throws IOException, InterruptedException {
+    public static BufferedReader executeBashCmd(String command, boolean shouldWait) throws IOException, InterruptedException {
         Process proc = new ProcessBuilder("/bin/bash", "-c", command).start();
-        proc.waitFor();
+        if (shouldWait) {
+            proc.waitFor();
+        }
+
         return new BufferedReader(new InputStreamReader(proc.getInputStream()));
     }
 }

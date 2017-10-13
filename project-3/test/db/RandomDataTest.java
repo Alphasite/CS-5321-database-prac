@@ -56,7 +56,7 @@ public class RandomDataTest {
     private Operator expectedResult;
     private boolean isOrdered;
 
-    @Parameterized.Parameters(name = "{2}")
+    @Parameterized.Parameters(name = "{index}: {2}")
     public static Collection<Object[]> data() throws IOException {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
