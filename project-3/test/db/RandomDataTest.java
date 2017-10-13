@@ -31,6 +31,8 @@ public class RandomDataTest {
 
     private final static String DB_PATH = "resources/samples/testData";
     private final static String MYSQL_DB_NAME = "testdb";
+    private final static int ROWS_PER_TABLE = 100;
+    private final static int RAND_RANGE = 100;
 
     private static String[] testQueries = new String[] {
             "SELECT * FROM Sailors;",
@@ -59,11 +61,11 @@ public class RandomDataTest {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
         // generate data and insert into MySQL
-        TestUtils.generateRandomData(DB_PATH, 100, 100);
+        TestUtils.generateRandomData(DB_PATH, ROWS_PER_TABLE, RAND_RANGE);
         try {
-            TestUtils.executeBashCmd(String.format("mysql -u root testdb < %s/data/Boats_sql.sql", DB_PATH));
-            TestUtils.executeBashCmd(String.format("mysql -u root testdb < %s/data/Sailors_sql.sql", DB_PATH));
-            TestUtils.executeBashCmd(String.format("mysql -u root testdb < %s/data/Reserves_sql.sql", DB_PATH));
+            TestUtils.executeBashCmd(String.format("mysql -u root testdb < %s/data/Boats_sql.sql", DB_PATH), true);
+            TestUtils.executeBashCmd(String.format("mysql -u root testdb < %s/data/Sailors_sql.sql", DB_PATH), true);
+            TestUtils.executeBashCmd(String.format("mysql -u root testdb < %s/data/Reserves_sql.sql", DB_PATH), true);
         } catch (InterruptedException e) {
             fail("unable to insert new data into MySQL");
         }
@@ -84,7 +86,7 @@ public class RandomDataTest {
 
                 // get result from MySQL
                 String command = String.format("echo '%s' | mysql -N -u root %s", statement.toString(), MYSQL_DB_NAME);
-                Scanner expectedScanner = new Scanner(TestUtils.executeBashCmd(command)).useDelimiter("\\s+");
+                Scanner expectedScanner = new Scanner(TestUtils.executeBashCmd(command, false)).useDelimiter("\\s+");
                 TupleReader expectedTuples = new StringTupleReader(new TableInfo(queryPlanRoot.getHeader(), null, false), expectedScanner);
                 ScanOperator expectedResult = new ScanOperator(expectedTuples);
 
