@@ -139,15 +139,24 @@ public class JoinOperator implements Operator, BinaryNode<Operator> {
         }
     }
 
+    /**
+     * @return The expression which decides whether or not the tuple is joined, if one is used for this join.
+     */
     public Expression getPredicate() {
         return evaluator.getExpression();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getLeft() {
         return left;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getRight() {
         return right;
