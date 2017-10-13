@@ -83,8 +83,8 @@ public class RandomDataTest {
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 // get result from MySQL
-                String command = String.format("echo '%s' | mysql -N -u root %s | sed 's/\t/,/g'", statement.toString(), MYSQL_DB_NAME);
-                Scanner expectedScanner = new Scanner(TestUtils.executeBashCmd(command)).useDelimiter(",|\\s+");
+                String command = String.format("echo '%s' | mysql -N -u root %s", statement.toString(), MYSQL_DB_NAME);
+                Scanner expectedScanner = new Scanner(TestUtils.executeBashCmd(command)).useDelimiter("\\s+");
                 TupleReader expectedTuples = new StringTupleReader(new TableInfo(queryPlanRoot.getHeader(), null, false), expectedScanner);
                 ScanOperator expectedResult = new ScanOperator(expectedTuples);
 
