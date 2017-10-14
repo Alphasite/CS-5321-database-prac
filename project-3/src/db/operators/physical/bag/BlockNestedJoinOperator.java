@@ -59,8 +59,9 @@ public class BlockNestedJoinOperator implements JoinOperator {
     }
 
     /**
-     * @inheritDoc This method generates tuples by doing a cross product of the left and right operator's tuples.
-     * It increments the left tuple then scans the right operator, repeating until done.
+     * @inheritDoc
+     *
+     * This method specifically uses block nested join.
      */
     @Override
     public Tuple getNextTuple() {
