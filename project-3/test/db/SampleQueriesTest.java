@@ -89,22 +89,14 @@ public class SampleQueriesTest {
     }
 
     @Test
-    public void printQuery() throws Exception {
+    public void printDebugInfo() throws Exception {
         System.out.println("Query: " + this.query);
-    }
-
-    @Test
-    public void printLogicalTree() throws Exception {
         System.out.println("Logical Tree:");
         LogicalTreePrinter.printTree(this.logicalOperator);
-    }
-
-    @Test
-    public void printPhysicalTree() throws Exception {
         System.out.println("Physical Tree:");
         PhysicalTreePrinter.printTree(this.queryPlanRoot);
     }
-
+    
     @Test
     public void test() {
         if (isOrdered) {
