@@ -20,16 +20,19 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      *
      * Unary operators pop their operand, binary ones pop right op then left one
      */
-    boolean useBlockNestedJoin;
     Deque<Operator> operators;
 
+    int joinType;
+    int sortType;
+
     public PhysicalPlanBuilder() {
-        this(false);
+        this(0, 0);
     }
 
-    public PhysicalPlanBuilder(boolean useBlockNestedJoin) {
+    public PhysicalPlanBuilder(int joinType, int sortType) {
         this.operators = new ArrayDeque<>();
-        this.useBlockNestedJoin = useBlockNestedJoin;
+        this.joinType = joinType;
+        this.sortType = sortType;
     }
 
     public Operator buildFromLogicalTree(LogicalOperator root) {
