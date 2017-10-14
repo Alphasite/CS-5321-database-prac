@@ -1,5 +1,6 @@
 package db.query.visitors;
 
+import db.operators.physical.physical.BlockCacheOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.bag.JoinOperator;
@@ -77,6 +78,11 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth += 1;
         node.getChild().accept(this);
         this.depth -= 1;
+    }
+
+    @Override
+    public void visit(BlockCacheOperator node) {
+        node.getChild().accept(this);
     }
 
     @Override

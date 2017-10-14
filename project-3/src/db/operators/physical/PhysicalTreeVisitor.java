@@ -1,5 +1,6 @@
 package db.operators.physical;
 
+import db.operators.physical.physical.BlockCacheOperator;
 import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
 import db.operators.physical.bag.RenameOperator;
@@ -22,4 +23,6 @@ public interface PhysicalTreeVisitor {
     void visit(DistinctOperator node);
 
     void visit(SortOperator node);
+
+    void visit(BlockCacheOperator node);
 }

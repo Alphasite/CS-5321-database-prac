@@ -11,8 +11,9 @@ import java.util.*;
  * contain the database tuples.
  */
 public class Database {
-    private final Map<String, TableInfo> tables;
+    public static final int PAGE_SIZE = 4096;
 
+    private final Map<String, TableInfo> tables;
 
     /**
      * Instantiate the catalogue.

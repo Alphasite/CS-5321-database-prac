@@ -2,10 +2,10 @@ package db.query.visitors;
 
 import db.operators.logical.*;
 import db.operators.physical.Operator;
-import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
 import db.operators.physical.bag.RenameOperator;
 import db.operators.physical.bag.SelectionOperator;
+import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
@@ -20,10 +20,16 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      *
      * Unary operators pop their operand, binary ones pop right op then left one
      */
+    boolean useBlockNestedJoin;
     Deque<Operator> operators;
 
     public PhysicalPlanBuilder() {
-        operators = new ArrayDeque<>();
+        this(false);
+    }
+
+    public PhysicalPlanBuilder(boolean useBlockNestedJoin) {
+        this.operators = new ArrayDeque<>();
+        this.useBlockNestedJoin = useBlockNestedJoin;
     }
 
     public Operator buildFromLogicalTree(LogicalOperator root) {
@@ -40,7 +46,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         Operator rightOp = operators.pollLast();
         Operator leftOp = operators.pollLast();
 
-        Operator join = new JoinOperator(leftOp, rightOp, node.getJoinCondition());
+        Operator join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
         operators.add(join);
     }
 

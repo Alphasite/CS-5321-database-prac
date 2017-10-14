@@ -4,25 +4,49 @@ import db.TestUtils;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
+import db.operators.physical.Operator;
+import db.query.TriFunction;
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.PlainSelect;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.runners.Parameterized.Parameters;
 
+@RunWith(Parameterized.class)
 public class JoinOperatorTest {
-    private static List<Tuple> tuplesA;
-    private static DummyOperator opA;
+    private List<Tuple> tuplesA;
+    private DummyOperator opA;
 
-    private static List<Tuple> tuplesB;
-    private static DummyOperator opB;
+    private List<Tuple> tuplesB;
+    private DummyOperator opB;
 
-    @BeforeClass
-    public static void loadData() {
+    private TriFunction<Operator, Operator, Expression, JoinOperator> joinFactory;
+
+    @Parameters(name = "{0}")
+    public static Collection<Object[]> data() {
+        List<Object[]> operators = new ArrayList<>();
+
+        TriFunction<Operator, Operator, Expression, JoinOperator> tuple = TupleNestedJoinOperator::new;
+        TriFunction<Operator, Operator, Expression, JoinOperator> block = BlockNestedJoinOperator::new;
+
+        operators.add(new Object[]{"Tuple Nested Loop Join", tuple});
+        operators.add(new Object[]{"Block Nested Loop Join", block});
+
+        return operators;
+    }
+
+    public JoinOperatorTest(String name, TriFunction<Operator, Operator, Expression, JoinOperator> joinFactory) {
+        this.joinFactory = joinFactory;
+    }
+
+    @Before
+    public void loadData() {
         tuplesA = new ArrayList<>();
         tuplesA.add(new Tuple(Arrays.asList(1, 200, 50)));
         tuplesA.add(new Tuple(Arrays.asList(2, 200, 200)));
@@ -42,6 +66,26 @@ public class JoinOperatorTest {
         tuplesB.add(new Tuple(Arrays.asList(4, 104)));
         TableHeader headerB = new TableHeader(Arrays.asList("Reserves", "Reserves"), Arrays.asList("G", "H"));
         opB = new DummyOperator(tuplesB, headerB);
+
+//        tuplesA = new ArrayList<>();
+//        tuplesA.add(new Tuple(Arrays.asList(1)));
+//        tuplesA.add(new Tuple(Arrays.asList(2)));
+//        tuplesA.add(new Tuple(Arrays.asList(3)));
+//        tuplesA.add(new Tuple(Arrays.asList(4)));
+//        tuplesA.add(new Tuple(Arrays.asList(5)));
+//        tuplesA.add(new Tuple(Arrays.asList(6)));
+//        TableHeader headerA = new TableHeader(Arrays.asList("Sailors"), Arrays.asList("A"));
+//        opA = new DummyOperator(tuplesA, headerA);
+
+//        tuplesB = new ArrayList<>();
+//        tuplesB.add(new Tuple(Arrays.asList(11)));
+//        tuplesB.add(new Tuple(Arrays.asList(12)));
+//        tuplesB.add(new Tuple(Arrays.asList(13)));
+//        tuplesB.add(new Tuple(Arrays.asList(14)));
+//        tuplesB.add(new Tuple(Arrays.asList(15)));
+//        tuplesB.add(new Tuple(Arrays.asList(16)));
+//        TableHeader headerB = new TableHeader(Arrays.asList("Reserves"), Arrays.asList("B"));
+//        opB = new DummyOperator(tuplesB, headerB);
     }
 
     @Test
@@ -49,7 +93,7 @@ public class JoinOperatorTest {
         List<String> expectedTables = Arrays.asList("Sailors", "Sailors", "Sailors", "Reserves", "Reserves");
         List<String> expectedColumns = Arrays.asList("A", "B", "C", "G", "H");
 
-        JoinOperator join = new JoinOperator(opA, opB);
+        JoinOperator join = this.joinFactory.apply(opA, opB, null);
         TableHeader result = join.getHeader();
 
         assertEquals(expectedTables, result.columnAliases);
@@ -58,25 +102,27 @@ public class JoinOperatorTest {
 
     @Test
     public void testJoin() {
-        JoinOperator join = new JoinOperator(opA, opB);
-        List<Tuple> tuples = new ArrayList<>();
-        Tuple next;
+        JoinOperator join = this.joinFactory.apply(opA, opB, null);
+        Set<Tuple> tuples = new HashSet<>();
 
+        int count = 0;
+        Tuple next;
         while ((next = join.getNextTuple()) != null) {
             tuples.add(next);
+            count += 1;
         }
 
-        assertEquals(tuplesA.size() * tuplesB.size(), tuples.size());
-        assertEquals(Arrays.asList(1, 200, 50, 1, 101), tuples.get(0).fields);
-        assertEquals(Arrays.asList(1, 200, 50, 2, 101), tuples.get(3).fields);
-        assertEquals(Arrays.asList(2, 200, 200, 1, 101), tuples.get(6).fields);
-        assertEquals(Arrays.asList(4, 100, 50, 3, 102), tuples.get(22).fields);
+        assertEquals(tuplesA.size() * tuplesB.size(), count);
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(1, 200, 50, 1, 101))));
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(1, 200, 50, 2, 101))));
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(2, 200, 200, 1, 101))));
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(4, 100, 50, 3, 102))));
     }
 
     @Test
     public void testFiltering() {
         PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
-        JoinOperator join = new JoinOperator(opA, opB, tokens.getWhere());
+        JoinOperator join = new TupleNestedJoinOperator(opA, opB, tokens.getWhere());
 
         List<Tuple> tuples = new ArrayList<>();
         Tuple next;

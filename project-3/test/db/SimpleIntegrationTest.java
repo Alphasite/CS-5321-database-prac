@@ -5,6 +5,7 @@ import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
+import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +38,7 @@ public class SimpleIntegrationTest {
         ScanOperator boatsScan = new ScanOperator(boats);
         ScanOperator reservesScan = new ScanOperator(reserves);
 
-        JoinOperator join = new JoinOperator(boatsScan, reservesScan);
+        JoinOperator join = new TupleNestedJoinOperator(boatsScan, reservesScan);
         assertThat(TestUtils.countNotNullTuples(join), is(1000 * 1000));
     }
 
@@ -58,7 +59,7 @@ public class SimpleIntegrationTest {
         tableHeader.columnAliases.add("Reserves");
         tableHeader.columnHeaders.add("G");
 
-        JoinOperator join = new JoinOperator(boatsScan, reservesScan);
+        JoinOperator join = new TupleNestedJoinOperator(boatsScan, reservesScan);
         ProjectionOperator projection = new ProjectionOperator(join, tableHeader);
 
         assertThat(TestUtils.countNotNullTuples(projection), is(1000 * 1000));

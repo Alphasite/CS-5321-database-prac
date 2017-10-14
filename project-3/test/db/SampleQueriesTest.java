@@ -37,14 +37,14 @@ public class SampleQueriesTest {
     private boolean isOrdered;
     private String query;
 
-    @Parameters(name = "{3} ({2})")
+    @Parameters(name = "join={4} query={3} path={2}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
         Database DB = Database.loadDatabase(Paths.get(INPUT_PATH + File.separator + "db"));
         QueryBuilder builder = new QueryBuilder(DB);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
-
+        PhysicalPlanBuilder physicalBuilderTuple = new PhysicalPlanBuilder(false);
+        PhysicalPlanBuilder physicalBuilderBlock = new PhysicalPlanBuilder(true);
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + File.separator + "queries.sql"));
@@ -54,10 +54,13 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
-
                 File expectedFile = new File(EXPECTED_PATH + File.separator + "query" + i);
-                testCases.add(new Object[]{logicalPlan, queryPlanRoot, expectedFile, statement.toString()});
+
+                Operator queryPlanRootTuple = physicalBuilderTuple.buildFromLogicalTree(logicalPlan);
+                Operator queryPlanRootBlock = physicalBuilderBlock.buildFromLogicalTree(logicalPlan);
+
+                testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), "Tuple"});
+                testCases.add(new Object[]{logicalPlan, queryPlanRootBlock, expectedFile, statement.toString(), "Block"});
 
                 i++;
             }
@@ -68,7 +71,7 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, File expectedFile, String query) {
+    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, File expectedFile, String query, String joinType) {
         this.logicalOperator = logicalOperator;
         this.queryPlanRoot = queryPlanRoot;
         this.query = query;

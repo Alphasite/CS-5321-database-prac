@@ -1,5 +1,6 @@
 package db.datastore.tuple.binary;
 
+import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
@@ -24,9 +25,9 @@ public class BinaryTupleWriter implements TupleWriter {
         this.header = header;
         this.channel = channel;
 
-        this.bb = ByteBuffer.allocateDirect(4096);
+        this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
-        this.page = new int[4096 / 4];
+        this.page = new int[Database.PAGE_SIZE / 4];
         this.clearPage();
 
         this.tuples_written = 0;
@@ -102,7 +103,7 @@ public class BinaryTupleWriter implements TupleWriter {
     }
 
     private int getCapacity() {
-        return (4096 - 2) / 4 / this.header.size();
+        return (Database.PAGE_SIZE - 2) / 4 / this.header.size();
     }
 
     private int getRemainingCapacity() {
