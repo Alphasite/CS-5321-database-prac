@@ -49,7 +49,7 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
     }
 
     private int getPageCapacity() {
-        return this.blockSizeBytes / 4 / this.operator.getHeader().size();
+        return (this.blockSizeBytes - 2) / 4 / this.operator.getHeader().size();
     }
 
     public void resetPage() {

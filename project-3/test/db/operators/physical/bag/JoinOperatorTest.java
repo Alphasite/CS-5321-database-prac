@@ -66,26 +66,6 @@ public class JoinOperatorTest {
         tuplesB.add(new Tuple(Arrays.asList(4, 104)));
         TableHeader headerB = new TableHeader(Arrays.asList("Reserves", "Reserves"), Arrays.asList("G", "H"));
         opB = new DummyOperator(tuplesB, headerB);
-
-//        tuplesA = new ArrayList<>();
-//        tuplesA.add(new Tuple(Arrays.asList(1)));
-//        tuplesA.add(new Tuple(Arrays.asList(2)));
-//        tuplesA.add(new Tuple(Arrays.asList(3)));
-//        tuplesA.add(new Tuple(Arrays.asList(4)));
-//        tuplesA.add(new Tuple(Arrays.asList(5)));
-//        tuplesA.add(new Tuple(Arrays.asList(6)));
-//        TableHeader headerA = new TableHeader(Arrays.asList("Sailors"), Arrays.asList("A"));
-//        opA = new DummyOperator(tuplesA, headerA);
-
-//        tuplesB = new ArrayList<>();
-//        tuplesB.add(new Tuple(Arrays.asList(11)));
-//        tuplesB.add(new Tuple(Arrays.asList(12)));
-//        tuplesB.add(new Tuple(Arrays.asList(13)));
-//        tuplesB.add(new Tuple(Arrays.asList(14)));
-//        tuplesB.add(new Tuple(Arrays.asList(15)));
-//        tuplesB.add(new Tuple(Arrays.asList(16)));
-//        TableHeader headerB = new TableHeader(Arrays.asList("Reserves"), Arrays.asList("B"));
-//        opB = new DummyOperator(tuplesB, headerB);
     }
 
     @Test
