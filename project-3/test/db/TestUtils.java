@@ -29,9 +29,6 @@ public class TestUtils {
      * @param tested    The generated operator
      */
     public static void compareTuples(Operator reference, Operator tested) {
-        System.out.println(tested.getHeader());
-
-
         int i = 0;
         while (true) {
             Tuple ref = reference.getNextTuple();
@@ -48,7 +45,6 @@ public class TestUtils {
             }
 
             i++;
-//            System.out.println("[OK] " + ++i + " " + ref.toString());
         }
 
         System.out.println("ALL OKAY: checked " + i + " rows.");
@@ -63,8 +59,6 @@ public class TestUtils {
      * @param tested    The generated operator
      */
     public static void unorderedCompareTuples(Operator reference, Operator tested) {
-        System.out.println(tested.getHeader());
-
         int referenceTupleCount = 0;
         Set<String> referenceTuples = new HashSet<>();
         List<String> testedTuples = new ArrayList<>();

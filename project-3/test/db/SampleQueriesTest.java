@@ -27,9 +27,8 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class SampleQueriesTest {
 
-    private static String INPUT_PATH = "resources/samples/input";
-    private static String OUTPUT_PATH = "resources/samples/output";
-    private static String EXPECTED_PATH = "resources/samples/expected";
+    private static final String INPUT_PATH = "resources/samples/input";
+    private static final String EXPECTED_PATH = "resources/samples/expected";
 
     private LogicalOperator logicalOperator;
     private Operator queryPlanRoot;
@@ -37,14 +36,15 @@ public class SampleQueriesTest {
     private boolean isOrdered;
     private String query;
 
-    @Parameters(name = "{3} ({2})")
+    @Parameters(name = "join={4} sort={5} query={3} path={2}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
+        String[] joinTypes = new String[]{"Tuple", "Block", "Sort Merge"};
+        String[] sortTypes = new String[]{"Memory", "External"};
+
         Database DB = Database.loadDatabase(Paths.get(INPUT_PATH + File.separator + "db"));
         QueryBuilder builder = new QueryBuilder(DB);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
-
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + File.separator + "queries.sql"));
@@ -54,10 +54,15 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
-
                 File expectedFile = new File(EXPECTED_PATH + File.separator + "query" + i);
-                testCases.add(new Object[]{logicalPlan, queryPlanRoot, expectedFile, statement.toString()});
+
+                for (int jointType = 0; jointType < 2; jointType++) {
+                    for (int sortType = 0; sortType < 1; sortType++) {
+                        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(jointType, sortType);
+                        Operator queryPlanRootTuple = physicalBuilder.buildFromLogicalTree(logicalPlan);
+                        testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), joinTypes[jointType], sortTypes[sortType]});
+                    }
+                }
 
                 i++;
             }
@@ -68,7 +73,7 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, File expectedFile, String query) {
+    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, File expectedFile, String query, String joinType, String sortType) {
         this.logicalOperator = logicalOperator;
         this.queryPlanRoot = queryPlanRoot;
         this.query = query;
@@ -84,23 +89,14 @@ public class SampleQueriesTest {
     }
 
     @Test
-    public void printQuery() throws Exception {
-        System.out.println("\n");
+    public void printDebugInfo() throws Exception {
         System.out.println("Query: " + this.query);
-    }
-
-    @Test
-    public void printLogicalTree() throws Exception {
         System.out.println("Logical Tree:");
         LogicalTreePrinter.printTree(this.logicalOperator);
-    }
-
-    @Test
-    public void printPhysicalTree() throws Exception {
         System.out.println("Physical Tree:");
         PhysicalTreePrinter.printTree(this.queryPlanRoot);
     }
-
+    
     @Test
     public void test() {
         if (isOrdered) {

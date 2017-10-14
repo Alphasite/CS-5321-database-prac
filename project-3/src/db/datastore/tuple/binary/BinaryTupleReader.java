@@ -1,5 +1,6 @@
 package db.datastore.tuple.binary;
 
+import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
@@ -10,6 +11,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.List;
 
 public class BinaryTupleReader implements TupleReader {
     private final TableInfo table;
@@ -25,8 +27,8 @@ public class BinaryTupleReader implements TupleReader {
         this.table = table;
         this.channel = channel;
 
-        this.page = new int[4096 / 4];
-        this.bb = ByteBuffer.allocateDirect(4096);
+        this.page = new int[Database.PAGE_SIZE / 4];
+        this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
         this.index = -1;
     }
@@ -60,7 +62,7 @@ public class BinaryTupleReader implements TupleReader {
         try {
             long len = channel.read(bb);
 
-            if (len == 4096) {
+            if (len == Database.PAGE_SIZE) {
                 bb.flip();
                 bb.asIntBuffer().get(page);
                 bb.clear();
@@ -95,7 +97,7 @@ public class BinaryTupleReader implements TupleReader {
 
         int startOffset = 2 + this.getTupleSize() * index;
 
-        ArrayList<Integer> tupleBacking = new ArrayList<>(this.getTupleSize());
+        List<Integer> tupleBacking = new ArrayList<>(this.getTupleSize());
 
         for (int i = startOffset; i < startOffset + this.getTupleSize(); i++) {
             tupleBacking.add(this.page[i]);

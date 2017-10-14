@@ -11,6 +11,8 @@ import java.util.*;
  * contain the database tuples.
  */
 public class Database {
+    public static final int PAGE_SIZE = 4096;
+
     private final Map<String, TableInfo> tables;
 
     /**

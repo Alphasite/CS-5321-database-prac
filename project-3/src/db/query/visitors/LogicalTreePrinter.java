@@ -50,7 +50,7 @@ public class LogicalTreePrinter implements LogicalTreeVisitor {
 
     @Override
     public void visit(LogicalScanOperator node) {
-        lines.add(pad("Scan (" + node.getTable().file.getFileName() + ")"));
+        lines.add(pad("Scan " + node.getTable().file.getFileName()));
     }
 
     @Override

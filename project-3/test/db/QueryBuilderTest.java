@@ -6,6 +6,7 @@ import db.operators.physical.Operator;
 import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
 import db.operators.physical.bag.SelectionOperator;
+import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
@@ -89,7 +90,7 @@ public class QueryBuilderTest {
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
         assertTrue(root instanceof ProjectionOperator);
-        assertTrue(((ProjectionOperator) root).getChild() instanceof JoinOperator);
+        assertTrue(((ProjectionOperator) root).getChild() instanceof TupleNestedJoinOperator);
         JoinOperator operator = (JoinOperator) ((ProjectionOperator) root).getChild();
         assertEquals("Sailors.A | Sailors.B | Sailors.C | Reserves.G | Reserves.H", operator.getHeader().toString());
         assertEquals(tokens.getWhere(), operator.getPredicate());

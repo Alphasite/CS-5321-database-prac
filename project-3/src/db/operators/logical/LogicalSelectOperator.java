@@ -17,16 +17,25 @@ public class LogicalSelectOperator implements LogicalOperator, UnaryNode<Logical
         return selectCondition;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return source.getHeader();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(LogicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public LogicalOperator getChild() {
         return source;

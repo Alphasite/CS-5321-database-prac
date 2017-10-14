@@ -38,25 +38,42 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
         return new TableHeader(aliases, headings);
     }
 
+    /**
+     * Return an optional expression which describes whether or not a tuple should be joned
+     *
+     * @return The nullable expression.
+     */
     public Expression getJoinCondition() {
         return joinCondition;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return outputSchema;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(LogicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public LogicalOperator getLeft() {
         return left;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public LogicalOperator getRight() {
         return right;

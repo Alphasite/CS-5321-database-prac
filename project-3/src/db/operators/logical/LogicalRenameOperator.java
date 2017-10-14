@@ -30,16 +30,25 @@ public class LogicalRenameOperator implements LogicalOperator, UnaryNode<Logical
         return newTableName;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return outputHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(LogicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public LogicalOperator getChild() {
         return child;

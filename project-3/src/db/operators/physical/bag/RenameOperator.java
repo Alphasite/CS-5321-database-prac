@@ -58,11 +58,17 @@ public class RenameOperator implements Operator, UnaryNode<Operator> {
         return this.child.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getChild() {
         return child;

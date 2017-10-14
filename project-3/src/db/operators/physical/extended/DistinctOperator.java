@@ -60,11 +60,17 @@ public class DistinctOperator implements Operator, UnaryNode<Operator> {
         return this.source.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getChild() {
         return source;

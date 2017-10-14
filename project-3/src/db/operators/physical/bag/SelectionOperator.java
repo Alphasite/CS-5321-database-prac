@@ -60,15 +60,26 @@ public class SelectionOperator implements Operator, UnaryNode<Operator> {
         return this.source.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * The predicate which is used to decide whether or not tuple passes this node.
+     *
+     * @return
+     */
     public Expression getPredicate() {
         return evaluator.getExpression();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getChild() {
         return source;

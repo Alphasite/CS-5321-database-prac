@@ -52,20 +52,34 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
         this.sortHeader = new TableHeader(aliases, columns);
     }
 
+    /**
+     * The header which indicates the sort priorities.
+     *
+     * @return The header
+     */
     public TableHeader getSortHeader() {
         return sortHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return source.getHeader();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(LogicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public LogicalOperator getChild() {
         return source;

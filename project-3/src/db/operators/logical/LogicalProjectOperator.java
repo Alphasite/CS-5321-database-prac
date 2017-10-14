@@ -12,16 +12,25 @@ public class LogicalProjectOperator implements LogicalOperator, UnaryNode<Logica
         this.newHeader = newHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return newHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(LogicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public LogicalOperator getChild() {
         return source;
