@@ -3,8 +3,8 @@ package db;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
-import db.query.visitors.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
+import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -49,6 +49,9 @@ public class Project3 {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + "/queries.sql"));
             Statement statement;
             int i = 1;
+
+            // Load plan config
+            PhysicalPlanConfig config = PhysicalPlanConfig.fromFile(new File(INPUT_PATH + "/plan_builder_config.txt"));
 
             // Create output directory if needed
             Files.createDirectories(Paths.get(OUTPUT_PATH));
