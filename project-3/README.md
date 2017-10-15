@@ -2,7 +2,11 @@
 
 ## Project 2
 
-The top-level class used to run the queries from a file is db.Project3
+The packages/classes of interest are:
+ - Top level class: db.Project3
+ - Physical operators: db.operators.physical 
+ - Logical operators: db.operators.logical 
+ - Builder: db.query.visitors.PhysicalPlanBuilder
 
 Many tests are also provided in the test folder to verify the behavior of our
 operator classes and query builder.
