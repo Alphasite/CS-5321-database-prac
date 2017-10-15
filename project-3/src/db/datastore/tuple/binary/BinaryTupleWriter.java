@@ -17,7 +17,6 @@ public class BinaryTupleWriter implements TupleWriter {
     private final FileChannel channel;
 
     private final ByteBuffer bb;
-    private final int[] page;
 
     private int tuples_written;
 
@@ -27,7 +26,6 @@ public class BinaryTupleWriter implements TupleWriter {
 
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
-        this.page = new int[Database.PAGE_SIZE / 4];
         this.clearPage();
 
         this.tuples_written = 0;
@@ -50,11 +48,11 @@ public class BinaryTupleWriter implements TupleWriter {
         int offset = this.getTupleOffset();
 
         this.tuples_written += 1;
-        this.page[1] = this.tuples_written;
+        this.bb.asIntBuffer().put(1, this.tuples_written);
 
         for (int i = 0; i < tuple.fields.size(); i++) {
             System.out.println(this.getRemainingCapacity());
-            this.page[offset + i] = tuple.fields.get(i);
+            this.bb.asIntBuffer().put(offset + i, tuple.fields.get(i));
         }
 
         if (this.getRemainingCapacity() <= 0) {
@@ -65,8 +63,6 @@ public class BinaryTupleWriter implements TupleWriter {
     @Override
     public void flush() {
         try {
-            this.bb.asIntBuffer().put(this.page);
-
             while (this.bb.hasRemaining()) {
                 System.out.println("wrote:" + this.channel.write(this.bb));
             }
@@ -93,13 +89,13 @@ public class BinaryTupleWriter implements TupleWriter {
     }
 
     private void clearPage() {
-        for (int i = 0; i < this.page.length; i++) {
-            this.page[i] = 0;
+        for (int i = 0; i < Database.PAGE_SIZE / 4; i++) {
+            this.bb.asIntBuffer().put(i, 0);
         }
 
         this.tuples_written = 0;
-        this.page[0] = this.header.columnAliases.size();
-        this.page[1] = 0;
+        this.bb.asIntBuffer().put(0, this.header.columnAliases.size());
+        this.bb.asIntBuffer().put(1, 0);
     }
 
     private int getCapacity() {
