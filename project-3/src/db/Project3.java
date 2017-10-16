@@ -1,6 +1,9 @@
 package db;
 
 import db.datastore.Database;
+import db.datastore.tuple.TupleWriter;
+import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
 import db.query.QueryBuilder;
@@ -11,9 +14,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -28,7 +29,8 @@ public class Project3 {
 
     public static String OUTPUT_PATH = "resources/samples/output";
 
-    public static boolean DUMP = true;
+    public static boolean DUMP = false;
+    public static final boolean BINARY_OUTPUT = true;
 
     /**
      * @param args If present : [inputFolder] [outputFolder]
@@ -69,22 +71,25 @@ public class Project3 {
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 if (DUMP) {
-                    queryPlanRoot.dump(System.out, true);
-                } else {
-                    queryPlanRoot.dump(null, true);
+                    TupleWriter consoleWriter = new StringTupleWriter(System.out);
+                    queryPlanRoot.dump(consoleWriter);
+                    queryPlanRoot.reset();
                 }
 
                 // Write output to file
+                TupleWriter fileWriter;
                 File outputFile = new File(OUTPUT_PATH + "/query" + i++);
-                PrintStream stream = new PrintStream(new FileOutputStream(outputFile));
-
-                queryPlanRoot.reset();
-
-                if (DUMP) {
-                    queryPlanRoot.dump(stream, false);
+                if (BINARY_OUTPUT) {
+                    fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
                 } else {
-                    queryPlanRoot.dump(null, false);
+                    fileWriter = StringTupleWriter.get(outputFile);
                 }
+
+                long start = System.currentTimeMillis();
+
+                queryPlanRoot.dump(fileWriter);
+
+                System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
             }
         } catch (Exception e) {
             e.printStackTrace();

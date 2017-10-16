@@ -5,12 +5,12 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 
 public class BinaryTupleWriter implements TupleWriter {
     private final TableHeader header;
@@ -31,14 +31,14 @@ public class BinaryTupleWriter implements TupleWriter {
         this.tuples_written = 0;
     }
 
-    public static BinaryTupleWriter get(TableHeader header, Path path) {
+    public static BinaryTupleWriter get(TableHeader header, File file) {
         try {
             return new BinaryTupleWriter(
                     header,
-                    new FileOutputStream(path.toFile()).getChannel()
+                    new FileOutputStream(file).getChannel()
             );
         } catch (FileNotFoundException e) {
-            System.err.println("Failed to find file: " + path);
+            System.err.println("Failed to find file: " + file);
             return null;
         }
     }
@@ -51,7 +51,7 @@ public class BinaryTupleWriter implements TupleWriter {
         this.bb.asIntBuffer().put(1, this.tuples_written);
 
         for (int i = 0; i < tuple.fields.size(); i++) {
-            System.out.println(this.getRemainingCapacity());
+//            System.out.println(this.getRemainingCapacity());
             this.bb.asIntBuffer().put(offset + i, tuple.fields.get(i));
         }
 

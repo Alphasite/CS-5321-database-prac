@@ -2,8 +2,7 @@ package db.operators.physical;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-
-import java.io.PrintStream;
+import db.datastore.tuple.TupleWriter;
 
 /**
  * Interface for an operator, which is an object which generates a stream of tuples which can then be operated
@@ -52,32 +51,15 @@ public interface Operator {
 
 
     /**
-     * Write the table header and rows to the provided print stream.
+     * Write the table header and rows with the provided Writer
      *
-     * @param stream The print stream to which the table is written. If null no output is written.
      * @return The number of tuples outputted.
      */
-    default int dump(PrintStream stream, boolean extended) {
-        if (stream != null) {
-            if (extended) {
-                stream.println(this.getHeader());
-            }
-        }
-
-        int i = 0;
+    default int dump(TupleWriter writer) {
         Tuple record;
-        while ((record = this.getNextTuple()) != null) {
-            i += 1;
-
-            if (stream != null) {
-                if (extended) {
-                    stream.println(i + ": " + record);
-                } else {
-                    // Not the most efficient but will do
-                    String output = record.fields.toString();
-                    stream.println(output.substring(1, output.length() - 1).replace(" ", ""));
-                }
-            }
+        int i;
+        for (i = 0; (record = this.getNextTuple()) != null; i++) {
+            writer.write(record);
         }
 
         return i;

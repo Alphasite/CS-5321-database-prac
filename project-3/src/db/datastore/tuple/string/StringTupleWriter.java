@@ -3,10 +3,7 @@ package db.datastore.tuple.string;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintStream;
-import java.nio.file.Path;
+import java.io.*;
 import java.util.stream.Collectors;
 
 public class StringTupleWriter implements TupleWriter {
@@ -16,13 +13,17 @@ public class StringTupleWriter implements TupleWriter {
         this.output = output;
     }
 
-    public static StringTupleWriter get(Path path) {
+    public StringTupleWriter(OutputStream output) {
+        this.output = new PrintStream(output);
+    }
+
+    public static StringTupleWriter get(File file) {
         try {
             return new StringTupleWriter(
-                    new PrintStream(new FileOutputStream(path.toFile()))
+                    new PrintStream(new FileOutputStream(file))
             );
         } catch (FileNotFoundException e) {
-            System.err.println("Failed to find file: " + path);
+            System.err.println("Failed to find file: " + file);
             return null;
         }
     }

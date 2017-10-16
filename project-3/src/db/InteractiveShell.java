@@ -1,10 +1,12 @@
 package db;
 
 import db.datastore.Database;
+import db.datastore.tuple.TupleWriter;
+import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
-import db.query.visitors.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
+import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -63,7 +65,8 @@ public class InteractiveShell {
                 PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
-                queryPlanRoot.dump(System.out, true);
+                TupleWriter writer = new StringTupleWriter(System.out);
+                queryPlanRoot.dump(writer);
             } catch (ParseException e) {
                 e.printStackTrace();
             }
