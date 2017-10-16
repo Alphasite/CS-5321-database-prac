@@ -64,14 +64,15 @@ public class BinaryTupleWriter implements TupleWriter {
     public void flush() {
         try {
             while (this.bb.hasRemaining()) {
-                System.out.println("wrote:" + this.channel.write(this.bb));
+                this.channel.write(this.bb);
+//                System.out.println("wrote:" + this.channel.write(this.bb));
             }
 
             this.bb.clear();
 
-            if (this.bb.hasRemaining()) {
-                System.err.println("LEFT OVERS????");
-            }
+//            if (this.bb.hasRemaining()) {
+//                System.err.println("LEFT OVERS????");
+//            }
 
             this.clearPage();
         } catch (IOException e) {
