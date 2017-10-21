@@ -6,7 +6,7 @@ import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
-import db.operators.physical.physical.BlockCacheOperator;
+import db.operators.physical.utility.BlockCacheOperator;
 import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 

@@ -1,6 +1,6 @@
 package db.query.visitors;
 
-import db.operators.physical.physical.BlockCacheOperator;
+import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.bag.JoinOperator;

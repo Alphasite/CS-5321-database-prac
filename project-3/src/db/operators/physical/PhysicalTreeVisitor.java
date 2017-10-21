@@ -1,6 +1,6 @@
 package db.operators.physical;
 
-import db.operators.physical.physical.BlockCacheOperator;
+import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
 import db.operators.physical.bag.RenameOperator;
