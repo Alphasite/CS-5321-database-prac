@@ -32,6 +32,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
     public TupleNestedJoinOperator(Operator left, Operator right) {
         this.left = left;
         this.right = right;
+        this.evaluator = null;
         this.resultHeader = LogicalJoinOperator.computeHeader(left.getHeader(), right.getHeader());
         this.reset();
     }
@@ -46,7 +47,8 @@ public class TupleNestedJoinOperator implements JoinOperator {
     public TupleNestedJoinOperator(Operator left, Operator right, Expression expression) {
         this(left, right);
 
-        this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
+        if (expression != null)
+            this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
     }
 
     /**
@@ -134,7 +136,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
      */
     @Override
     public Expression getPredicate() {
-        return evaluator.getExpression();
+        return evaluator != null ? evaluator.getExpression() : null;
     }
 
     /**

@@ -31,6 +31,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
     public ExpressionEvaluator(Expression expression, TableHeader schema) {
         this.result = false;
         this.value = 0;
+
+        assert expression != null;
+
         this.expressionRoot = expression;
         this.schema = schema;
     }
