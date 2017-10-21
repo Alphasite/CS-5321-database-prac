@@ -73,7 +73,7 @@ public class StringTupleWriterTest {
         Database database = Database.loadDatabase(inputDir);
         TableInfo table = database.getTable("Sailors");
 
-        BinaryTupleReader reader = BinaryTupleReader.get(table);
+        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
 
         StringTupleWriter writer = StringTupleWriter.get(tempFile.toFile());
 

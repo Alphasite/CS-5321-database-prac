@@ -31,7 +31,7 @@ public class BinaryTupleReaderTest {
 
     @Test
     public void next() throws Exception {
-        BinaryTupleReader reader = BinaryTupleReader.get(table);
+        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
 
         assertThat(reader, notNullValue());
 
@@ -47,7 +47,7 @@ public class BinaryTupleReaderTest {
 
     @Test
     public void seek() throws Exception {
-        BinaryTupleReader reader = BinaryTupleReader.get(table);
+        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
 
         List<Tuple> tuples = new ArrayList<>();
 

@@ -54,9 +54,9 @@ public class ScanOperator implements Operator {
     @Override
     public boolean reset() {
         if (this.table.binary) {
-            this.reader = BinaryTupleReader.get(this.table);
+            this.reader = BinaryTupleReader.get(this.table.file);
         } else {
-            this.reader = StringTupleReader.get(this.table);
+            this.reader = StringTupleReader.get(this.table.header, this.table.file);
         }
 
         return this.reader != null;

@@ -33,7 +33,7 @@ public class StringTupleReaderTest {
 
     @Test
     public void next() throws Exception {
-        StringTupleReader reader = StringTupleReader.get(table);
+        StringTupleReader reader = StringTupleReader.get(this.table.header, this.table.file);
 
         assertThat(reader, notNullValue());
 
@@ -49,7 +49,7 @@ public class StringTupleReaderTest {
 
     @Test
     public void seek() throws Exception {
-        StringTupleReader reader = StringTupleReader.get(table);
+        StringTupleReader reader = StringTupleReader.get(this.table.header, this.table.file);
 
         List<Tuple> tuples = new ArrayList<>();
 

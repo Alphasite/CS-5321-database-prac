@@ -71,7 +71,7 @@ public class BinaryTupleWriterTest {
         Database database = Database.loadDatabase(inputDir);
         TableInfo table = database.getTable("Sailors");
 
-        BinaryTupleReader reader = BinaryTupleReader.get(table);
+        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
 
         BinaryTupleWriter writer = BinaryTupleWriter.get(header, tempFile.toFile());
 

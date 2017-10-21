@@ -37,9 +37,9 @@ public class TestUtils {
             if (ref == null && test == null) {
                 break;
             } else if (test == null) {
-                fail("output has fewer tuples than expected");
+                fail("output has fewer tuples (" + i + ") than expected");
             } else if (ref == null) {
-                fail("output has more tuples than expected");
+                fail("output has more tuples (" + i + ") than expected");
             } else {
                 assertThat(test, equalTo(ref));
             }

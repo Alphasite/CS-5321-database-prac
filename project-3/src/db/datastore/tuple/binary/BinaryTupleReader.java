@@ -1,7 +1,6 @@
 package db.datastore.tuple.binary;
 
 import db.datastore.Database;
-import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 
@@ -10,20 +9,21 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BinaryTupleReader implements TupleReader {
-    private final TableInfo table;
+    private final Path path;
     private final FileChannel channel;
 
     private final ByteBuffer bb;
 
-    private int index;
+    private long index;
 
 
-    public BinaryTupleReader(TableInfo table, FileChannel channel) {
-        this.table = table;
+    public BinaryTupleReader(Path path, FileChannel channel) {
+        this.path = path;
         this.channel = channel;
 
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
@@ -31,14 +31,14 @@ public class BinaryTupleReader implements TupleReader {
         this.index = -1;
     }
 
-    public static BinaryTupleReader get(TableInfo table) {
+    public static BinaryTupleReader get(Path path) {
         try {
             return new BinaryTupleReader(
-                    table,
-                    new FileInputStream(table.file.toFile()).getChannel()
+                    path,
+                    new FileInputStream(path.toFile()).getChannel()
             );
         } catch (FileNotFoundException e) {
-            System.out.println("Failed to load table file; file not found: " + table.file);
+            System.out.println("Failed to load table file; file not found: " + path);
             return null;
         }
     }
@@ -57,9 +57,14 @@ public class BinaryTupleReader implements TupleReader {
     }
 
     @Override
-    public void seek(int index) {
+    public void seek(long index) {
+        if (this.index == -1) {
+            loadPage(channel, bb);
+            this.index = 0;
+        }
+
         try {
-            int page = index / this.getCapacity();
+            long page = index / this.getCapacity();
             this.channel.position(page * Database.PAGE_SIZE);
             this.loadPage(channel, bb);
             this.index = index % this.getCapacity();
@@ -80,11 +85,11 @@ public class BinaryTupleReader implements TupleReader {
                 // System.out.println("Reached end of binary file:" + this.table.file);
                 return false;
             } else {
-                System.err.println("Error reading binary file:" + this.table.file + " Read only " + len + "bytes");
+                System.err.println("Error reading binary file: " + path + " Read only " + len + "bytes");
                 return false;
             }
         } catch (IOException e) {
-            System.err.println("Error reading binary file:" + this.table.file);
+            System.err.println("Error reading binary file:" + path);
             return false;
         }
 
@@ -103,17 +108,17 @@ public class BinaryTupleReader implements TupleReader {
         return this.bb.asIntBuffer().get(1);
     }
 
-    private Tuple getTupleOnPage(int index) {
+    private Tuple getTupleOnPage(long index) {
         if (this.getNumberOfTuples() <= index) {
             return null;
         }
 
-        int startOffset = 2 + this.getTupleSize() * index;
+        long startOffset = 2 + this.getTupleSize() * index;
 
         List<Integer> tupleBacking = new ArrayList<>(this.getTupleSize());
 
-        for (int i = startOffset; i < startOffset + this.getTupleSize(); i++) {
-            tupleBacking.add(this.bb.asIntBuffer().get(i));
+        for (long i = startOffset; i < startOffset + this.getTupleSize(); i++) {
+            tupleBacking.add(this.bb.asIntBuffer().get((int) i));
         }
 
         return new Tuple(tupleBacking);

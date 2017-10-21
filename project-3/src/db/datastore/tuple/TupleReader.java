@@ -3,5 +3,5 @@ package db.datastore.tuple;
 public interface TupleReader {
     Tuple next();
 
-    void seek(int index);
+    void seek(long index);
 }
