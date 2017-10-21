@@ -52,6 +52,10 @@ public class ExternalBlockCacheOperatorTest {
         ScanOperator bufferScan = new ScanOperator(new TableInfo(table.header, cache.getBufferFile(), true));
 
         TestUtils.compareTuples(refScan, bufferScan);
+
+        refScan.reset();
+        TestUtils.compareTuples(refScan, cache);
+
     }
 
     @Test
@@ -65,34 +69,39 @@ public class ExternalBlockCacheOperatorTest {
         ScanOperator bufferScan = new ScanOperator(new TableInfo(table.header, cache.getBufferFile(), true));
 
         TestUtils.compareTuples(refScan, bufferScan);
+
+        refScan.reset();
+        TestUtils.compareTuples(refScan, cache);
     }
 
     @Test
     public void writeSourceToBufferPageLimited() throws Exception {
-        ScanOperator scan = new ScanOperator(table);
-        ExternalBlockCacheOperator cache = new ExternalBlockCacheOperator(scan.getHeader(), Files.createTempDirectory("test-external-cache"));
-        cache.writeSourceToBuffer(scan, 3);
-        cache.flush();
+        for (int i = 1; i <= 3; i++) {
+            ExternalBlockCacheOperator cache = null;
 
-        ScanOperator refScan = new ScanOperator(table);
-        ScanOperator bufferScan = new ScanOperator(new TableInfo(table.header, cache.getBufferFile(), true));
+            try {
+                ScanOperator scan = new ScanOperator(table);
+                cache = new ExternalBlockCacheOperator(scan.getHeader(), Files.createTempDirectory("test-external-cache"));
+                cache.writeSourceToBuffer(scan, i);
+                cache.flush();
 
-        TestUtils.compareTuples(refScan, bufferScan);
-        cache.delete();
+                // Check the file directly.
+                ScanOperator refScan = new ScanOperator(table);
+                BlockCacheOperator refBlock = new BlockCacheOperator(refScan, i * Database.PAGE_SIZE);
+                ScanOperator bufferScan = new ScanOperator(new TableInfo(table.header, cache.getBufferFile(), true));
 
-        cache = new ExternalBlockCacheOperator(scan.getHeader(), Files.createTempDirectory("test-external-cache"));
-        cache.writeSourceToBuffer(scan, 2);
-        cache.flush();
+                TestUtils.compareTuples(refBlock, bufferScan);
 
-        TestUtils.compareTuples(new BlockCacheOperator(refScan, 2 * Database.PAGE_SIZE), bufferScan);
-        cache.delete();
-
-        cache = new ExternalBlockCacheOperator(scan.getHeader(), Files.createTempDirectory("test-external-cache"));
-        cache.writeSourceToBuffer(scan, 1);
-        cache.flush();
-
-        TestUtils.compareTuples(new BlockCacheOperator(refScan, Database.PAGE_SIZE), bufferScan);
-        cache.delete();
+                // Check the operator
+                refBlock.reset();
+                cache.reset();
+                TestUtils.compareTuples(refBlock, cache);
+            } finally {
+                if (cache != null) {
+                    cache.delete();
+                }
+            }
+        }
     }
 
     @Test

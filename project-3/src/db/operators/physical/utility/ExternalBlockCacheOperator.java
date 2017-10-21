@@ -19,8 +19,8 @@ public class ExternalBlockCacheOperator implements Operator {
     private final TableHeader header;
     private final Path bufferFile;
 
-    private final TupleWriter out;
-    private final TupleReader in;
+    private TupleWriter out;
+    private TupleReader in;
 
     private boolean flushed;
 
@@ -28,7 +28,7 @@ public class ExternalBlockCacheOperator implements Operator {
         this.header = header;
         this.bufferFile = tempDirectory.resolve(UUID.randomUUID().toString());
         this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile.toFile());
-        this.in = BinaryTupleReader.get(this.bufferFile);
+        this.in = null;
         this.flushed = false;
     }
 
@@ -76,7 +76,7 @@ public class ExternalBlockCacheOperator implements Operator {
 
         Tuple tuple;
         while ((tuple = source.getNextTuple()) != null) {
-            this.out.write(tuple);
+            this.writeTupleToBuffer(tuple);
         }
     }
 
@@ -89,18 +89,15 @@ public class ExternalBlockCacheOperator implements Operator {
 
         for (int i = 0; i < pagesToIngest; i++) {
             page.loadBlock();
-            writeSourceToBuffer(page);
-        }
-
-        Tuple tuple;
-        while ((tuple = source.getNextTuple()) != null) {
-            this.writeTupleToBuffer(tuple);
+            this.writeSourceToBuffer(page);
         }
     }
 
     public void flush() {
         this.out.flush();
         this.out.close();
+        this.out = null;
+        this.in = BinaryTupleReader.get(this.bufferFile);
         this.flushed = true;
     }
 
