@@ -58,7 +58,7 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
 
     public boolean hasNext() {
         if (!this.valid) {
-            this.loadBlock();
+            this.loadNextBlock();
         }
 
         if (this.index < this.block.size()) {
@@ -68,7 +68,7 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         }
     }
 
-    public boolean loadBlock() {
+    public boolean loadNextBlock() {
         this.resetPage();
         this.block.clear();
 

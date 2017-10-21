@@ -6,13 +6,14 @@ import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.operators.UnaryNode;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class ExternalBlockCacheOperator implements Operator {
+public class ExternalBlockCacheOperator implements Operator, UnaryNode<Operator> {
     private final Path bufferFile;
     private final TupleWriter out;
     private final Operator source;
@@ -68,5 +69,10 @@ public class ExternalBlockCacheOperator implements Operator {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         // Not implemented, is an internal node.
+    }
+
+    @Override
+    public Operator getChild() {
+        return source;
     }
 }

@@ -1,6 +1,10 @@
 package db;
 
+import db.datastore.TableHeader;
+import db.datastore.tuple.Tuple;
 import net.sf.jsqlparser.schema.Table;
+
+import java.util.List;
 
 public class Utilities {
     /**
@@ -15,5 +19,25 @@ public class Utilities {
         } else {
             return table.getName();
         }
+    }
+
+    public static int compareTuples(Tuple a, Tuple b, TableHeader sortHeader) {
+        if (a == b)
+            return 0;
+
+        // TODO: finish this
+        return 0;
+    }
+
+    public static int getFirstTuple(List<Tuple> tuples, TableHeader sortHeader) {
+        int currentMin = 0;
+
+        for (int i = 1; i < tuples.size(); i++) {
+            if (compareTuples(tuples.get(i), tuples.get(currentMin), sortHeader) > 0) {
+                currentMin = i;
+            }
+        }
+
+        return currentMin;
     }
 }

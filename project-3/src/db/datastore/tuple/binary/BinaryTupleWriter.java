@@ -31,14 +31,25 @@ public class BinaryTupleWriter implements TupleWriter {
         this.tuples_written = 0;
     }
 
+    /**
+     * Create a new writer outputting binary tuples to the specified file object
+     * @param header The relation header, used to properly size the buffers
+     * @param file The output file. Will be created if it doesn't exist
+     * @return
+     */
     public static BinaryTupleWriter get(TableHeader header, File file) {
         try {
+            // Create file if it doesn't exist
+            file.createNewFile();
             return new BinaryTupleWriter(
                     header,
                     new FileOutputStream(file).getChannel()
             );
         } catch (FileNotFoundException e) {
             System.err.println("Failed to find file: " + file);
+            return null;
+        } catch (IOException e) {
+            e.printStackTrace();
             return null;
         }
     }

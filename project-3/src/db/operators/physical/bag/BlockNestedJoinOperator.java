@@ -86,7 +86,7 @@ public class BlockNestedJoinOperator implements JoinOperator {
                 this.right.reset();
 
                 // if we're out of left and right tuples, then we're done.
-                if (!this.left.loadBlock()) {
+                if (!this.left.loadNextBlock()) {
                     return null;
                 }
             }

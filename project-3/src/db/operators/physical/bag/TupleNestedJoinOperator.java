@@ -24,33 +24,29 @@ public class TupleNestedJoinOperator implements JoinOperator {
     private ExpressionEvaluator evaluator;
 
     /**
-     * Create an object which joins left and right tuples and filters results based on a conditional clause
+     * Create an object which joins left and right tuples.
      *
      * @param left       The operator which generates the left hand tuples.
      * @param right      The operator which generates the right hand tuples.
-     * @param expression The expression to evaluate the resulting tuples on.
      */
-    public TupleNestedJoinOperator(Operator left, Operator right, Expression expression) {
+    public TupleNestedJoinOperator(Operator left, Operator right) {
         this.left = left;
         this.right = right;
         this.resultHeader = LogicalJoinOperator.computeHeader(left.getHeader(), right.getHeader());
         this.reset();
-
-        if (expression != null) {
-            this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
-        } else {
-            this.evaluator = null;
-        }
     }
 
     /**
-     * Create an object which joins left and right tuples.
+     * Create an object which joins left and right tuples and filters results based on a conditional clause.
      *
      * @param left  The operator which generates the left hand tuples.
      * @param right The operator which generates the right hand tuples.
+     * @param expression The expression to evaluate the resulting tuples on.
      */
-    public TupleNestedJoinOperator(Operator left, Operator right) {
-        this(left, right, null);
+    public TupleNestedJoinOperator(Operator left, Operator right, Expression expression) {
+        this(left, right);
+
+        this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
     }
 
     /**
