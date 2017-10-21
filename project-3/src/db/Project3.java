@@ -13,9 +13,9 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
-import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -54,7 +54,7 @@ public class Project3 {
             int i = 1;
 
             // Load plan config
-            PhysicalPlanConfig config = PhysicalPlanConfig.fromFile(new File(INPUT_PATH + "/plan_builder_config.txt"));
+            PhysicalPlanConfig config = PhysicalPlanConfig.fromFile(Paths.get(INPUT_PATH + "/plan_builder_config.txt"));
 
             // Create directories if needed
             Files.createDirectories(Paths.get(OUTPUT_PATH));
@@ -80,7 +80,7 @@ public class Project3 {
 
                 // Write output to file
                 TupleWriter fileWriter;
-                File outputFile = new File(OUTPUT_PATH + "/query" + i++);
+                Path outputFile = Paths.get(OUTPUT_PATH + "/query" + i++);
                 if (BINARY_OUTPUT) {
                     fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
                 } else {

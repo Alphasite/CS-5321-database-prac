@@ -1,6 +1,6 @@
 package db;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 public class PhysicalPlanConfig {
@@ -36,7 +36,7 @@ public class PhysicalPlanConfig {
         this.sortParameter = sortParam;
     }
 
-    public static PhysicalPlanConfig fromFile(File configFile) {
+    public static PhysicalPlanConfig fromFile(Path configFile) {
         try {
             Scanner scanner = new Scanner(configFile);
             String[] joinParams = scanner.nextLine().split(" ");

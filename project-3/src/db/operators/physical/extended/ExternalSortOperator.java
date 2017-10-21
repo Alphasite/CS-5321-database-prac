@@ -15,7 +15,6 @@ import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.physical.BlockCacheOperator;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -63,7 +62,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
     public boolean reset() {
         // No need to sort data again, just reset reader if present
         if (isSorted && sortedRelationFile != null) {
-            this.sortedRelationReader = getReader(getHeader(), sortedRelationFile.toFile());
+            this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
             return true;
         } else {
             return false;
@@ -78,29 +77,29 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
         // Check that we have a valid file to read from
         if (sortedRelationReader == null) {
-            this.sortedRelationReader = getReader(getHeader(), sortedRelationFile.toFile());
+            this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
         }
 
         return sortedRelationReader.next();
     }
 
-    private TupleReader getReader(TableHeader header, File file) {
+    private TupleReader getReader(TableHeader header, Path path) {
         if (STRING_OUTPUT)
-            return StringTupleReader.get(header, file.toPath());
+            return StringTupleReader.get(header, path);
         else
-            return BinaryTupleReader.get(file.toPath());
+            return BinaryTupleReader.get(path);
     }
 
-    private TupleWriter getWriter(TableHeader header, File file) {
+    private TupleWriter getWriter(TableHeader header, Path path) {
         if (STRING_OUTPUT)
-            return StringTupleWriter.get(file);
+            return StringTupleWriter.get(path);
         else
-            return BinaryTupleWriter.get(header, file);
+            return BinaryTupleWriter.get(header, path);
     }
 
     private void performExternalSort() {
         // First pass : read pages from source, sort then in-memory and write the resulting run to disk
-        List<File> previousRunFiles = new ArrayList<>();
+        List<Path> previousRunFiles = new ArrayList<>();
         int blockId = 1;
 
         // Create a cache that reads tuples from source one page at a time
@@ -108,7 +107,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
         while (cache.hasNext()) {
             SortOperator inMemorySort = new SortOperator(cache, sortHeader);
-            File sortedPageFile = sortFolder.resolve("Sort" + operatorId + "_1_" + blockId).toFile();
+            Path sortedPageFile = sortFolder.resolve("Sort" + operatorId + "_1_" + blockId);
             TupleWriter writer = getWriter(getHeader(), sortedPageFile);
 
             previousRunFiles.add(sortedPageFile);
@@ -125,7 +124,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
         blockId = 1;
 
         while (previousRunFiles.size() >= 2) {
-            List<File> currentRunFiles = new ArrayList<>();
+            List<Path> currentRunFiles = new ArrayList<>();
 
             // Load N - 1 input files into memory with N = buffer size
             List<TupleReader> currentRunReaders = new ArrayList<>();
@@ -135,7 +134,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
                 if (i % (bufSize - 1) == 0 || i == previousRunFiles.size()) {
                     // All necessary pages are loaded : run merge pass
-                    File mergeOutputFile = sortFolder.resolve("Sort" + operatorId + "_" + runId + "_" + blockId).toFile();
+                    Path mergeOutputFile = sortFolder.resolve("Sort" + operatorId + "_" + runId + "_" + blockId);
                     currentRunFiles.add(mergeOutputFile);
 
                     performMultiMerge(currentRunReaders, getWriter(getHeader(), mergeOutputFile));
@@ -151,8 +150,8 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
         this.isSorted = true;
 
-        this.sortedRelationFile = previousRunFiles.get(0).toPath();
-        this.sortedRelationReader = getReader(getHeader(), sortedRelationFile.toFile());
+        this.sortedRelationFile = previousRunFiles.get(0);
+        this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
     }
 
     private void performMultiMerge(List<TupleReader> readers, TupleWriter output) {

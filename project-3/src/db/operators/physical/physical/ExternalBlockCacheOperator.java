@@ -24,7 +24,7 @@ public class ExternalBlockCacheOperator implements Operator, UnaryNode<Operator>
     public ExternalBlockCacheOperator(Operator source, Path tempDirectory) {
         this.source = source;
         this.bufferFile = tempDirectory.resolve(UUID.randomUUID().toString());
-        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile.toFile());
+        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile);
         this.in = null;
     }
 

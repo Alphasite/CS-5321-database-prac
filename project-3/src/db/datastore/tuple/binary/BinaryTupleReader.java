@@ -4,12 +4,11 @@ import db.datastore.Database;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,12 +32,9 @@ public class BinaryTupleReader implements TupleReader {
 
     public static BinaryTupleReader get(Path path) {
         try {
-            return new BinaryTupleReader(
-                    path,
-                    new FileInputStream(path.toFile()).getChannel()
-            );
-        } catch (FileNotFoundException e) {
-            System.out.println("Failed to load table file; file not found: " + path);
+            return new BinaryTupleReader(path, FileChannel.open(path, StandardOpenOption.READ));
+        } catch (IOException e) {
+            e.printStackTrace();
             return null;
         }
     }
@@ -89,7 +85,7 @@ public class BinaryTupleReader implements TupleReader {
                 return false;
             }
         } catch (IOException e) {
-            System.err.println("Error reading binary file:" + path);
+            e.printStackTrace();
             return false;
         }
 

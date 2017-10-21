@@ -20,6 +20,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +44,7 @@ public class SampleQueriesTest {
         String[] joinTypes = new String[]{"Tuple", "Block", "Sort Merge"};
         String[] sortTypes = new String[]{"Memory", "External"};
 
-        Database DB = Database.loadDatabase(Paths.get(INPUT_PATH + File.separator + "db"));
+        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
         QueryBuilder builder = new QueryBuilder(DB);
 
         try {
@@ -54,7 +55,7 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                File expectedFile = new File(EXPECTED_PATH + File.separator + "query" + i);
+                Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i);
 
                 for (int jointType = 0; jointType < 2; jointType++) {
                     for (int sortType = 0; sortType < 1; sortType++) {
@@ -73,7 +74,7 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, File expectedFile, String query, String joinType, String sortType) {
+    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, Path expectedFile, String query, String joinType, String sortType) {
         this.logicalOperator = logicalOperator;
         this.queryPlanRoot = queryPlanRoot;
         this.query = query;
@@ -84,7 +85,7 @@ public class SampleQueriesTest {
             this.isOrdered = false;
         }
 
-        TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile.toPath(), true);
+        TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile, true);
         this.sampleTuples = new ScanOperator(tableInfo);
     }
 

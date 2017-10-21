@@ -103,7 +103,7 @@ public class ExternalSortOperatorTest {
         Operator sort = new ExternalSortOperator(join, header, 5, Paths.get(Project3.TEMP_PATH));
 
         Path out = Paths.get(Project3.OUTPUT_PATH).resolve("ExternalSortTest");
-        TupleWriter output = StringTupleWriter.get(out.toFile());
+        TupleWriter output = StringTupleWriter.get(out);
         int total = sort.dump(output);
 
         assertEquals(25224, total);

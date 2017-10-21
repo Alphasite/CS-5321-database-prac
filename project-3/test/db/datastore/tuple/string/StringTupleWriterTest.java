@@ -45,12 +45,12 @@ public class StringTupleWriterTest {
 
         tableInfo = new TableInfo(header, tempFile, false);
 
-        BinaryTupleWriter.get(header, tempFile.toFile());
+        BinaryTupleWriter.get(header, tempFile);
     }
 
     @Test
     public void write() throws Exception {
-        StringTupleWriter writer = StringTupleWriter.get(tempFile.toFile());
+        StringTupleWriter writer = StringTupleWriter.get(tempFile);
 
         assertThat(writer, notNullValue());
 
@@ -75,7 +75,7 @@ public class StringTupleWriterTest {
 
         BinaryTupleReader reader = BinaryTupleReader.get(table.file);
 
-        StringTupleWriter writer = StringTupleWriter.get(tempFile.toFile());
+        StringTupleWriter writer = StringTupleWriter.get(tempFile);
 
         assertThat(writer, notNullValue());
 

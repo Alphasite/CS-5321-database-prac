@@ -3,7 +3,11 @@ package db.datastore.tuple.string;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 public class StringTupleWriter implements TupleWriter {
@@ -17,13 +21,11 @@ public class StringTupleWriter implements TupleWriter {
         this.output = new PrintStream(output);
     }
 
-    public static StringTupleWriter get(File file) {
+    public static StringTupleWriter get(Path path) {
         try {
-            return new StringTupleWriter(
-                    new PrintStream(new FileOutputStream(file))
-            );
-        } catch (FileNotFoundException e) {
-            System.err.println("Failed to find file: " + file);
+            return new StringTupleWriter(new PrintStream(Files.newOutputStream(path)));
+        } catch (IOException e) {
+            e.printStackTrace();
             return null;
         }
     }
