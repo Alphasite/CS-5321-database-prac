@@ -7,9 +7,9 @@ import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * This operator sorts input tuples in ascending order, based on the columns referenced by a specified header.
@@ -21,10 +21,10 @@ public class SortOperator implements Operator, UnaryNode<Operator> {
     private final Operator source;
 
     private final TableHeader sortHeader;
+    private Comparator<Tuple> tupleComparator;
 
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
-    private List<Integer> tupleSortPriorityIndex;
 
     /**
      * This creates the sort operator.
@@ -40,20 +40,8 @@ public class SortOperator implements Operator, UnaryNode<Operator> {
     public SortOperator(Operator source, TableHeader sortHeaders) {
         this.source = source;
         this.sortHeader = sortHeaders;
-        this.tupleSortPriorityIndex = new ArrayList<>();
 
-        for (int i = 0; i < sortHeaders.size(); i++) {
-            String alias = sortHeaders.columnAliases.get(i);
-            String header = sortHeaders.columnHeaders.get(i);
-
-            Optional<Integer> index = this.source.getHeader().resolve(alias, header);
-
-            if (index.isPresent()) {
-                this.tupleSortPriorityIndex.add(index.get());
-            } else {
-                throw new RuntimeException("Sort mappings are incorrect. " + alias + "." + header + " has no match.");
-            }
-        }
+        this.tupleComparator = new TupleComparator(sortHeader, source.getHeader());
 
         this.buffer();
         this.reset();
@@ -103,20 +91,7 @@ public class SortOperator implements Operator, UnaryNode<Operator> {
             this.buffer.add(tuple);
         }
 
-        this.buffer.sort((a, b) -> {
-            for (Integer tupleIndex : this.tupleSortPriorityIndex) {
-                Integer leftField = a.fields.get(tupleIndex);
-                Integer rightField = b.fields.get(tupleIndex);
-
-                int result = Integer.compare(leftField, rightField);
-
-                if (result != 0) {
-                    return result;
-                }
-            }
-
-            return 0;
-        });
+        this.buffer.sort(tupleComparator);
 
         this.reset();
     }

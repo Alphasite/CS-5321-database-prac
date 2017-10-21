@@ -16,6 +16,7 @@ import db.operators.physical.physical.BlockCacheOperator;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
@@ -23,6 +24,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
     private final Operator source;
     private final TableHeader sortHeader;
+    private final Comparator<Tuple> tupleComparator;
 
     private final Path sortFolder;
     /** The number of pages held in memory during sorting and merging operations */
@@ -38,6 +40,8 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
     public ExternalSortOperator(Operator source, TableHeader sortHeader, int bufferSize, Path tempFolder) {
         this.source = source;
         this.sortHeader = sortHeader;
+
+        this.tupleComparator = new TupleComparator(sortHeader, source.getHeader());
 
         // Cannot perform merge sort with less than three buffer pages
         assert bufferSize >= 3;
@@ -142,7 +146,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
         }
 
         while (inputRemaining > 0) {
-            int iMin = Utilities.getFirstTuple(inputTuples, sortHeader);
+            int iMin = Utilities.getFirstTuple(inputTuples, tupleComparator);
 
             output.write(inputTuples.get(iMin));
             Tuple next = readers.get(iMin).next();
