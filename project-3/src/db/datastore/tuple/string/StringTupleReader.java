@@ -4,8 +4,7 @@ import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -13,20 +12,22 @@ public class StringTupleReader implements TupleReader {
     private final TableInfo table;
     private Scanner tableFile;
 
-    public StringTupleReader(TableInfo tableInfo, Scanner scanner) {
+    public StringTupleReader(TableInfo tableInfo) {
         this.table = tableInfo;
-        this.tableFile = scanner;
+        this.tableFile = getScanner(tableInfo.file.toFile());
     }
 
     public static StringTupleReader get(TableInfo table) {
-        try {
-            Scanner scanner = new Scanner(new FileInputStream(table.file.toFile()));
-            scanner.useDelimiter(",|\\s+");
+        return new StringTupleReader(table);
+    }
 
-            return new StringTupleReader(table, scanner);
-        } catch (FileNotFoundException e) {
-            System.out.println("Failed to load table file; file not found: " + table.file);
-            return null;
+    private static Scanner getScanner(File file) {
+        try {
+            Scanner scanner = new Scanner(new FileInputStream(file));
+            scanner.useDelimiter(",|\\s+");
+            return scanner;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -47,6 +48,15 @@ public class StringTupleReader implements TupleReader {
             return (new Tuple(row));
         } else {
             return null;
+        }
+    }
+
+    @Override
+    public void seek(int index) {
+        this.tableFile = getScanner(this.table.file.toFile());
+
+        for (int i = 0; i < index; i++) {
+            this.next();
         }
     }
 }

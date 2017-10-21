@@ -102,10 +102,6 @@ public class BinaryTupleWriter implements TupleWriter {
         this.page[1] = 0;
     }
 
-    private int getCapacity() {
-        return (Database.PAGE_SIZE - 2) / 4 / this.header.size();
-    }
-
     private int getRemainingCapacity() {
         return (1024 - this.getTupleOffset()) / (this.header.size());
     }

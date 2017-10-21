@@ -58,6 +58,18 @@ public class BinaryTupleReader implements TupleReader {
         return this.getTupleOnPage(this.index++);
     }
 
+    @Override
+    public void seek(int index) {
+        try {
+            int page = index / this.getCapacity();
+            this.channel.position(page * Database.PAGE_SIZE);
+            this.loadPage(channel, bb);
+            this.index = index % this.getCapacity();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private boolean loadPage(FileChannel channel, ByteBuffer bb) {
         try {
             long len = channel.read(bb);
@@ -80,6 +92,10 @@ public class BinaryTupleReader implements TupleReader {
         }
 
         return true;
+    }
+
+    private int getCapacity() {
+        return (Database.PAGE_SIZE - 8) / 4 / this.getTupleSize();
     }
 
     private int getTupleSize() {
