@@ -9,6 +9,8 @@ import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -25,6 +27,18 @@ public class ExternalBlockCacheOperator implements Operator {
         this.bufferFile = tempDirectory.resolve(UUID.randomUUID().toString());
         this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile.toFile());
         this.in = null;
+    }
+
+    public Path getBufferFile() {
+        return bufferFile;
+    }
+
+    public void delete() {
+        try {
+            Files.deleteIfExists(bufferFile);
+        } catch (IOException e) {
+            System.out.println("Failed to delete:" + bufferFile);
+        }
     }
 
     public void seek(long index) {

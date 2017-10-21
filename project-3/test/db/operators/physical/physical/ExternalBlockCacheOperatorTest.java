@@ -21,6 +21,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNull.notNullValue;
 
 public class ExternalBlockCacheOperatorTest {
+
     TableInfo table;
 
     @Before
@@ -29,6 +30,17 @@ public class ExternalBlockCacheOperatorTest {
         inputDir = inputDir.toAbsolutePath();
         Database database = Database.loadDatabase(inputDir);
         table = database.getTable("Sailors");
+    }
+
+    @Test
+    public void delete() throws Exception {
+        ScanOperator scan = new ScanOperator(table);
+        ExternalBlockCacheOperator cache = new ExternalBlockCacheOperator(scan, Files.createTempDirectory("test-external-cache"));
+
+        assertThat(cache.getBufferFile(), notNullValue());
+        assertThat(Files.exists(cache.getBufferFile()), is(true));
+        cache.delete();
+        assertThat(Files.exists(cache.getBufferFile()), is(false));
     }
 
     @Test
