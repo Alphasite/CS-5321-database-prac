@@ -145,6 +145,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
             }
         }
 
+        // Perform merging
         while (inputRemaining > 0) {
             int iMin = Utilities.getFirstTuple(inputTuples, tupleComparator);
 

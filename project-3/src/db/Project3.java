@@ -28,6 +28,7 @@ public class Project3 {
     public static String DB_PATH = INPUT_PATH + "/db";
 
     public static String OUTPUT_PATH = "resources/samples/output";
+    public static String TEMP_PATH = "resources/samples/tmp";
 
     public static boolean DUMP = false;
     public static final boolean BINARY_OUTPUT = true;
@@ -55,8 +56,9 @@ public class Project3 {
             // Load plan config
             PhysicalPlanConfig config = PhysicalPlanConfig.fromFile(new File(INPUT_PATH + "/plan_builder_config.txt"));
 
-            // Create output directory if needed
+            // Create directories if needed
             Files.createDirectories(Paths.get(OUTPUT_PATH));
+            Files.createDirectories(Paths.get(TEMP_PATH));
 
             while ((statement = parser.Statement()) != null) {
                 System.out.println("Read statement: " + statement);

@@ -34,7 +34,7 @@ public interface Operator {
 
 
     /**
-     * Reset the operator and any child db.operators, generating tuples from the begining of the table again.
+     * Reset the operator and any child db.operators, generating tuples from the beginning of the table again.
      * <p>
      * This may reset the internal state of an operator.
      *
