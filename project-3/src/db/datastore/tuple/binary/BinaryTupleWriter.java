@@ -5,19 +5,18 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
 
 public class BinaryTupleWriter implements TupleWriter {
     private final TableHeader header;
     private final FileChannel channel;
 
     private final ByteBuffer bb;
-    private final int[] page;
 
     private int tuples_written;
 
@@ -27,20 +26,19 @@ public class BinaryTupleWriter implements TupleWriter {
 
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
-        this.page = new int[Database.PAGE_SIZE / 4];
         this.clearPage();
 
         this.tuples_written = 0;
     }
 
-    public static BinaryTupleWriter get(TableHeader header, Path path) {
+    public static BinaryTupleWriter get(TableHeader header, File file) {
         try {
             return new BinaryTupleWriter(
                     header,
-                    new FileOutputStream(path.toFile()).getChannel()
+                    new FileOutputStream(file).getChannel()
             );
         } catch (FileNotFoundException e) {
-            System.err.println("Failed to find file: " + path);
+            System.err.println("Failed to find file: " + file);
             return null;
         }
     }
@@ -50,11 +48,11 @@ public class BinaryTupleWriter implements TupleWriter {
         int offset = this.getTupleOffset();
 
         this.tuples_written += 1;
-        this.page[1] = this.tuples_written;
+        this.bb.asIntBuffer().put(1, this.tuples_written);
 
         for (int i = 0; i < tuple.fields.size(); i++) {
-            System.out.println(this.getRemainingCapacity());
-            this.page[offset + i] = tuple.fields.get(i);
+//            System.out.println(this.getRemainingCapacity());
+            this.bb.asIntBuffer().put(offset + i, tuple.fields.get(i));
         }
 
         if (this.getRemainingCapacity() <= 0) {
@@ -65,17 +63,16 @@ public class BinaryTupleWriter implements TupleWriter {
     @Override
     public void flush() {
         try {
-            this.bb.asIntBuffer().put(this.page);
-
             while (this.bb.hasRemaining()) {
-                System.out.println("wrote:" + this.channel.write(this.bb));
+                this.channel.write(this.bb);
+//                System.out.println("wrote:" + this.channel.write(this.bb));
             }
 
             this.bb.clear();
 
-            if (this.bb.hasRemaining()) {
-                System.err.println("LEFT OVERS????");
-            }
+//            if (this.bb.hasRemaining()) {
+//                System.err.println("LEFT OVERS????");
+//            }
 
             this.clearPage();
         } catch (IOException e) {
@@ -93,13 +90,13 @@ public class BinaryTupleWriter implements TupleWriter {
     }
 
     private void clearPage() {
-        for (int i = 0; i < this.page.length; i++) {
-            this.page[i] = 0;
+        for (int i = 0; i < Database.PAGE_SIZE / 4; i++) {
+            this.bb.asIntBuffer().put(i, 0);
         }
 
         this.tuples_written = 0;
-        this.page[0] = this.header.columnAliases.size();
-        this.page[1] = 0;
+        this.bb.asIntBuffer().put(0, this.header.columnAliases.size());
+        this.bb.asIntBuffer().put(1, 0);
     }
 
     private int getRemainingCapacity() {

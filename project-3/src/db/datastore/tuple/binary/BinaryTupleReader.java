@@ -18,7 +18,6 @@ public class BinaryTupleReader implements TupleReader {
     private final FileChannel channel;
 
     private final ByteBuffer bb;
-    private final int[] page;
 
     private int index;
 
@@ -27,7 +26,6 @@ public class BinaryTupleReader implements TupleReader {
         this.table = table;
         this.channel = channel;
 
-        this.page = new int[Database.PAGE_SIZE / 4];
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
         this.index = -1;
@@ -76,7 +74,6 @@ public class BinaryTupleReader implements TupleReader {
 
             if (len == Database.PAGE_SIZE) {
                 bb.flip();
-                bb.asIntBuffer().get(page);
                 bb.clear();
             } else if (len == -1) {
                 // TODO proper logging.
@@ -99,11 +96,11 @@ public class BinaryTupleReader implements TupleReader {
     }
 
     private int getTupleSize() {
-        return this.page[0];
+        return this.bb.asIntBuffer().get(0);
     }
 
     private int getNumberOfTuples() {
-        return this.page[1];
+        return this.bb.asIntBuffer().get(1);
     }
 
     private Tuple getTupleOnPage(int index) {
@@ -116,7 +113,7 @@ public class BinaryTupleReader implements TupleReader {
         List<Integer> tupleBacking = new ArrayList<>(this.getTupleSize());
 
         for (int i = startOffset; i < startOffset + this.getTupleSize(); i++) {
-            tupleBacking.add(this.page[i]);
+            tupleBacking.add(this.bb.asIntBuffer().get(i));
         }
 
         return new Tuple(tupleBacking);
