@@ -1,13 +1,23 @@
 package db.operators.physical.extended;
 
 import db.Project3;
+import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.datastore.tuple.TupleWriter;
+import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
+import db.operators.physical.bag.TupleNestedJoinOperator;
+import db.operators.physical.physical.ScanOperator;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,5 +79,33 @@ public class ExternalSortOperatorTest {
         assertEquals(Arrays.asList(4, 3, 2), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(2, 1, 3), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(1, 2, 3), sort.getNextTuple().fields);
+    }
+
+    @Test
+    public void testMultiPageQuery() {
+        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
+
+        ScanOperator S = new ScanOperator(DB.getTable("Sailors"));
+        ScanOperator R = new ScanOperator(DB.getTable("Reserves"));
+        ScanOperator B = new ScanOperator(DB.getTable("Boats"));
+
+        TableHeader header = new TableHeader(
+                Arrays.asList("Sailors", "Sailors", "Sailors"),
+                Arrays.asList("C", "A", "B")
+        );
+
+        Expression cmp1 = new EqualsTo(new Column(new Table(null, "Sailors"), "A"), new Column(new Table(null, "Reserves"), "G"));
+        TupleNestedJoinOperator join = new TupleNestedJoinOperator(S, R, cmp1);
+
+        Expression cmp2 = new EqualsTo(new Column(new Table(null, "Reserves"), "H"), new Column(new Table(null, "Boats"), "D"));
+        join = new TupleNestedJoinOperator(join, B, cmp2);
+
+        Operator sort = new ExternalSortOperator(join, header, 5, Paths.get(Project3.TEMP_PATH));
+
+        Path out = Paths.get(Project3.OUTPUT_PATH).resolve("ExternalSortTest");
+        TupleWriter output = StringTupleWriter.get(out.toFile());
+        int total = sort.dump(output);
+
+        assertEquals(25224, total);
     }
 }

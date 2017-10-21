@@ -3,5 +3,6 @@
 /build/
 
 /resources/samples/output/
+/resources/samples/tmp/
 
 .settings/

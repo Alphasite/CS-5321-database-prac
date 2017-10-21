@@ -50,10 +50,23 @@ public class Utilities {
      * @return index of lowest order tuple in list
      */
     public static int getFirstTuple(List<Tuple> tuples, Comparator<Tuple> comparator) {
-        int currentMin = 0;
+        int currentMin = -1;
 
-        for (int i = 1; i < tuples.size(); i++) {
-            if (comparator.compare(tuples.get(i), tuples.get(currentMin)) > 0) {
+        // First pass : check if all values are null
+        for (int i = 0; i < tuples.size(); i++) {
+            if (tuples.get(i) != null) {
+                currentMin = i;
+                break;
+            }
+        }
+
+        if (currentMin == -1) {
+            throw new RuntimeException("All tuples are null");
+        }
+
+        for (int i = currentMin + 1; i < tuples.size(); i++) {
+            Tuple t = tuples.get(i);
+            if (t != null && comparator.compare(t, tuples.get(currentMin)) < 0) {
                 currentMin = i;
             }
         }
