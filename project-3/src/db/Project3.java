@@ -13,7 +13,6 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
-import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -100,7 +99,7 @@ public class Project3 {
                     System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
 
                     if (CLEANUP) {
-                        Files.walk(Paths.get(TEMP_PATH)).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
+                        Utilities.cleanDirectory(Paths.get(TEMP_PATH));
                     }
                 } finally {
                     queryPlanRoot.close();

@@ -56,15 +56,13 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i);
+                Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i++);
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
                         testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
-
-                i++;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,7 +76,7 @@ public class SampleQueriesTest {
         this.logicalOperator = logicalOperator;
         this.query = query;
 
-        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 5, 5);
+        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
 
         this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
@@ -96,6 +94,7 @@ public class SampleQueriesTest {
     @After
     public void tearDown() throws Exception {
         this.queryPlanRoot.close();
+        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
     }
 
     @Test

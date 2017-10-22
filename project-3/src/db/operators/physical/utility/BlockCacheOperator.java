@@ -78,7 +78,11 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         this.block.clear();
 
         for (int i = 0; i < this.getPageCapacity(); i++) {
-            this.block.add(this.operator.getNextTuple());
+            Tuple next = operator.getNextTuple();
+            this.block.add(next);
+
+            if (next == null)
+                break;
         }
 
         this.valid = true;

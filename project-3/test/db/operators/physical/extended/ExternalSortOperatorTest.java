@@ -1,6 +1,7 @@
 package db.operators.physical.extended;
 
 import db.Project3;
+import db.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
@@ -14,6 +15,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -119,5 +121,10 @@ public class ExternalSortOperatorTest {
         sort.close();
 
         output.close();
+    }
+
+    @After
+    public void cleanup() {
+        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
     }
 }
