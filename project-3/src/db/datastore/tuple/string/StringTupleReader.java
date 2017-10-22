@@ -31,8 +31,7 @@ public class StringTupleReader implements TupleReader {
             scanner.useDelimiter(",|\\s+");
             return scanner;
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -58,10 +57,17 @@ public class StringTupleReader implements TupleReader {
 
     @Override
     public void seek(long index) {
+        this.tableFile.close();
         this.tableFile = getScanner(path);
 
         for (int i = 0; i < index; i++) {
             this.next();
         }
+    }
+
+    @Override
+    public void close() {
+        this.tableFile.close();
+        this.tableFile = null;
     }
 }

@@ -104,6 +104,12 @@ public class SortOperator implements Operator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    @Override
+    public void close() {
+        this.buffer.clear();
+        this.source.close();
+    }
+
     /**
      * @inheritDoc
      */

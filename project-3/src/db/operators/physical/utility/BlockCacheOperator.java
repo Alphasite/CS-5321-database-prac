@@ -48,6 +48,11 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    @Override
+    public void close() {
+        this.operator.close();
+    }
+
     private int getPageCapacity() {
         return (this.blockSizeBytes - 2) / 4 / this.operator.getHeader().size();
     }

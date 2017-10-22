@@ -15,7 +15,7 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -93,9 +93,9 @@ public class SampleQueriesTest {
         this.sampleTuples = new ScanOperator(tableInfo);
     }
 
-    @Before
-    public void setUp() throws Exception {
-
+    @After
+    public void tearDown() throws Exception {
+        this.queryPlanRoot.close();
     }
 
     @Test

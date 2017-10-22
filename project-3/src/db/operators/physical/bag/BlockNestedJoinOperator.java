@@ -66,6 +66,10 @@ public class BlockNestedJoinOperator implements JoinOperator {
     @Override
     public Tuple getNextTuple() {
         while (true) {
+            if (rightTuple == null) {
+                return null;
+            }
+
             Tuple leftTuple;
 
             // Iterate through the left block, trying to join each to that right tuple
@@ -120,6 +124,12 @@ public class BlockNestedJoinOperator implements JoinOperator {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void close() {
+        this.left.close();
+        this.right.close();
     }
 
     /**

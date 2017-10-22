@@ -43,6 +43,8 @@ public class BinaryTupleReaderTest {
         }
 
         assertThat(reader.next(), nullValue());
+
+        reader.close();
     }
 
     @Test
@@ -73,5 +75,7 @@ public class BinaryTupleReaderTest {
         reader.seek(999);
         assertThat(reader.next(), equalTo(tuples.get(999)));
         assertThat(reader.next(), is(nullValue()));
+
+        reader.close();
     }
 }

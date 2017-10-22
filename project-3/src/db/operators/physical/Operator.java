@@ -49,6 +49,8 @@ public interface Operator {
      */
     void accept(PhysicalTreeVisitor visitor);
 
+    void close();
+
     /**
      * Write the table header and rows with the provided Writer
      *

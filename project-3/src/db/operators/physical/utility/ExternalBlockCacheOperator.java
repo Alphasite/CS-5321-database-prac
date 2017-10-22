@@ -38,6 +38,7 @@ public class ExternalBlockCacheOperator implements Operator {
 
     public void delete() {
         try {
+            this.close();
             Files.deleteIfExists(bufferFile);
         } catch (IOException e) {
             System.out.println("Failed to delete:" + bufferFile);
@@ -115,5 +116,17 @@ public class ExternalBlockCacheOperator implements Operator {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         // Not implemented, is an internal node.
+    }
+
+    @Override
+    public void close() {
+        if (out != null) {
+            this.out.flush();
+            this.out.close();
+        }
+
+        if (this.in != null) {
+            this.in.close();
+        }
     }
 }

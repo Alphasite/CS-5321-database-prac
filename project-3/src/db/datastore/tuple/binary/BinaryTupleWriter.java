@@ -42,8 +42,7 @@ public class BinaryTupleWriter implements TupleWriter {
             return new BinaryTupleWriter(header, FileChannel.open(
                     file, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 

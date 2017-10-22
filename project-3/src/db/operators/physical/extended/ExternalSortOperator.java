@@ -125,7 +125,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
             previousRunFiles.add(sortedPageFile);
 
             inMemorySort.dump(writer);
-            writer.close();
+            writer.flush();
 
             cache.loadNextBlock();
             blockId++;
@@ -210,5 +210,14 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
 //        visitor.visit(this);
+    }
+
+    @Override
+    public void close() {
+        this.source.close();
+
+        if (this.sortedRelationReader != null) {
+            this.sortedRelationReader.close();
+        }
     }
 }

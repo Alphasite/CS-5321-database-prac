@@ -113,6 +113,12 @@ public class TupleNestedJoinOperator implements JoinOperator {
         visitor.visit(this);
     }
 
+    @Override
+    public void close() {
+        this.left.close();
+        this.right.close();
+    }
+
 
     /**
      * This method tries to get the next left hand tuple and then resets the right hand operator,

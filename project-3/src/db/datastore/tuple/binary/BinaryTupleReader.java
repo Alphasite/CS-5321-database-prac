@@ -34,8 +34,7 @@ public class BinaryTupleReader implements TupleReader {
         try {
             return new BinaryTupleReader(path, FileChannel.open(path, StandardOpenOption.READ));
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -66,6 +65,15 @@ public class BinaryTupleReader implements TupleReader {
             this.index = index % this.getCapacity();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            this.channel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

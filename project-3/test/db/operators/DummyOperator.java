@@ -39,4 +39,9 @@ public class DummyOperator implements Operator {
     public void accept(PhysicalTreeVisitor visitor) {
         // Not used for the mock class.
     }
+
+    @Override
+    public void close() {
+        // Not used for the mock class.
+    }
 }

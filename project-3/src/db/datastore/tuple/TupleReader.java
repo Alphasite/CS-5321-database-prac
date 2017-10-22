@@ -17,4 +17,6 @@ public interface TupleReader {
      * @param index the tuple index.
      */
     void seek(long index);
+
+    void close();
 }
