@@ -13,7 +13,7 @@ import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.UnaryNode;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
-import db.operators.physical.physical.BlockCacheOperator;
+import db.operators.physical.utility.BlockCacheOperator;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

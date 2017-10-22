@@ -27,7 +27,7 @@ public class ExternalBlockCacheOperator implements Operator {
     public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory) {
         this.header = header;
         this.bufferFile = tempDirectory.resolve(UUID.randomUUID().toString());
-        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile.toFile());
+        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile);
         this.in = null;
         this.flushed = false;
     }
@@ -88,7 +88,7 @@ public class ExternalBlockCacheOperator implements Operator {
         BlockCacheOperator page = new BlockCacheOperator(source, Database.PAGE_SIZE);
 
         for (int i = 0; i < pagesToIngest; i++) {
-            page.loadBlock();
+            page.loadNextBlock();
             this.writeSourceToBuffer(page);
         }
     }
