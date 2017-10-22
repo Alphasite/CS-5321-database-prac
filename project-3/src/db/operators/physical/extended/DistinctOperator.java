@@ -61,6 +61,16 @@ public class DistinctOperator extends AbstractOperator implements UnaryNode<Oper
         return this.source.reset();
     }
 
+    @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * @inheritDoc
      */

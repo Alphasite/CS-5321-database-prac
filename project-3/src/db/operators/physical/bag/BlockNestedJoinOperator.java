@@ -118,6 +118,16 @@ public class BlockNestedJoinOperator extends AbstractOperator implements JoinOpe
         }
     }
 
+    @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * @inheritDoc
      */

@@ -116,6 +116,16 @@ public class TupleNestedJoinOperator extends AbstractOperator implements JoinOpe
      * @inheritDoc
      */
     @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }

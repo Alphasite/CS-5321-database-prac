@@ -45,6 +45,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
     private boolean STRING_OUTPUT = true;
 
+    private int tupleIndex;
+
     /**
      * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
      *
@@ -69,6 +71,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
         // Assign a new ID to keep temporary files separate from other instances
         this.operatorId = nextOperatorId++;
+
+        this.tupleIndex = -1;
     }
 
     /**
@@ -79,16 +83,35 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         // No need to sort data again, just reset reader if present
         if (isSorted && Files.exists(sortedRelationFile)) {
             this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
+            this.tupleIndex = -1;
             return true;
         } else {
             return false;
         }
     }
 
+    @Override
+    public boolean reset(int index) {
+        // TODO: FIX LATER
+        if (reset()) {
+            for (int i = 0; i < index; i++) {
+                getNextTuple();
+            }
+            this.tupleIndex = index;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int getTupleIndex() {
+        return tupleIndex;
+    }
+
     /**
      * @inheritDoc
      */
-    @Override
     protected Tuple generateNextTuple() {
         if (!isSorted) {
             System.out.println("Beginning sort");
@@ -101,6 +124,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
             this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
         }
 
+        tupleIndex++;
         return sortedRelationReader.next();
     }
 

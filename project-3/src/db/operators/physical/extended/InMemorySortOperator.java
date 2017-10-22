@@ -85,6 +85,16 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
         return true;
     }
 
+    @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Read all the tuples from the child operator then sort them using the provided sort headers.
      */

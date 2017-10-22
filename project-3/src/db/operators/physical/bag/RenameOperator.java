@@ -59,6 +59,16 @@ public class RenameOperator extends AbstractOperator implements UnaryNode<Operat
         return this.child.reset();
     }
 
+    @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * @inheritDoc
      */

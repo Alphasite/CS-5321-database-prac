@@ -126,6 +126,16 @@ public class ExternalBlockCacheOperator extends AbstractOperator {
         return true;
     }
 
+    @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * @inheritDoc
      */

@@ -36,6 +36,16 @@ public class DummyOperator extends AbstractOperator {
     }
 
     @Override
+    public boolean reset(int index) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getTupleIndex() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void accept(PhysicalTreeVisitor visitor) {
         // Not used for the mock class.
     }
