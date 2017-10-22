@@ -61,6 +61,8 @@ public interface Operator {
             writer.write(record);
         }
 
+        writer.flush();
+
         return i;
     }
 }
