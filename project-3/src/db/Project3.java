@@ -34,19 +34,19 @@ public class Project3 {
     public static final boolean BINARY_OUTPUT = true;
 
     /**
-     * @param args If present : [inputFolder] [outputFolder]
+     * @param args If present : [inputFolder] [outputFolder] [tempFolder]
      */
     public static void main(String args[]) {
         if (args.length >= 2) {
             INPUT_PATH = args[0];
             DB_PATH = INPUT_PATH + "/db";
             OUTPUT_PATH = args[1];
-            System.out.println(INPUT_PATH + "\n" + OUTPUT_PATH);
+            TEMP_PATH = args[2];
+            System.out.println(INPUT_PATH + "\n" + OUTPUT_PATH + "\n" + TEMP_PATH);
         }
 
         Database DB = Database.loadDatabase(Paths.get(DB_PATH));
         QueryBuilder builder = new QueryBuilder(DB);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + "/queries.sql"));
@@ -60,13 +60,15 @@ public class Project3 {
             Files.createDirectories(Paths.get(OUTPUT_PATH));
             Files.createDirectories(Paths.get(TEMP_PATH));
 
+            PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
+
             while ((statement = parser.Statement()) != null) {
                 System.out.println("Read statement: " + statement);
 
                 // Get select body from statement
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
 
-                // Run db.query and print output
+                // Build logical query plan
                 LogicalOperator logicalPlan = builder.buildQuery(select);
 
                 // Create physical plan optimized for query on given data
