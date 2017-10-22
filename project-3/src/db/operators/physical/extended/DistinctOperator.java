@@ -68,6 +68,9 @@ public class DistinctOperator implements Operator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.source.close();

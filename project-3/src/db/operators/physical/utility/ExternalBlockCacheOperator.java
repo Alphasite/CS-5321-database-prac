@@ -53,6 +53,9 @@ public class ExternalBlockCacheOperator implements Operator {
         this.in.seek(index);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Tuple getNextTuple() {
         if (!flushed) {
@@ -102,22 +105,34 @@ public class ExternalBlockCacheOperator implements Operator {
         this.flushed = true;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.header;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
         this.in.seek(0);
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         // Not implemented, is an internal node.
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         if (out != null) {

@@ -99,6 +99,9 @@ public class ProjectionOperator implements Operator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.source.close();

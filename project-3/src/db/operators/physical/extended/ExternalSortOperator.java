@@ -70,6 +70,9 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
         this.operatorId = nextOperatorId++;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
         // No need to sort data again, just reset reader if present
@@ -81,6 +84,9 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Tuple getNextTuple() {
         if (!isSorted) {
@@ -197,26 +203,41 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
         output.close();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getChild() {
         return source;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return source.getHeader();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getSortHeader() {
         return sortHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.source.close();

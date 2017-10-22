@@ -24,6 +24,9 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         this.block = new ArrayList<>(this.getPageCapacity());
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Tuple getNextTuple() {
         if (this.hasNext()) {
@@ -33,21 +36,34 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.operator.getHeader();
     }
 
+    /**
+     * @inheritDoc
+     */
+    @Override
     public boolean reset() {
         this.valid = false;
         return this.operator.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.operator.close();
@@ -86,6 +102,9 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         return this.block.get(0) != null;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getChild() {
         return operator;

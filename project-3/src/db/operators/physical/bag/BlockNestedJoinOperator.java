@@ -127,6 +127,9 @@ public class BlockNestedJoinOperator implements JoinOperator {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.left.close();

@@ -66,6 +66,9 @@ public class RenameOperator implements Operator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.child.close();

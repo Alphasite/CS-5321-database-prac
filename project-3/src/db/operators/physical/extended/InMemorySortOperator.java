@@ -104,6 +104,9 @@ public class InMemorySortOperator implements SortOperator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.buffer.clear();
@@ -119,7 +122,7 @@ public class InMemorySortOperator implements SortOperator, UnaryNode<Operator> {
     }
 
     /**
-     * @return The table which is indicates the sort order.
+     * @inheritDoc
      */
     public TableHeader getSortHeader() {
         return sortHeader;

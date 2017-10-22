@@ -108,11 +108,17 @@ public class TupleNestedJoinOperator implements JoinOperator {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.left.close();

@@ -62,11 +62,17 @@ public class ScanOperator implements Operator {
         return this.reader != null;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.reader.close();

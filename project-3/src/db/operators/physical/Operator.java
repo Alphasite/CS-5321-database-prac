@@ -49,6 +49,9 @@ public interface Operator {
      */
     void accept(PhysicalTreeVisitor visitor);
 
+    /**
+     * Close any readers/writers, releasing file descriptors.
+     */
     void close();
 
     /**
