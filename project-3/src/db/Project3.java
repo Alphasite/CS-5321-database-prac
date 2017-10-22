@@ -13,6 +13,7 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
+import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +32,8 @@ public class Project3 {
     public static String TEMP_PATH = "resources/samples/tmp";
 
     public static boolean DUMP = false;
-    public static final boolean BINARY_OUTPUT = true;
+    private static boolean CLEANUP = false;
+    private static final boolean BINARY_OUTPUT = true;
 
     /**
      * @param args If present : [inputFolder] [outputFolder] [tempFolder]
@@ -94,6 +96,10 @@ public class Project3 {
                 queryPlanRoot.dump(fileWriter);
 
                 System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
+
+                if (CLEANUP) {
+                    Files.walk(Paths.get(TEMP_PATH)).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -15,11 +15,15 @@ import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.physical.BlockCacheOperator;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * A sort operator implementation that guarantees bounded state.
+ */
 public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
     private static int nextOperatorId = 1;
 
@@ -40,6 +44,14 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
     private boolean STRING_OUTPUT = true;
 
+    /**
+     * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
+     *
+     * @param source Operator to read tuples from
+     * @param sortHeader Defines against which attributes the relation will be sorted
+     * @param bufferSize Number of buffer pages held in memory. Must be >= 3
+     * @param tempFolder Folder to write temporary merged runs to
+     */
     public ExternalSortOperator(Operator source, TableHeader sortHeader, int bufferSize, Path tempFolder) {
         this.source = source;
         this.sortHeader = sortHeader;
@@ -61,7 +73,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
     @Override
     public boolean reset() {
         // No need to sort data again, just reset reader if present
-        if (isSorted && sortedRelationFile != null) {
+        if (isSorted && Files.exists(sortedRelationFile)) {
             this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
             return true;
         } else {

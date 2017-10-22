@@ -1,6 +1,7 @@
 package db.query.visitors;
 
 import db.PhysicalPlanConfig;
+import db.Project3;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
 import db.operators.physical.bag.ProjectionOperator;
@@ -12,6 +13,7 @@ import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -27,11 +29,15 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      *
      * Unary operators pop their operand, binary ones pop right op then left one
      */
-    Deque<Operator> operators;
+    private Deque<Operator> operators;
 
-    Path temporaryFolder;
+    private Path temporaryFolder;
 
-    PhysicalPlanConfig config;
+    private PhysicalPlanConfig config;
+
+    public PhysicalPlanBuilder() {
+        this(Paths.get(Project3.TEMP_PATH));
+    }
 
     public PhysicalPlanBuilder(Path temporaryFolder) {
         this(PhysicalPlanConfig.DEFAULT_CONFIG, temporaryFolder);

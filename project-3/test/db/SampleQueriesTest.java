@@ -30,6 +30,7 @@ public class SampleQueriesTest {
 
     private static final String INPUT_PATH = "resources/samples/input";
     private static final String EXPECTED_PATH = "resources/samples/expected";
+    private static final String TEMP_PATH = "resources/samples/tmp";
 
     private LogicalOperator logicalOperator;
     private Operator queryPlanRoot;
@@ -40,9 +41,6 @@ public class SampleQueriesTest {
     @Parameters(name = "join={4} sort={5} query={3} path={2}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
-
-        String[] joinTypes = new String[]{"Tuple", "Block", "Sort Merge"};
-        String[] sortTypes = new String[]{"Memory", "External"};
 
         Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
         QueryBuilder builder = new QueryBuilder(DB);
@@ -57,11 +55,12 @@ public class SampleQueriesTest {
                 LogicalOperator logicalPlan = builder.buildQuery(select);
                 Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i);
 
-                for (int jointType = 0; jointType < 2; jointType++) {
-                    for (int sortType = 0; sortType < 1; sortType++) {
-                        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(jointType, sortType);
+                for (PhysicalPlanConfig.JoinImplementation joinType : PhysicalPlanConfig.JoinImplementation.values()) {
+                    for (PhysicalPlanConfig.SortImplementation sortType : PhysicalPlanConfig.SortImplementation.values()) {
+                        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType);
+                        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
                         Operator queryPlanRootTuple = physicalBuilder.buildFromLogicalTree(logicalPlan);
-                        testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), joinTypes[jointType], sortTypes[sortType]});
+                        testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
 
