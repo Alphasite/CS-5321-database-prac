@@ -32,7 +32,7 @@ public class Project3 {
     public static String TEMP_PATH = "resources/samples/tmp";
 
     public static boolean DUMP = false;
-    private static boolean CLEANUP = false;
+    private static final boolean CLEANUP = false;
     private static final boolean BINARY_OUTPUT = true;
 
     /**

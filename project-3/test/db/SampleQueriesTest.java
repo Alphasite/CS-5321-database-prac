@@ -57,7 +57,7 @@ public class SampleQueriesTest {
 
                 for (PhysicalPlanConfig.JoinImplementation joinType : PhysicalPlanConfig.JoinImplementation.values()) {
                     for (PhysicalPlanConfig.SortImplementation sortType : PhysicalPlanConfig.SortImplementation.values()) {
-                        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType);
+                        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 5, 5);
                         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
                         Operator queryPlanRootTuple = physicalBuilder.buildFromLogicalTree(logicalPlan);
                         testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), joinType, sortType});
@@ -73,7 +73,8 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, Path expectedFile, String query, String joinType, String sortType) {
+    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, Path expectedFile, String query,
+                             PhysicalPlanConfig.JoinImplementation joinType, PhysicalPlanConfig.SortImplementation sortType) {
         this.logicalOperator = logicalOperator;
         this.queryPlanRoot = queryPlanRoot;
         this.query = query;

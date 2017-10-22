@@ -4,13 +4,12 @@ import db.PhysicalPlanConfig;
 import db.Project3;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
-import db.operators.physical.bag.ProjectionOperator;
-import db.operators.physical.bag.RenameOperator;
-import db.operators.physical.bag.SelectionOperator;
-import db.operators.physical.bag.TupleNestedJoinOperator;
+import db.operators.physical.bag.*;
 import db.operators.physical.extended.DistinctOperator;
+import db.operators.physical.extended.ExternalSortOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,7 +62,23 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         Operator rightOp = operators.pollLast();
         Operator leftOp = operators.pollLast();
 
-        Operator join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
+        Operator join;
+
+        switch (config.joinImplementation) {
+            case TNLJ:
+                join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
+                break;
+            case BNLJ:
+                join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
+                break;
+            case SMJ:
+                // TODO: replace when implemented
+                join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+
         operators.add(join);
     }
 
@@ -93,7 +108,20 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     public void visit(LogicalSortOperator node) {
         node.getChild().accept(this);
 
-        Operator sort = new SortOperator(operators.pollLast(), node.getSortHeader());
+        Operator sort;
+
+        switch (config.sortImplementation) {
+
+            case IN_MEMORY:
+                sort = new SortOperator(operators.pollLast(), node.getSortHeader());
+                break;
+            case EXTERNAL:
+                sort = new ExternalSortOperator(operators.pollLast(), node.getSortHeader(), config.sortParameter, temporaryFolder);
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+
         operators.add(sort);
     }
 
