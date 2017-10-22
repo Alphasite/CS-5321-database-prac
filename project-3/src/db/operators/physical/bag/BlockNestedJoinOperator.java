@@ -88,6 +88,7 @@ public class BlockNestedJoinOperator implements JoinOperator {
             // If the right tuples have run out, reset the right stream and load the next left block
             if (this.rightTuple == null) {
                 this.right.reset();
+                this.rightTuple = this.right.getNextTuple();
 
                 // if we're out of left and right tuples, then we're done.
                 if (!this.left.loadNextBlock()) {
