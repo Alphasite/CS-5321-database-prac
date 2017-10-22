@@ -75,11 +75,11 @@ public class TestUtils {
         }
 
         if (referenceTupleCount > testedTuples.size()) {
-            assertThat("output has fewer tuples than expected", referenceTuples.size(), equalTo(testedTuples.size()));
+            assertThat("output has fewer tuples than expected", testedTuples.size(), equalTo(referenceTuples.size()));
         }
 
         if (referenceTupleCount < testedTuples.size()) {
-            assertThat("output has more tuples than expected", referenceTuples.size(), equalTo(testedTuples.size()));
+            assertThat("output has more tuples than expected", testedTuples.size(), equalTo(referenceTuples.size()));
         }
 
         int i = 0;

@@ -215,6 +215,9 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
     @Override
     public void close() {
         this.source.close();
-        this.sortedRelationReader.close();
+
+        if (this.sortedRelationReader != null) {
+            this.sortedRelationReader.close();
+        }
     }
 }
