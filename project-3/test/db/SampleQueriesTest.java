@@ -13,6 +13,7 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -87,6 +88,11 @@ public class SampleQueriesTest {
 
         TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile, true);
         this.sampleTuples = new ScanOperator(tableInfo);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        this.queryPlanRoot.close();
     }
 
     @Test

@@ -68,6 +68,11 @@ public class SelectionOperator implements Operator, UnaryNode<Operator> {
         visitor.visit(this);
     }
 
+    @Override
+    public void close() {
+        this.source.close();
+    }
+
     /**
      * The predicate which is used to decide whether or not tuple passes this node.
      *

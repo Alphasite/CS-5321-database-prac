@@ -62,6 +62,8 @@ public class BinaryTupleWriterTest {
         ScanOperator binaryInput = new ScanOperator(tableInfo);
 
         TestUtils.compareTuples(operator, binaryInput);
+
+        binaryInput.close();
     }
 
     @Test
@@ -82,6 +84,8 @@ public class BinaryTupleWriterTest {
             writer.write(tuple);
         }
 
+        reader.close();
+
         writer.flush();
         writer.close();
 
@@ -89,5 +93,8 @@ public class BinaryTupleWriterTest {
         ScanOperator refScan = new ScanOperator(table);
 
         TestUtils.compareTuples(refScan, binaryInput);
+
+        refScan.close();
+        binaryInput.close();
     }
 }

@@ -67,6 +67,11 @@ public class ScanOperator implements Operator {
         visitor.visit(this);
     }
 
+    @Override
+    public void close() {
+        this.reader.close();
+    }
+
     /**
      * @return the underlying table info instance.
      */

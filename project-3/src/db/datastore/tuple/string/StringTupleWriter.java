@@ -25,8 +25,7 @@ public class StringTupleWriter implements TupleWriter {
         try {
             return new StringTupleWriter(new PrintStream(Files.newOutputStream(path)));
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 

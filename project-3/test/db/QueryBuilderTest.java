@@ -54,6 +54,7 @@ public class QueryBuilderTest {
         assertTrue(root instanceof ProjectionOperator);
         assertTrue(((ProjectionOperator) root).getChild() instanceof ScanOperator);
 
+        root.close();
     }
 
     @Test
@@ -67,6 +68,8 @@ public class QueryBuilderTest {
         assertTrue(((ProjectionOperator) root).getChild() instanceof SelectionOperator);
         SelectionOperator select = (SelectionOperator) ((ProjectionOperator) root).getChild();
         assertEquals(tokens.getWhere(), select.getPredicate());
+
+        root.close();
     }
 
     @Test
@@ -80,6 +83,8 @@ public class QueryBuilderTest {
         assertEquals(1, root.getHeader().size());
         assertEquals("Sailors", root.getHeader().columnAliases.get(0));
         assertEquals("A", root.getHeader().columnHeaders.get(0));
+
+        root.close();
     }
 
     @Test
@@ -97,6 +102,8 @@ public class QueryBuilderTest {
 
         assertEquals("64 | 113 | 139 | 64 | 156", root.getNextTuple().toString());
         assertEquals("64 | 113 | 139 | 64 | 70", root.getNextTuple().toString());
+
+        root.close();
     }
 
     @Test
@@ -113,6 +120,8 @@ public class QueryBuilderTest {
         assertEquals("139", root.getNextTuple().toString());
         assertEquals("129", root.getNextTuple().toString());
         assertEquals("118", root.getNextTuple().toString());
+
+        root.close();
     }
 
     @Test
@@ -137,6 +146,8 @@ public class QueryBuilderTest {
         assertEquals("109 | 0 | 24", root.getNextTuple().toString());
         assertEquals("192 | 0 | 29", root.getNextTuple().toString());
         assertEquals("156 | 0 | 64", root.getNextTuple().toString());
+
+        root.close();
     }
 
     @Test
@@ -151,5 +162,7 @@ public class QueryBuilderTest {
         assertEquals("0", root.getNextTuple().toString());
         assertEquals("1", root.getNextTuple().toString());
         assertEquals("2", root.getNextTuple().toString());
+
+        root.close();
     }
 }

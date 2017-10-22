@@ -31,7 +31,7 @@ public class Project3 {
     public static String OUTPUT_PATH = "resources/samples/output";
     public static String TEMP_PATH = "resources/samples/tmp";
 
-    public static boolean DUMP = false;
+    public static boolean DUMP_TO_CONSOLE = false;
     private static final boolean CLEANUP = false;
     private static final boolean BINARY_OUTPUT = true;
 
@@ -76,29 +76,38 @@ public class Project3 {
                 // Create physical plan optimized for query on given data
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
-                if (DUMP) {
-                    TupleWriter consoleWriter = new StringTupleWriter(System.out);
-                    queryPlanRoot.dump(consoleWriter);
-                    queryPlanRoot.reset();
-                }
-
                 // Write output to file
-                TupleWriter fileWriter;
-                Path outputFile = Paths.get(OUTPUT_PATH + "/query" + i++);
-                if (BINARY_OUTPUT) {
-                    fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
-                } else {
-                    fileWriter = StringTupleWriter.get(outputFile);
-                }
+                TupleWriter fileWriter = null;
 
-                long start = System.currentTimeMillis();
+                try {
+                    if (DUMP_TO_CONSOLE) {
+                        TupleWriter consoleWriter = new StringTupleWriter(System.out);
+                        queryPlanRoot.dump(consoleWriter);
+                        queryPlanRoot.reset();
+                    }
 
-                queryPlanRoot.dump(fileWriter);
+                    Path outputFile = Paths.get(OUTPUT_PATH + "/query" + i++);
+                    if (BINARY_OUTPUT) {
+                        fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
+                    } else {
+                        fileWriter = StringTupleWriter.get(outputFile);
+                    }
 
-                System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
+                    long start = System.currentTimeMillis();
 
-                if (CLEANUP) {
-                    Files.walk(Paths.get(TEMP_PATH)).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
+                    queryPlanRoot.dump(fileWriter);
+
+                    System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
+
+                    if (CLEANUP) {
+                        Files.walk(Paths.get(TEMP_PATH)).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
+                    }
+                } finally {
+                    queryPlanRoot.close();
+
+                    if (fileWriter != null) {
+                        fileWriter.close();
+                    }
                 }
             }
         } catch (Exception e) {

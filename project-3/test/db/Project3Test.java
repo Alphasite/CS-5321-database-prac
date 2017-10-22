@@ -7,7 +7,7 @@ public class Project3Test {
 
     @Before
     public void setUp() throws Exception {
-        Project3.DUMP = true;
+        Project3.DUMP_TO_CONSOLE = false;
     }
 
     @Test

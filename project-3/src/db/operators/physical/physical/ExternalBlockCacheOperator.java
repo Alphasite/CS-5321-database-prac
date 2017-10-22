@@ -41,14 +41,13 @@ public class ExternalBlockCacheOperator implements Operator, UnaryNode<Operator>
 
     private void initialiseIfNeeded() {
         if (this.in == null) {
-            int i = 0;
             Tuple tuple;
             while ((tuple = this.source.getNextTuple()) != null) {
                 this.out.write(tuple);
-                System.out.println("wrote:" + ++i);
             }
 
             this.out.flush();
+            this.out.close();
 
             this.in = BinaryTupleReader.get(this.bufferFile);
         }
@@ -69,6 +68,15 @@ public class ExternalBlockCacheOperator implements Operator, UnaryNode<Operator>
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         // Not implemented, is an internal node.
+    }
+
+    @Override
+    public void close() {
+        this.out.close();
+
+        if (this.in != null) {
+            this.in.close();
+        }
     }
 
     @Override

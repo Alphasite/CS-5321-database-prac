@@ -58,12 +58,13 @@ public class StringTupleWriterTest {
             writer.write(tuple);
         }
 
-        writer.flush();
         writer.close();
 
         ScanOperator binaryInput = new ScanOperator(tableInfo);
 
         TestUtils.compareTuples(operator, binaryInput);
+
+        binaryInput.close();
     }
 
     @Test
@@ -84,12 +85,15 @@ public class StringTupleWriterTest {
             writer.write(tuple);
         }
 
-        writer.flush();
+        reader.close();
         writer.close();
 
         ScanOperator binaryInput = new ScanOperator(tableInfo);
         ScanOperator refScan = new ScanOperator(table);
 
         TestUtils.compareTuples(refScan, binaryInput);
+
+        refScan.close();
+        binaryInput.close();
     }
 }

@@ -65,6 +65,10 @@ public class ExternalBlockCacheOperatorTest {
         cache.seek(999);
         assertThat(cache.getNextTuple(), equalTo(tuples.get(999)));
         assertThat(cache.getNextTuple(), is(nullValue()));
+
+        reader.close();
+        cache.close();
+        scan.close();
     }
 
     @Test
@@ -75,6 +79,10 @@ public class ExternalBlockCacheOperatorTest {
         ScanOperator refScan = new ScanOperator(table);
 
         TestUtils.compareTuples(refScan, cache);
+
+        refScan.close();
+        cache.close();
+        scan.close();
     }
 
     @Test
@@ -83,6 +91,9 @@ public class ExternalBlockCacheOperatorTest {
         ExternalBlockCacheOperator cache = new ExternalBlockCacheOperator(scan, Files.createTempDirectory("test-external-cache"));
 
         assertThat(scan.getHeader(), equalTo(cache.getHeader()));
+
+        scan.close();
+        cache.close();
     }
 
     @Test
@@ -94,10 +105,16 @@ public class ExternalBlockCacheOperatorTest {
 
         TestUtils.compareTuples(refScan, cache);
 
+        refScan.close();
+
         refScan = new ScanOperator(table);
         cache.reset();
 
         TestUtils.compareTuples(refScan, cache);
+
+        scan.close();
+        refScan.close();
+        cache.close();
     }
 
 }

@@ -45,6 +45,7 @@ public class StringTupleReaderTest {
         }
 
         assertThat(reader.next(), nullValue());
+        reader.close();
     }
 
     @Test
@@ -70,6 +71,8 @@ public class StringTupleReaderTest {
         reader.seek(tuples.size() - 1);
         assertThat(reader.next(), equalTo(tuples.get(tuples.size() - 1)));
         assertThat(reader.next(), is(nullValue()));
+
+        reader.close();
     }
 
 }

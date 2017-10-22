@@ -42,8 +42,7 @@ public class BinaryTupleWriter implements TupleWriter {
             return new BinaryTupleWriter(header, FileChannel.open(
                     file, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
         } catch (IOException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
@@ -69,15 +68,9 @@ public class BinaryTupleWriter implements TupleWriter {
         try {
             while (this.bb.hasRemaining()) {
                 this.channel.write(this.bb);
-//                System.out.println("wrote:" + this.channel.write(this.bb));
             }
 
             this.bb.clear();
-
-//            if (this.bb.hasRemaining()) {
-//                System.err.println("LEFT OVERS????");
-//            }
-
             this.clearPage();
         } catch (IOException e) {
             e.printStackTrace();
