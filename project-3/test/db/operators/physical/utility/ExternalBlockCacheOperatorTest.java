@@ -189,5 +189,4 @@ public class ExternalBlockCacheOperatorTest {
 
         TestUtils.compareTuples(refScan, cache);
     }
-
 }
