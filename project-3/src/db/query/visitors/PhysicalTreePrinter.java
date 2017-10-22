@@ -1,6 +1,5 @@
 package db.query.visitors;
 
-import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.bag.JoinOperator;
@@ -10,6 +9,7 @@ import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
+import db.operators.physical.utility.BlockCacheOperator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,8 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     public void visit(JoinOperator node) {
         StringBuilder line = new StringBuilder();
 
-        line.append("Join");
+        String operatorClass = node.getClass().getSimpleName();
+        line.append(operatorClass);
 
         if (node.getPredicate() != null) {
             line.append(" on ");
@@ -49,8 +50,18 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     }
 
     @Override
+    public void visit(SortOperator node) {
+        String operatorClass = node.getClass().getSimpleName();
+        lines.add(pad(operatorClass + " on " + node.getSortHeader()));
+
+        this.depth += 1;
+        node.getChild().accept(this);
+        this.depth -= 1;
+    }
+
+    @Override
     public void visit(RenameOperator node) {
-        lines.add(pad("Reaname " + node.getNewTableName()));
+        lines.add(pad("Rename " + node.getNewTableName()));
 
         this.depth += 1;
         node.getChild().accept(this);
@@ -65,15 +76,6 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     @Override
     public void visit(SelectionOperator node) {
         lines.add(pad("Select on " + node.getPredicate()));
-
-        this.depth += 1;
-        node.getChild().accept(this);
-        this.depth -= 1;
-    }
-
-    @Override
-    public void visit(SortOperator node) {
-        lines.add(pad("Sort on " + node.getSortHeader()));
 
         this.depth += 1;
         node.getChild().accept(this);

@@ -7,7 +7,7 @@ import db.operators.physical.Operator;
 import db.operators.physical.bag.*;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.ExternalSortOperator;
-import db.operators.physical.extended.SortOperator;
+import db.operators.physical.extended.InMemorySortOperator;
 import db.operators.physical.physical.ScanOperator;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -113,7 +113,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         switch (config.sortImplementation) {
 
             case IN_MEMORY:
-                sort = new SortOperator(operators.pollLast(), node.getSortHeader());
+                sort = new InMemorySortOperator(operators.pollLast(), node.getSortHeader());
                 break;
             case EXTERNAL:
                 sort = new ExternalSortOperator(operators.pollLast(), node.getSortHeader(), config.sortParameter, temporaryFolder);

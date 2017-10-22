@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * A sort operator implementation that guarantees bounded state.
  */
-public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
+public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
     private static int nextOperatorId = 1;
 
     private final Operator source;
@@ -118,7 +118,7 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
         BlockCacheOperator cache = new BlockCacheOperator(source, Database.PAGE_SIZE * bufSize);
 
         while (cache.hasNext()) {
-            SortOperator inMemorySort = new SortOperator(cache, sortHeader);
+            InMemorySortOperator inMemorySort = new InMemorySortOperator(cache, sortHeader);
             Path sortedPageFile = sortFolder.resolve("Sort" + operatorId + "_1_" + blockId);
             TupleWriter writer = getWriter(getHeader(), sortedPageFile);
 
@@ -209,7 +209,12 @@ public class ExternalSortOperator implements Operator, UnaryNode<Operator> {
 
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
-//        visitor.visit(this);
+        visitor.visit(this);
+    }
+
+    @Override
+    public TableHeader getSortHeader() {
+        return sortHeader;
     }
 
     @Override

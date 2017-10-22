@@ -17,7 +17,7 @@ import static org.junit.Assert.assertEquals;
  * Test reordering of tuples by the sort operator
  * Pay particular attention to conflict resolution as explained in section 2.1
  */
-public class SortOperatorTest {
+public class InMemorySortOperatorTest {
     private List<Tuple> tuplesA;
     private TableHeader headerA;
     private DummyOperator opA;
@@ -42,7 +42,7 @@ public class SortOperatorTest {
                 Arrays.asList("B")
         );
 
-        Operator sort = new SortOperator(opA, header);
+        Operator sort = new InMemorySortOperator(opA, header);
 
         assertEquals(Arrays.asList(2, 1, 3), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
@@ -59,7 +59,7 @@ public class SortOperatorTest {
                 Arrays.asList("C", "B")
         );
 
-        Operator sort = new SortOperator(opA, header);
+        Operator sort = new InMemorySortOperator(opA, header);
 
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(1, 2, 1), sort.getNextTuple().fields);
