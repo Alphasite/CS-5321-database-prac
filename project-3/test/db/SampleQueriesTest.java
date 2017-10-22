@@ -1,5 +1,7 @@
 package db;
 
+import db.PhysicalPlanConfig.JoinImplementation;
+import db.PhysicalPlanConfig.SortImplementation;
 import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.operators.logical.LogicalOperator;
@@ -39,7 +41,7 @@ public class SampleQueriesTest {
     private boolean isOrdered;
     private String query;
 
-    @Parameters(name = "join={4} sort={5} query={3} path={2}")
+    @Parameters(name = "join={3} sort={4} query={2} path={1}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
@@ -56,12 +58,9 @@ public class SampleQueriesTest {
                 LogicalOperator logicalPlan = builder.buildQuery(select);
                 Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i);
 
-                for (PhysicalPlanConfig.JoinImplementation joinType : PhysicalPlanConfig.JoinImplementation.values()) {
-                    for (PhysicalPlanConfig.SortImplementation sortType : PhysicalPlanConfig.SortImplementation.values()) {
-                        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 5, 5);
-                        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
-                        Operator queryPlanRootTuple = physicalBuilder.buildFromLogicalTree(logicalPlan);
-                        testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), joinType, sortType});
+                for (JoinImplementation joinType : JoinImplementation.values()) {
+                    for (SortImplementation sortType : SortImplementation.values()) {
+                        testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
 
@@ -74,11 +73,15 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, Path expectedFile, String query,
-                             PhysicalPlanConfig.JoinImplementation joinType, PhysicalPlanConfig.SortImplementation sortType) {
+    public SampleQueriesTest(LogicalOperator logicalOperator, Path expectedFile, String query,
+                             JoinImplementation joinType, SortImplementation sortType) {
         this.logicalOperator = logicalOperator;
-        this.queryPlanRoot = queryPlanRoot;
         this.query = query;
+
+        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 5, 5);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
+
+        this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
 
         if (query.contains("ORDER BY")) {
             this.isOrdered = true;
