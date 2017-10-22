@@ -60,7 +60,8 @@ public class SampleQueriesTest {
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
-                        testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
+                        if (joinType != JoinImplementation.SMJ)
+                            testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
             }
@@ -76,16 +77,16 @@ public class SampleQueriesTest {
         this.logicalOperator = logicalOperator;
         this.query = query;
 
-        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
-
-        this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
-
-        if (query.contains("ORDER BY")) {
+        if (query.contains("ORDER BY") || query.contains("DISTINCT")) {
             this.isOrdered = true;
         } else {
             this.isOrdered = false;
         }
+
+        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
+
+        this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
 
         TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile, true);
         this.sampleTuples = new ScanOperator(tableInfo);
@@ -93,7 +94,8 @@ public class SampleQueriesTest {
 
     @After
     public void tearDown() throws Exception {
-        this.queryPlanRoot.close();
+        if (this.queryPlanRoot != null)
+            this.queryPlanRoot.close();
         Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
     }
 
