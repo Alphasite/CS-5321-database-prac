@@ -26,12 +26,12 @@ public class InMemorySortOperator implements SortOperator, UnaryNode<Operator> {
     private List<Tuple> buffer;
     private Iterator<Tuple> bufferIterator;
 
+    private boolean isSorted;
+
     /**
-     * This creates the sort operator.
+     * This creates the sort operator with the specified parameters
      * <p>
-     * Instantiating this operator will automatically fully evaluate the child db.operators and sort their output,
-     * storing the sorted tuples in an internal buffer, so be careful to not sort too large a dataset with the
-     * current implementation.
+     * Sorting will be performed when the first tuple is requested
      *
      * @param source      The operator which creates the tuples which shall be sorted
      * @param sortHeaders The header defines the name and sort order of the columns which are to be used for sorting.
@@ -42,9 +42,9 @@ public class InMemorySortOperator implements SortOperator, UnaryNode<Operator> {
         this.sortHeader = sortHeaders;
 
         this.tupleComparator = new TupleComparator(sortHeader, source.getHeader());
+        this.isSorted = false;
 
-        this.buffer();
-        this.reset();
+        this.buffer = new ArrayList<>();
     }
 
     /**
@@ -56,6 +56,10 @@ public class InMemorySortOperator implements SortOperator, UnaryNode<Operator> {
      */
     @Override
     public Tuple getNextTuple() {
+        if (!isSorted) {
+            this.buffer();
+        }
+
         if (this.bufferIterator.hasNext()) {
             return (this.bufferIterator.next());
         } else {
@@ -92,6 +96,7 @@ public class InMemorySortOperator implements SortOperator, UnaryNode<Operator> {
         }
 
         this.buffer.sort(tupleComparator);
+        this.isSorted = true;
 
         this.reset();
     }

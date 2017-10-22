@@ -90,7 +90,9 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
     @Override
     public Tuple getNextTuple() {
         if (!isSorted) {
+            System.out.println("Beginning sort");
             performExternalSort();
+            System.out.println("Complete !");
         }
 
         // Check that we have a valid file to read from
@@ -123,7 +125,10 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
         // Create a cache that reads tuples from source one page at a time
         BlockCacheOperator cache = new BlockCacheOperator(source, Database.PAGE_SIZE * bufSize);
 
+        System.out.println("Pass 1");
+
         while (cache.hasNext()) {
+            System.out.println("Sorting " + blockId);
             InMemorySortOperator inMemorySort = new InMemorySortOperator(cache, sortHeader);
             Path sortedPageFile = sortFolder.resolve("Sort" + operatorId + "_1_" + blockId);
             TupleWriter writer = getWriter(getHeader(), sortedPageFile);
@@ -137,9 +142,13 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
             blockId++;
         }
 
+        cache.close();
+
         // Second to last pass : merge previous runs using a fixed size buffer
         int runId = 2;
         blockId = 1;
+
+        System.out.println("Pass 2");
 
         while (previousRunFiles.size() >= 2) {
             List<Path> currentRunFiles = new ArrayList<>();
@@ -155,8 +164,10 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
                     Path mergeOutputFile = sortFolder.resolve("Sort" + operatorId + "_" + runId + "_" + blockId);
                     currentRunFiles.add(mergeOutputFile);
 
+                    System.out.println("Merging " + i);
                     performMultiMerge(currentRunReaders, getWriter(getHeader(), mergeOutputFile));
                     currentRunReaders.clear();
+                    System.out.println("Merge done");
 
                     blockId++;
                 }
