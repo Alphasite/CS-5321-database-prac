@@ -1,4 +1,4 @@
-package db.operators.physical.physical;
+package db.operators.physical.utility;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;

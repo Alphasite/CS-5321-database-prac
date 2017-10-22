@@ -54,7 +54,6 @@ public class BinaryTupleWriter implements TupleWriter {
         this.bb.asIntBuffer().put(1, this.tuples_written);
 
         for (int i = 0; i < tuple.fields.size(); i++) {
-//            System.out.println(this.getRemainingCapacity());
             this.bb.asIntBuffer().put(offset + i, tuple.fields.get(i));
         }
 
