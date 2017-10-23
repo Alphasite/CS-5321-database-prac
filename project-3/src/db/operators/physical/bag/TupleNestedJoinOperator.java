@@ -73,7 +73,10 @@ public class TupleNestedJoinOperator extends AbstractOperator implements JoinOpe
             while ((rightTuple = this.right.getNextTuple()) == null) {
                 // If there is none, then increment the left hand operator and then
                 // reset the right hand operator and try to get another tuple.
-                if (!loadNextLeftTuple()) {
+                if (this.left.hasNextTuple()) {
+                    this.leftTupleCache = this.left.getNextTuple();
+                    this.right.reset();
+                } else {
                     return null;
                 }
             }
@@ -102,7 +105,7 @@ public class TupleNestedJoinOperator extends AbstractOperator implements JoinOpe
     @Override
     public boolean reset() {
         if (this.left.reset() && this.right.reset()) {
-            this.loadNextLeftTuple();
+            this.leftTupleCache = this.left.getNextTuple();
             return true;
         } else {
             return false;
@@ -124,24 +127,6 @@ public class TupleNestedJoinOperator extends AbstractOperator implements JoinOpe
     public void close() {
         this.left.close();
         this.right.close();
-    }
-
-
-    /**
-     * This method tries to get the next left hand tuple and then resets the right hand operator,
-     * so that it can try generate more tuples.
-     *
-     * @return A boolean indicating whether or not tuple generation is done.
-     */
-    private boolean loadNextLeftTuple() {
-        Tuple leftFromChild = this.left.getNextTuple();
-        if (leftFromChild != null) {
-            leftTupleCache = leftFromChild;
-            right.reset();
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**

@@ -36,8 +36,11 @@ public class BinaryTupleReaderTest {
         assertThat(reader, notNullValue());
 
         for (int i = 0; i < 1000; i++) {
+            assertThat("tuple: " + i, reader.hasNext(), equalTo(true));
+
             Tuple peek = reader.peek();
             Tuple next = reader.next();
+
             assertThat(peek, notNullValue());
             assertThat(peek, instanceOf(Tuple.class));
             assertThat(peek.fields.size(), equalTo(table.header.size()));
@@ -51,6 +54,8 @@ public class BinaryTupleReaderTest {
 
         assertThat(reader.peek(), nullValue());
         assertThat(reader.next(), nullValue());
+        assertThat(reader.hasNext(), equalTo(false));
+
 
         reader.close();
     }

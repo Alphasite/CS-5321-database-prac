@@ -71,31 +71,28 @@ public class BlockNestedJoinOperator extends AbstractOperator implements JoinOpe
                 return null;
             }
 
-            Tuple leftTuple;
-
             // Iterate through the left block, trying to join each to that right tuple
-            while ((leftTuple = this.left.getNextTuple()) != null) {
-                Tuple joinedTuple = leftTuple.join(rightTuple);
+            while (this.left.hasNext()) {
+                Tuple joinedTuple = this.left.getNextTuple().join(rightTuple);
 
                 if (evaluator == null || evaluator.matches(joinedTuple)) {
                     return joinedTuple;
                 }
             }
 
-            // Block is empty so load next right tuple.
-            this.rightTuple = this.right.getNextTuple();
-            this.left.resetPage();
-
             // If the right tuples have run out, reset the right stream and load the next left block
-            if (this.rightTuple == null) {
+            if (!this.right.hasNextTuple()) {
                 this.right.reset();
-                this.rightTuple = this.right.getNextTuple();
 
                 // if we're out of left and right tuples, then we're done.
                 if (!this.left.loadNextBlock()) {
                     return null;
                 }
             }
+
+            // Block is empty so load next right tuple.
+            this.rightTuple = this.right.getNextTuple();
+            this.left.resetPage();
         }
     }
 
