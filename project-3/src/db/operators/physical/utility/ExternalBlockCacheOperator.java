@@ -3,10 +3,9 @@ package db.operators.physical.utility;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.TupleReader;
-import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -15,12 +14,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class ExternalBlockCacheOperator implements Operator {
+public class ExternalBlockCacheOperator extends AbstractOperator {
     private final TableHeader header;
     private final Path bufferFile;
 
-    private TupleWriter out;
-    private TupleReader in;
+    private BinaryTupleWriter out;
+    private BinaryTupleReader in;
 
     private boolean flushed;
 
@@ -57,7 +56,7 @@ public class ExternalBlockCacheOperator implements Operator {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (!flushed) {
             this.flush();
         }

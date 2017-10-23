@@ -3,6 +3,7 @@ package db.operators.physical.bag;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.query.visitors.ExpressionEvaluator;
@@ -15,7 +16,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class TupleNestedJoinOperator implements JoinOperator {
+public class TupleNestedJoinOperator extends AbstractOperator implements JoinOperator {
     private final Operator left;
     private final Operator right;
 
@@ -56,7 +57,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
      * It increments the left tuple then scans the right operator, repeating until done.
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (this.leftTupleCache == null) {
             // No more tuple on left op : we are done
             return null;

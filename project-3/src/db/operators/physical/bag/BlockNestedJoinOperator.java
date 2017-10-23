@@ -4,6 +4,7 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.utility.BlockCacheOperator;
@@ -17,7 +18,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class BlockNestedJoinOperator implements JoinOperator {
+public class BlockNestedJoinOperator extends AbstractOperator implements JoinOperator {
     private final BlockCacheOperator left;
     private final Operator right;
 
@@ -64,7 +65,7 @@ public class BlockNestedJoinOperator implements JoinOperator {
      * This method specifically uses block nested join.
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         while (true) {
             if (rightTuple == null) {
                 return null;
@@ -97,6 +98,7 @@ public class BlockNestedJoinOperator implements JoinOperator {
             }
         }
     }
+
 
     /**
      * @inheritDoc

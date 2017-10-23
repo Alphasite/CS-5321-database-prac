@@ -3,13 +3,14 @@ package db.operators.physical.utility;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
+public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Operator> {
     private boolean valid;
     private Operator operator;
     private List<Tuple> block;
@@ -28,7 +29,7 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (this.hasNext()) {
             return this.block.get(this.index++);
         } else {

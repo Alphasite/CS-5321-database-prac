@@ -19,6 +19,7 @@ public class BinaryTupleReader implements TupleReader {
     private final ByteBuffer bb;
 
     private long index;
+    private long pageNumber;
 
 
     public BinaryTupleReader(Path path, FileChannel channel) {
@@ -28,6 +29,7 @@ public class BinaryTupleReader implements TupleReader {
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
         this.index = -1;
+        this.pageNumber = -1;
     }
 
     public static BinaryTupleReader get(Path path) {
@@ -38,17 +40,28 @@ public class BinaryTupleReader implements TupleReader {
         }
     }
 
-    @Override
-    public Tuple next() {
+    public Tuple peek() {
         if (this.index == -1 || this.getNumberOfTuples() <= this.index) {
             if (loadPage(channel, bb)) {
                 this.index = 0;
+                this.pageNumber += 1;
             } else {
                 return null;
             }
         }
 
-        return this.getTupleOnPage(this.index++);
+        return this.getTupleOnPage(this.index);
+    }
+
+    public boolean hasNext() {
+        return this.peek() != null;
+    }
+
+    @Override
+    public Tuple next() {
+        Tuple next = this.peek();
+        this.index += 1;
+        return next;
     }
 
     @Override
@@ -60,9 +73,16 @@ public class BinaryTupleReader implements TupleReader {
 
         try {
             long page = index / this.getCapacity();
-            this.channel.position(page * Database.PAGE_SIZE);
-            this.loadPage(channel, bb);
-            this.index = index % this.getCapacity();
+            long offset = index % this.getCapacity();
+
+
+            if (this.pageNumber != page) {
+                this.channel.position(page * Database.PAGE_SIZE);
+                this.loadPage(channel, bb);
+            }
+
+            this.pageNumber = page;
+            this.index = offset;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
