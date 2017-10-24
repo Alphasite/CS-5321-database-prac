@@ -92,16 +92,6 @@ public class ProjectionOperator extends AbstractOperator implements UnaryNode<Op
         return this.source.reset();
     }
 
-    @Override
-    public boolean reset(int index) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getTupleIndex() {
-        throw new UnsupportedOperationException();
-    }
-
     /**
      * @inheritDoc
      */

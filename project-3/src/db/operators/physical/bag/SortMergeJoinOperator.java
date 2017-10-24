@@ -104,16 +104,6 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
     }
 
     @Override
-    public boolean reset(int index) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public int getTupleIndex() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
