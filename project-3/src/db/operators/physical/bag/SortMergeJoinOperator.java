@@ -3,13 +3,14 @@ package db.operators.physical.bag;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.extended.TupleComparator;
 import net.sf.jsqlparser.expression.Expression;
 
-public class SortMergeJoinOperator implements JoinOperator {
+public class SortMergeJoinOperator extends AbstractOperator implements JoinOperator {
 
     private SortOperator left, right;
     private TupleComparator tupleComparator;
@@ -50,7 +51,7 @@ public class SortMergeJoinOperator implements JoinOperator {
     }
 
     @Override
-    public Tuple getNextTuple() {
+    public Tuple generateNextTuple() {
         while (this.leftTuple != null) {
             Tuple rightTuple = this.right.getNextTuple();
 
