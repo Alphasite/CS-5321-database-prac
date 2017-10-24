@@ -93,7 +93,7 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
     }
 
     @Override
-    public boolean reset(int index) {
+    public boolean seek(int index) {
         this.bufferIterator = this.buffer.listIterator(index);
         this.tupleIndex = index-1;
         this.next = null;

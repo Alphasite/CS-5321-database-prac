@@ -21,7 +21,7 @@ public interface SortOperator extends Operator, UnaryNode<Operator> {
      *
      * @return A boolean indicating whether the reset succeeded or failed.
      */
-    boolean reset(int index);
+    boolean seek(int index);
 
     /**
      * Get the index of the tuple that was returned by the last call to <pre>getNextTuple()</pre>.

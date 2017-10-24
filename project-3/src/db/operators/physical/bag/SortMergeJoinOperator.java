@@ -62,7 +62,7 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
                     break;
                 } else {
                     this.left.getNextTuple();
-                    this.right.reset(this.lastMatchingRight);
+                    this.right.seek(this.lastMatchingRight);
                     this.lastMatchingRight = -1;
                 }
 
@@ -70,7 +70,7 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
                 this.left.getNextTuple();
 
                 if (this.lastMatchingRight != -1) {
-                    this.right.reset(this.lastMatchingRight);
+                    this.right.seek(this.lastMatchingRight);
                     this.lastMatchingRight = -1;
                 }
             } else if (this.tupleComparator.compare(leftTuple, rightTuple) > 0) {

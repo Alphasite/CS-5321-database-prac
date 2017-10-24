@@ -92,7 +92,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     }
 
     @Override
-    public boolean reset(int index) {
+    public boolean seek(int index) {
         // TODO: FIX LATER
         if (reset()) {
             for (int i = 0; i < index; i++) {
