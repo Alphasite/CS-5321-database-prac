@@ -24,6 +24,25 @@ public interface Operator {
      */
     Tuple getNextTuple();
 
+    /**
+     * Retrieve or generate the next tuple in the table. This does not increment the head pointer.
+     * <p>
+     * This method may pull from child db.operators transforming the tuples as necessary.
+     * <p>
+     * If there is a tuple, that is returned, else a null is returned.
+     *
+     * @return The next tuple, or a null.
+     */
+    Tuple peekNextTuple();
+
+    /**
+     * Indicate whether or not there is a next tuple to retrieve.
+     *
+     * @return A bool indicating whether or not the next tuple is null.
+     */
+    default boolean hasNextTuple() {
+        return this.peekNextTuple() != null;
+    }
 
     /**
      * Get the schema for the tuples produced by this operator.
@@ -34,7 +53,7 @@ public interface Operator {
 
 
     /**
-     * Reset the operator and any child db.operators, generating tuples from the begining of the table again.
+     * Reset the operator and any child db.operators, generating tuples from the beginning of the table again.
      * <p>
      * This may reset the internal state of an operator.
      *
@@ -48,6 +67,11 @@ public interface Operator {
      * @param visitor the visitor to be accepted.
      */
     void accept(PhysicalTreeVisitor visitor);
+
+    /**
+     * Close any readers/writers, releasing file descriptors.
+     */
+    void close();
 
     /**
      * Write the table header and rows with the provided Writer

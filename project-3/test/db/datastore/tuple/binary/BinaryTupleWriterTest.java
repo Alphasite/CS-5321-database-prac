@@ -43,12 +43,12 @@ public class BinaryTupleWriterTest {
 
         tableInfo = new TableInfo(header, tempFile, true);
 
-        BinaryTupleWriter.get(header, tempFile.toFile());
+        BinaryTupleWriter.get(header, tempFile);
     }
 
     @Test
     public void write() throws Exception {
-        BinaryTupleWriter writer = BinaryTupleWriter.get(header, tempFile.toFile());
+        BinaryTupleWriter writer = BinaryTupleWriter.get(header, tempFile);
 
         assertThat(writer, notNullValue());
 
@@ -62,6 +62,8 @@ public class BinaryTupleWriterTest {
         ScanOperator binaryInput = new ScanOperator(tableInfo);
 
         TestUtils.compareTuples(operator, binaryInput);
+
+        binaryInput.close();
     }
 
     @Test
@@ -73,7 +75,7 @@ public class BinaryTupleWriterTest {
 
         BinaryTupleReader reader = BinaryTupleReader.get(table.file);
 
-        BinaryTupleWriter writer = BinaryTupleWriter.get(header, tempFile.toFile());
+        BinaryTupleWriter writer = BinaryTupleWriter.get(header, tempFile);
 
         assertThat(writer, notNullValue());
 
@@ -82,6 +84,8 @@ public class BinaryTupleWriterTest {
             writer.write(tuple);
         }
 
+        reader.close();
+
         writer.flush();
         writer.close();
 
@@ -89,5 +93,8 @@ public class BinaryTupleWriterTest {
         ScanOperator refScan = new ScanOperator(table);
 
         TestUtils.compareTuples(refScan, binaryInput);
+
+        refScan.close();
+        binaryInput.close();
     }
 }

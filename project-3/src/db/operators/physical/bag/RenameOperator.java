@@ -4,6 +4,7 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
 import db.operators.logical.LogicalRenameOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -16,7 +17,7 @@ import db.operators.physical.PhysicalTreeVisitor;
  *
  * @inheritDoc
  */
-public class RenameOperator implements Operator, UnaryNode<Operator> {
+public class RenameOperator extends AbstractOperator implements UnaryNode<Operator> {
     private final Operator child;
 
     private String newTableName;
@@ -38,7 +39,7 @@ public class RenameOperator implements Operator, UnaryNode<Operator> {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         return this.child.getNextTuple();
     }
 
@@ -64,6 +65,14 @@ public class RenameOperator implements Operator, UnaryNode<Operator> {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        this.child.close();
     }
 
     /**

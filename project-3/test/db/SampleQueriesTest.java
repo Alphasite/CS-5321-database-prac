@@ -1,5 +1,7 @@
 package db;
 
+import db.PhysicalPlanConfig.JoinImplementation;
+import db.PhysicalPlanConfig.SortImplementation;
 import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.operators.logical.LogicalOperator;
@@ -13,6 +15,7 @@ import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -20,6 +23,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import java.io.File;
 import java.io.FileReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,6 +33,7 @@ public class SampleQueriesTest {
 
     private static final String INPUT_PATH = "resources/samples/input";
     private static final String EXPECTED_PATH = "resources/samples/expected";
+    private static final String TEMP_PATH = "resources/samples/tmp";
 
     private LogicalOperator logicalOperator;
     private Operator queryPlanRoot;
@@ -36,14 +41,11 @@ public class SampleQueriesTest {
     private boolean isOrdered;
     private String query;
 
-    @Parameters(name = "join={4} sort={5} query={3} path={2}")
+    @Parameters(name = "join={3} sort={4} query={2} path={1}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
-        String[] joinTypes = new String[]{"Tuple", "Block", "Sort Merge"};
-        String[] sortTypes = new String[]{"Memory", "External"};
-
-        Database DB = Database.loadDatabase(Paths.get(INPUT_PATH + File.separator + "db"));
+        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
         QueryBuilder builder = new QueryBuilder(DB);
 
         try {
@@ -54,17 +56,14 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                File expectedFile = new File(EXPECTED_PATH + File.separator + "query" + i);
+                Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i++);
 
-                for (int jointType = 0; jointType < 2; jointType++) {
-                    for (int sortType = 0; sortType < 1; sortType++) {
-                        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(jointType, sortType);
-                        Operator queryPlanRootTuple = physicalBuilder.buildFromLogicalTree(logicalPlan);
-                        testCases.add(new Object[]{logicalPlan, queryPlanRootTuple, expectedFile, statement.toString(), joinTypes[jointType], sortTypes[sortType]});
+                for (JoinImplementation joinType : JoinImplementation.values()) {
+                    for (SortImplementation sortType : SortImplementation.values()) {
+                        if (joinType != JoinImplementation.SMJ)
+                            testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
-
-                i++;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -73,19 +72,35 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Operator queryPlanRoot, File expectedFile, String query, String joinType, String sortType) {
+    public SampleQueriesTest(LogicalOperator logicalOperator, Path expectedFile, String query,
+                             JoinImplementation joinType, SortImplementation sortType) {
         this.logicalOperator = logicalOperator;
-        this.queryPlanRoot = queryPlanRoot;
         this.query = query;
 
-        if (query.contains("ORDER BY")) {
+        if (query.contains("ORDER BY") || query.contains("DISTINCT")) {
             this.isOrdered = true;
         } else {
             this.isOrdered = false;
         }
 
-        TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile.toPath(), true);
+        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
+
+        this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
+
+        TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile, true);
         this.sampleTuples = new ScanOperator(tableInfo);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (this.queryPlanRoot != null) {
+            this.queryPlanRoot.close();
+        }
+
+        this.sampleTuples.close();
+
+        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
     }
 
     @Test

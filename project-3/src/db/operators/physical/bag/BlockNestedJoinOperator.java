@@ -4,6 +4,7 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.utility.BlockCacheOperator;
@@ -17,7 +18,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class BlockNestedJoinOperator implements JoinOperator {
+public class BlockNestedJoinOperator extends AbstractOperator implements JoinOperator {
     private final BlockCacheOperator left;
     private final Operator right;
 
@@ -64,34 +65,37 @@ public class BlockNestedJoinOperator implements JoinOperator {
      * This method specifically uses block nested join.
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         while (true) {
-            Tuple leftTuple;
+            if (rightTuple == null) {
+                return null;
+            }
 
             // Iterate through the left block, trying to join each to that right tuple
-            while ((leftTuple = this.left.getNextTuple()) != null) {
-                Tuple joinedTuple = leftTuple.join(rightTuple);
+            while (this.left.hasNext()) {
+                Tuple joinedTuple = this.left.getNextTuple().join(rightTuple);
 
                 if (evaluator == null || evaluator.matches(joinedTuple)) {
                     return joinedTuple;
                 }
             }
 
-            // Block is empty so load next right tuple.
-            this.rightTuple = this.right.getNextTuple();
-            this.left.resetPage();
-
             // If the right tuples have run out, reset the right stream and load the next left block
-            if (this.rightTuple == null) {
+            if (!this.right.hasNextTuple()) {
                 this.right.reset();
 
                 // if we're out of left and right tuples, then we're done.
-                if (!this.left.loadBlock()) {
+                if (!this.left.loadNextBlock()) {
                     return null;
                 }
             }
+
+            // Block is empty so load next right tuple.
+            this.rightTuple = this.right.getNextTuple();
+            this.left.resetPage();
         }
     }
+
 
     /**
      * @inheritDoc
@@ -120,6 +124,15 @@ public class BlockNestedJoinOperator implements JoinOperator {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        this.left.close();
+        this.right.close();
     }
 
     /**

@@ -3,10 +3,9 @@ package db.operators.physical.utility;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.TupleReader;
-import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -15,21 +14,26 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class ExternalBlockCacheOperator implements Operator {
+public class ExternalBlockCacheOperator extends AbstractOperator {
     private final TableHeader header;
     private final Path bufferFile;
 
-    private TupleWriter out;
-    private TupleReader in;
+    private BinaryTupleWriter out;
+    private BinaryTupleReader in;
 
     private boolean flushed;
 
-    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory) {
+    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory, String file) {
         this.header = header;
-        this.bufferFile = tempDirectory.resolve(UUID.randomUUID().toString());
-        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile.toFile());
+        this.bufferFile = tempDirectory.resolve(file);
+        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile);
         this.in = null;
         this.flushed = false;
+    }
+
+
+    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory) {
+        this(header, tempDirectory, UUID.randomUUID().toString());
     }
 
     public Path getBufferFile() {
@@ -38,6 +42,7 @@ public class ExternalBlockCacheOperator implements Operator {
 
     public void delete() {
         try {
+            this.close();
             Files.deleteIfExists(bufferFile);
         } catch (IOException e) {
             System.out.println("Failed to delete:" + bufferFile);
@@ -52,8 +57,11 @@ public class ExternalBlockCacheOperator implements Operator {
         this.in.seek(index);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (!flushed) {
             this.flush();
         }
@@ -88,7 +96,7 @@ public class ExternalBlockCacheOperator implements Operator {
         BlockCacheOperator page = new BlockCacheOperator(source, Database.PAGE_SIZE);
 
         for (int i = 0; i < pagesToIngest; i++) {
-            page.loadBlock();
+            page.loadNextBlock();
             this.writeSourceToBuffer(page);
         }
     }
@@ -101,19 +109,43 @@ public class ExternalBlockCacheOperator implements Operator {
         this.flushed = true;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.header;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
         this.in.seek(0);
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         // Not implemented, is an internal node.
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        if (out != null) {
+            this.out.flush();
+            this.out.close();
+        }
+
+        if (this.in != null) {
+            this.in.close();
+        }
     }
 }

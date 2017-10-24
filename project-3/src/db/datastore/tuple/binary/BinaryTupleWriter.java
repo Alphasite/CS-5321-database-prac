@@ -5,12 +5,11 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 public class BinaryTupleWriter implements TupleWriter {
     private final TableHeader header;
@@ -31,15 +30,19 @@ public class BinaryTupleWriter implements TupleWriter {
         this.tuples_written = 0;
     }
 
-    public static BinaryTupleWriter get(TableHeader header, File file) {
+    /**
+     * Create a new writer outputting binary tuples to the specified file object
+     * @param header The relation header, used to properly size the buffers
+     * @param file The output file. Will be created if it doesn't exist
+     * @return
+     */
+    public static BinaryTupleWriter get(TableHeader header, Path file) {
         try {
-            return new BinaryTupleWriter(
-                    header,
-                    new FileOutputStream(file).getChannel()
-            );
-        } catch (FileNotFoundException e) {
-            System.err.println("Failed to find file: " + file);
-            return null;
+            // Create file if it doesn't exist
+            return new BinaryTupleWriter(header, FileChannel.open(
+                    file, StandardOpenOption.CREATE, StandardOpenOption.WRITE));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

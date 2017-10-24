@@ -3,6 +3,7 @@ package db.operators.physical.bag;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.query.visitors.ExpressionEvaluator;
@@ -15,7 +16,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class TupleNestedJoinOperator implements JoinOperator {
+public class TupleNestedJoinOperator extends AbstractOperator implements JoinOperator {
     private final Operator left;
     private final Operator right;
 
@@ -24,33 +25,31 @@ public class TupleNestedJoinOperator implements JoinOperator {
     private ExpressionEvaluator evaluator;
 
     /**
-     * Create an object which joins left and right tuples and filters results based on a conditional clause
+     * Create an object which joins left and right tuples.
      *
      * @param left       The operator which generates the left hand tuples.
      * @param right      The operator which generates the right hand tuples.
-     * @param expression The expression to evaluate the resulting tuples on.
      */
-    public TupleNestedJoinOperator(Operator left, Operator right, Expression expression) {
+    public TupleNestedJoinOperator(Operator left, Operator right) {
         this.left = left;
         this.right = right;
+        this.evaluator = null;
         this.resultHeader = LogicalJoinOperator.computeHeader(left.getHeader(), right.getHeader());
         this.reset();
-
-        if (expression != null) {
-            this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
-        } else {
-            this.evaluator = null;
-        }
     }
 
     /**
-     * Create an object which joins left and right tuples.
+     * Create an object which joins left and right tuples and filters results based on a conditional clause.
      *
      * @param left  The operator which generates the left hand tuples.
      * @param right The operator which generates the right hand tuples.
+     * @param expression The expression to evaluate the resulting tuples on.
      */
-    public TupleNestedJoinOperator(Operator left, Operator right) {
-        this(left, right, null);
+    public TupleNestedJoinOperator(Operator left, Operator right, Expression expression) {
+        this(left, right);
+
+        if (expression != null)
+            this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
     }
 
     /**
@@ -58,7 +57,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
      * It increments the left tuple then scans the right operator, repeating until done.
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (this.leftTupleCache == null) {
             // No more tuple on left op : we are done
             return null;
@@ -74,7 +73,10 @@ public class TupleNestedJoinOperator implements JoinOperator {
             while ((rightTuple = this.right.getNextTuple()) == null) {
                 // If there is none, then increment the left hand operator and then
                 // reset the right hand operator and try to get another tuple.
-                if (!loadNextLeftTuple()) {
+                if (this.left.hasNextTuple()) {
+                    this.leftTupleCache = this.left.getNextTuple();
+                    this.right.reset();
+                } else {
                     return null;
                 }
             }
@@ -103,30 +105,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
     @Override
     public boolean reset() {
         if (this.left.reset() && this.right.reset()) {
-            this.loadNextLeftTuple();
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public void accept(PhysicalTreeVisitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    /**
-     * This method tries to get the next left hand tuple and then resets the right hand operator,
-     * so that it can try generate more tuples.
-     *
-     * @return A boolean indicating whether or not tuple generation is done.
-     */
-    private boolean loadNextLeftTuple() {
-        Tuple leftFromChild = this.left.getNextTuple();
-        if (leftFromChild != null) {
-            leftTupleCache = leftFromChild;
-            right.reset();
+            this.leftTupleCache = this.left.getNextTuple();
             return true;
         } else {
             return false;
@@ -137,8 +116,25 @@ public class TupleNestedJoinOperator implements JoinOperator {
      * @inheritDoc
      */
     @Override
+    public void accept(PhysicalTreeVisitor visitor) {
+        visitor.visit(this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        this.left.close();
+        this.right.close();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
     public Expression getPredicate() {
-        return evaluator.getExpression();
+        return evaluator != null ? evaluator.getExpression() : null;
     }
 
     /**

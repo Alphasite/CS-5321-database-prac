@@ -35,8 +35,8 @@ public class QueryBuilder {
      * Optimizations performed at this stage include evaluating predicates as early as possible.
      * It is necessary to convert the resulting tree to a physical plan in order to execute the query.
      *
-     * @param query The parsed query object
-     * @return The root operator of the logical query plan
+     * @param query Parsed query object
+     * @return Root operator of logical query plan
      */
     @SuppressWarnings("unchecked")
     public LogicalOperator buildQuery(PlainSelect query) {

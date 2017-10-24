@@ -4,12 +4,11 @@ import db.datastore.Database;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +19,7 @@ public class BinaryTupleReader implements TupleReader {
     private final ByteBuffer bb;
 
     private long index;
+    private long pageNumber;
 
 
     public BinaryTupleReader(Path path, FileChannel channel) {
@@ -29,31 +29,39 @@ public class BinaryTupleReader implements TupleReader {
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
         this.index = -1;
+        this.pageNumber = -1;
     }
 
     public static BinaryTupleReader get(Path path) {
         try {
-            return new BinaryTupleReader(
-                    path,
-                    new FileInputStream(path.toFile()).getChannel()
-            );
-        } catch (FileNotFoundException e) {
-            System.out.println("Failed to load table file; file not found: " + path);
-            return null;
+            return new BinaryTupleReader(path, FileChannel.open(path, StandardOpenOption.READ));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    @Override
-    public Tuple next() {
+    public Tuple peek() {
         if (this.index == -1 || this.getNumberOfTuples() <= this.index) {
             if (loadPage(channel, bb)) {
                 this.index = 0;
+                this.pageNumber += 1;
             } else {
                 return null;
             }
         }
 
-        return this.getTupleOnPage(this.index++);
+        return this.getTupleOnPage(this.index);
+    }
+
+    public boolean hasNext() {
+        return this.peek() != null;
+    }
+
+    @Override
+    public Tuple next() {
+        Tuple next = this.peek();
+        this.index += 1;
+        return next;
     }
 
     @Override
@@ -65,11 +73,27 @@ public class BinaryTupleReader implements TupleReader {
 
         try {
             long page = index / this.getCapacity();
-            this.channel.position(page * Database.PAGE_SIZE);
-            this.loadPage(channel, bb);
-            this.index = index % this.getCapacity();
+            long offset = index % this.getCapacity();
+
+
+            if (this.pageNumber != page) {
+                this.channel.position(page * Database.PAGE_SIZE);
+                this.loadPage(channel, bb);
+            }
+
+            this.pageNumber = page;
+            this.index = offset;
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void close() {
+        try {
+            this.channel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -89,7 +113,7 @@ public class BinaryTupleReader implements TupleReader {
                 return false;
             }
         } catch (IOException e) {
-            System.err.println("Error reading binary file:" + path);
+            e.printStackTrace();
             return false;
         }
 

@@ -3,13 +3,14 @@ package db.operators.physical.utility;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
+public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Operator> {
     private boolean valid;
     private Operator operator;
     private List<Tuple> block;
@@ -24,8 +25,11 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         this.block = new ArrayList<>(this.getPageCapacity());
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (this.hasNext()) {
             return this.block.get(this.index++);
         } else {
@@ -33,19 +37,37 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.operator.getHeader();
     }
 
+    /**
+     * @inheritDoc
+     */
+    @Override
     public boolean reset() {
         this.valid = false;
         return this.operator.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        this.operator.close();
     }
 
     private int getPageCapacity() {
@@ -58,7 +80,7 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
 
     public boolean hasNext() {
         if (!this.valid) {
-            this.loadBlock();
+            this.loadNextBlock();
         }
 
         if (this.index < this.block.size()) {
@@ -68,12 +90,16 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         }
     }
 
-    public boolean loadBlock() {
+    public boolean loadNextBlock() {
         this.resetPage();
         this.block.clear();
 
         for (int i = 0; i < this.getPageCapacity(); i++) {
-            this.block.add(this.operator.getNextTuple());
+            Tuple next = operator.getNextTuple();
+            this.block.add(next);
+
+            if (next == null)
+                break;
         }
 
         this.valid = true;
@@ -81,6 +107,9 @@ public class BlockCacheOperator implements Operator, UnaryNode<Operator> {
         return this.block.get(0) != null;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getChild() {
         return operator;

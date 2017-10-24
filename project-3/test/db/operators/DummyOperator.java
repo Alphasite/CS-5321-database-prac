@@ -2,12 +2,12 @@ package db.operators;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.operators.physical.Operator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 import java.util.List;
 
-public class DummyOperator implements Operator {
+public class DummyOperator extends AbstractOperator {
 
     private List<Tuple> tuples;
     private TableHeader header;
@@ -20,7 +20,7 @@ public class DummyOperator implements Operator {
     }
 
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         return i < tuples.size() ? tuples.get(i++) : null;
     }
 
@@ -37,6 +37,11 @@ public class DummyOperator implements Operator {
 
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
+        // Not used for the mock class.
+    }
+
+    @Override
+    public void close() {
         // Not used for the mock class.
     }
 }

@@ -37,16 +37,13 @@ public class ExternalBlockCacheOperatorTest {
         ScanOperator scan = new ScanOperator(table);
         ExternalBlockCacheOperator cache = new ExternalBlockCacheOperator(scan.getHeader(), Files.createTempDirectory("test-external-cache"));
 
-        int i = 0;
         Tuple next;
         while ((next = scan.getNextTuple()) != null) {
             cache.writeTupleToBuffer(next);
-            i++;
         }
 
+        scan.close();
         cache.flush();
-
-        System.out.println(i);
 
         ScanOperator refScan = new ScanOperator(table);
         ScanOperator bufferScan = new ScanOperator(new TableInfo(table.header, cache.getBufferFile(), true));
@@ -56,6 +53,9 @@ public class ExternalBlockCacheOperatorTest {
         refScan.reset();
         TestUtils.compareTuples(refScan, cache);
 
+        refScan.close();
+        bufferScan.close();
+        cache.close();
     }
 
     @Test
@@ -65,6 +65,8 @@ public class ExternalBlockCacheOperatorTest {
         cache.writeSourceToBuffer(scan);
         cache.flush();
 
+        scan.close();
+
         ScanOperator refScan = new ScanOperator(table);
         ScanOperator bufferScan = new ScanOperator(new TableInfo(table.header, cache.getBufferFile(), true));
 
@@ -72,6 +74,10 @@ public class ExternalBlockCacheOperatorTest {
 
         refScan.reset();
         TestUtils.compareTuples(refScan, cache);
+
+        refScan.close();
+        bufferScan.close();
+        cache.close();
     }
 
     @Test
@@ -85,6 +91,7 @@ public class ExternalBlockCacheOperatorTest {
                 cache.writeSourceToBuffer(scan, i);
                 cache.flush();
 
+
                 // Check the file directly.
                 ScanOperator refScan = new ScanOperator(table);
                 BlockCacheOperator refBlock = new BlockCacheOperator(refScan, i * Database.PAGE_SIZE);
@@ -96,8 +103,15 @@ public class ExternalBlockCacheOperatorTest {
                 refBlock.reset();
                 cache.reset();
                 TestUtils.compareTuples(refBlock, cache);
+
+                scan.close();
+                refBlock.close();
+                cache.close();
+                refScan.close();
+                bufferScan.close();
             } finally {
                 if (cache != null) {
+                    cache.close();
                     cache.delete();
                 }
             }
@@ -114,6 +128,8 @@ public class ExternalBlockCacheOperatorTest {
         assertThat(Files.exists(cache.getBufferFile()), is(true));
         cache.delete();
         assertThat(Files.exists(cache.getBufferFile()), is(false));
+
+        scan.close();
     }
 
     @Test
@@ -151,6 +167,10 @@ public class ExternalBlockCacheOperatorTest {
         cache.seek(999);
         assertThat(cache.getNextTuple(), equalTo(tuples.get(999)));
         assertThat(cache.getNextTuple(), is(nullValue()));
+
+        reader.close();
+        scan.close();
+        cache.close();
     }
 
     @Test
@@ -162,6 +182,10 @@ public class ExternalBlockCacheOperatorTest {
         ScanOperator refScan = new ScanOperator(table);
 
         TestUtils.compareTuples(refScan, cache);
+
+        scan.close();
+        cache.close();
+        refScan.close();
     }
 
     @Test
@@ -171,12 +195,16 @@ public class ExternalBlockCacheOperatorTest {
         cache.writeSourceToBuffer(scan);
 
         assertThat(scan.getHeader(), equalTo(cache.getHeader()));
+
+        scan.close();
+        cache.close();
     }
 
     @Test
     public void reset() throws Exception {
         ScanOperator scan = new ScanOperator(table);
         ExternalBlockCacheOperator cache = new ExternalBlockCacheOperator(scan.getHeader(), Files.createTempDirectory("test-external-cache"));
+
         cache.writeSourceToBuffer(scan);
         cache.flush();
 
@@ -188,6 +216,9 @@ public class ExternalBlockCacheOperatorTest {
         cache.reset();
 
         TestUtils.compareTuples(refScan, cache);
-    }
 
+        refScan.close();
+        cache.close();
+        scan.close();
+    }
 }

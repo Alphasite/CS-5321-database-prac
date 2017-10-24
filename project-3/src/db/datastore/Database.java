@@ -58,7 +58,7 @@ public class Database {
             e.printStackTrace();
         }
 
-        return (new Database(tables));
+        return new Database(tables);
     }
 
     /**
@@ -68,6 +68,6 @@ public class Database {
      * @return The table info object.
      */
     public TableInfo getTable(String name) {
-        return (this.tables.get(name));
+        return this.tables.get(name);
     }
 }

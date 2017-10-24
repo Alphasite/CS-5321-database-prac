@@ -37,6 +37,8 @@ public class ScanOperatorTest {
 
         assertThat(nextTuple, notNullValue());
         assertThat(nextTuple.fields, equalTo(tuple1));
+
+        scan.close();
     }
 
     @Test
@@ -51,5 +53,7 @@ public class ScanOperatorTest {
         TableHeader header = new TableHeader(Arrays.asList("Sailors", "Sailors", "Sailors"), Arrays.asList("A", "B", "C"));
 
         assertEquals(scan.getHeader().toString(), header.toString());
+
+        scan.close();
     }
 }

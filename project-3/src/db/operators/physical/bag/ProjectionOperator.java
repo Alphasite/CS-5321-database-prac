@@ -3,6 +3,7 @@ package db.operators.physical.bag;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -19,7 +20,7 @@ import java.util.Optional;
  *
  * @inheritDoc
  */
-public class ProjectionOperator implements Operator, UnaryNode<Operator> {
+public class ProjectionOperator extends AbstractOperator implements UnaryNode<Operator> {
     private final Operator source;
 
     private final TableHeader newHeader;
@@ -59,7 +60,7 @@ public class ProjectionOperator implements Operator, UnaryNode<Operator> {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         Tuple tuple = this.source.getNextTuple();
 
         if (tuple != null) {
@@ -71,7 +72,7 @@ public class ProjectionOperator implements Operator, UnaryNode<Operator> {
 
             return (new Tuple(newBackingArray));
         } else {
-            return tuple;
+            return null;
         }
     }
 
@@ -97,6 +98,14 @@ public class ProjectionOperator implements Operator, UnaryNode<Operator> {
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        this.source.close();
     }
 
     /**
