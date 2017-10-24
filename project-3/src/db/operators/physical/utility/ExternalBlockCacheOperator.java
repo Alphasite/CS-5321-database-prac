@@ -23,12 +23,17 @@ public class ExternalBlockCacheOperator extends AbstractOperator {
 
     private boolean flushed;
 
-    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory) {
+    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory, String file) {
         this.header = header;
-        this.bufferFile = tempDirectory.resolve(UUID.randomUUID().toString());
+        this.bufferFile = tempDirectory.resolve(file);
         this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile);
         this.in = null;
         this.flushed = false;
+    }
+
+
+    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory) {
+        this(header, tempDirectory, UUID.randomUUID().toString());
     }
 
     public Path getBufferFile() {
