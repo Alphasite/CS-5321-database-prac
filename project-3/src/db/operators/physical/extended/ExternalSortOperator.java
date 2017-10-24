@@ -11,6 +11,7 @@ import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.datastore.tuple.string.StringTupleReader;
 import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.UnaryNode;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.utility.BlockCacheOperator;
@@ -24,7 +25,7 @@ import java.util.List;
 /**
  * A sort operator implementation that guarantees bounded state.
  */
-public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
+public class ExternalSortOperator extends AbstractOperator implements SortOperator, UnaryNode<Operator> {
     private static int nextOperatorId = 1;
 
     private final Operator source;
@@ -88,7 +89,7 @@ public class ExternalSortOperator implements SortOperator, UnaryNode<Operator> {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (!isSorted) {
             System.out.println("Beginning sort");
             performExternalSort();

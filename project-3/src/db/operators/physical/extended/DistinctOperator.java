@@ -3,6 +3,7 @@ package db.operators.physical.extended;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
  *
  * @inheritDoc
  */
-public class DistinctOperator implements Operator, UnaryNode<Operator> {
+public class DistinctOperator extends AbstractOperator implements UnaryNode<Operator> {
     private final Operator source;
 
     private Tuple previous;
@@ -31,7 +32,7 @@ public class DistinctOperator implements Operator, UnaryNode<Operator> {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         Tuple next;
 
         while ((next = this.source.getNextTuple()) != null) {

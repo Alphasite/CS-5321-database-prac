@@ -94,8 +94,12 @@ public class SampleQueriesTest {
 
     @After
     public void tearDown() throws Exception {
-        if (this.queryPlanRoot != null)
+        if (this.queryPlanRoot != null) {
             this.queryPlanRoot.close();
+        }
+
+        this.sampleTuples.close();
+
         Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
     }
 

@@ -3,6 +3,7 @@ package db.operators.physical.bag;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.logical.LogicalJoinOperator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.query.visitors.ExpressionEvaluator;
@@ -15,7 +16,7 @@ import net.sf.jsqlparser.expression.Expression;
  *
  * @inheritDoc
  */
-public class TupleNestedJoinOperator implements JoinOperator {
+public class TupleNestedJoinOperator extends AbstractOperator implements JoinOperator {
     private final Operator left;
     private final Operator right;
 
@@ -56,7 +57,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
      * It increments the left tuple then scans the right operator, repeating until done.
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         if (this.leftTupleCache == null) {
             // No more tuple on left op : we are done
             return null;
@@ -72,7 +73,10 @@ public class TupleNestedJoinOperator implements JoinOperator {
             while ((rightTuple = this.right.getNextTuple()) == null) {
                 // If there is none, then increment the left hand operator and then
                 // reset the right hand operator and try to get another tuple.
-                if (!loadNextLeftTuple()) {
+                if (this.left.hasNextTuple()) {
+                    this.leftTupleCache = this.left.getNextTuple();
+                    this.right.reset();
+                } else {
                     return null;
                 }
             }
@@ -101,7 +105,7 @@ public class TupleNestedJoinOperator implements JoinOperator {
     @Override
     public boolean reset() {
         if (this.left.reset() && this.right.reset()) {
-            this.loadNextLeftTuple();
+            this.leftTupleCache = this.left.getNextTuple();
             return true;
         } else {
             return false;
@@ -123,24 +127,6 @@ public class TupleNestedJoinOperator implements JoinOperator {
     public void close() {
         this.left.close();
         this.right.close();
-    }
-
-
-    /**
-     * This method tries to get the next left hand tuple and then resets the right hand operator,
-     * so that it can try generate more tuples.
-     *
-     * @return A boolean indicating whether or not tuple generation is done.
-     */
-    private boolean loadNextLeftTuple() {
-        Tuple leftFromChild = this.left.getNextTuple();
-        if (leftFromChild != null) {
-            leftTupleCache = leftFromChild;
-            right.reset();
-            return true;
-        } else {
-            return false;
-        }
     }
 
     /**

@@ -15,10 +15,13 @@ public class StringTupleReader implements TupleReader {
     private final TableHeader header;
     private Scanner tableFile;
 
+    private Tuple next;
+
     public StringTupleReader(TableHeader header, Path path) {
         this.header = header;
         this.path = path;
         this.tableFile = getScanner(path);
+        this.next = null;
     }
 
     public static StringTupleReader get(TableHeader header, Path path) {
@@ -36,7 +39,31 @@ public class StringTupleReader implements TupleReader {
     }
 
     @Override
+    public Tuple peek() {
+        if (this.next == null) {
+            this.next = this.getNextTuple();
+        }
+
+        return this.next;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return this.peek() != null;
+    }
+
+    @Override
     public Tuple next() {
+        if (this.next == null) {
+            return getNextTuple();
+        } else {
+            Tuple next = this.next;
+            this.next = null;
+            return next;
+        }
+    }
+
+    private Tuple getNextTuple() {
         if (this.tableFile.hasNextLine()) {
             int cellNumber = this.header.columnHeaders.size();
             ArrayList<Integer> row = new ArrayList<>();

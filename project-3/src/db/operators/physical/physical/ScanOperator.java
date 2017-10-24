@@ -6,7 +6,7 @@ import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.string.StringTupleReader;
-import db.operators.physical.Operator;
+import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 /**
@@ -14,7 +14,7 @@ import db.operators.physical.PhysicalTreeVisitor;
  *
  * @inheritDoc
  */
-public class ScanOperator implements Operator {
+public class ScanOperator extends AbstractOperator {
     private final TableInfo table;
     private TupleReader reader;
 
@@ -30,7 +30,7 @@ public class ScanOperator implements Operator {
      * @inheritDoc
      */
     @Override
-    public Tuple getNextTuple() {
+    protected Tuple generateNextTuple() {
         return this.reader.next();
     }
 
@@ -59,7 +59,7 @@ public class ScanOperator implements Operator {
             this.reader = StringTupleReader.get(this.table.header, this.table.file);
         }
 
-        return this.reader != null;
+        return true;
     }
 
     /**

@@ -1,10 +1,13 @@
 package db.operators.physical.bag;
 
 import db.TestUtils;
+import db.datastore.Database;
 import db.datastore.TableHeader;
+import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
+import db.operators.physical.physical.ScanOperator;
 import db.query.TriFunction;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -13,8 +16,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.runners.Parameterized.Parameters;
 
@@ -27,6 +36,9 @@ public class JoinOperatorTest {
     private DummyOperator opB;
 
     private TriFunction<Operator, Operator, Expression, JoinOperator> joinFactory;
+
+    TableInfo table1;
+    TableInfo table2;
 
     @Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -66,6 +78,12 @@ public class JoinOperatorTest {
         tuplesB.add(new Tuple(Arrays.asList(4, 104)));
         TableHeader headerB = new TableHeader(Arrays.asList("Reserves", "Reserves"), Arrays.asList("G", "H"));
         opB = new DummyOperator(tuplesB, headerB);
+
+        Path inputDir = Paths.get("resources/samples/input/db");
+        inputDir = inputDir.toAbsolutePath();
+        Database database = Database.loadDatabase(inputDir);
+        this.table1 = database.getTable("Sailors");
+        this.table2 = database.getTable("Reserves");
     }
 
     @Test
@@ -102,7 +120,7 @@ public class JoinOperatorTest {
     @Test
     public void testFiltering() {
         PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
-        JoinOperator join = new TupleNestedJoinOperator(opA, opB, tokens.getWhere());
+        JoinOperator join = joinFactory.apply(opA, opB, tokens.getWhere());
 
         List<Tuple> tuples = new ArrayList<>();
         Tuple next;
@@ -112,9 +130,25 @@ public class JoinOperatorTest {
         }
 
         assertEquals(6, tuples.size());
-        assertEquals(Arrays.asList(1, 200, 50, 1, 101), tuples.get(0).fields);
-        assertEquals(Arrays.asList(1, 200, 50, 1, 103), tuples.get(2).fields);
-        assertEquals(Arrays.asList(2, 200, 200, 2, 101), tuples.get(3).fields);
-        assertEquals(Arrays.asList(4, 100, 50, 4, 104), tuples.get(5).fields);
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(1, 200, 50, 1, 101))));
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(1, 200, 50, 1, 103))));
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(2, 200, 200, 2, 101))));
+        assertEquals(true, tuples.contains(new Tuple(Arrays.asList(4, 100, 50, 4, 104))));
+    }
+
+    @Test
+    public void large() throws Exception {
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;");
+        JoinOperator join = joinFactory.apply(new ScanOperator(table1), new ScanOperator(table2), tokens.getWhere());
+
+        int i = 0;
+        while (join.hasNextTuple()) {
+            Tuple tuple = join.getNextTuple();
+            assertThat(tuple, notNullValue());
+            assertEquals(tuple.fields.get(0), tuple.fields.get(3));
+            i++;
+        }
+
+        assertThat(i, not(equalTo((0))));
     }
 }
