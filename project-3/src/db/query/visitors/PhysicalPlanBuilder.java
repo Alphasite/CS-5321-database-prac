@@ -2,12 +2,14 @@ package db.query.visitors;
 
 import db.PhysicalPlanConfig;
 import db.Project3;
+import db.datastore.TableHeader;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
 import db.operators.physical.bag.*;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.ExternalSortOperator;
 import db.operators.physical.extended.InMemorySortOperator;
+import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -15,6 +17,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
+
+import static db.PhysicalPlanConfig.SortImplementation.IN_MEMORY;
 
 /**
  * Physical query plan builder, implemented as a Logical operator tree visitor
@@ -72,8 +76,23 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                 join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
                 break;
             case SMJ:
-                // TODO: replace when implemented
-                join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
+                SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(leftOp.getHeader(), rightOp.getHeader());
+                node.getJoinCondition().accept(smjEval);
+
+                TableHeader leftSortHeader = smjEval.getLeftSortHeader();
+                TableHeader rightSortHeader = smjEval.getRightSortHeader();
+
+                SortOperator leftOpSorted, rightOpSorted;
+
+                if (config.sortImplementation == IN_MEMORY) {
+                    leftOpSorted = new InMemorySortOperator(leftOp, leftSortHeader);
+                    rightOpSorted = new InMemorySortOperator(rightOp, rightSortHeader);
+                } else /* EXTERNAL */ {
+                    leftOpSorted = new ExternalSortOperator(leftOp, leftSortHeader, config.sortParameter, temporaryFolder);
+                    rightOpSorted = new ExternalSortOperator(rightOp, rightSortHeader, config.sortParameter, temporaryFolder);
+                }
+
+                join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, node.getJoinCondition());
                 break;
             default:
                 throw new NotImplementedException();
