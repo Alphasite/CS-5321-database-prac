@@ -66,21 +66,25 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
                     this.lastMatchingRight = -1;
                 }
 
-            } else if (this.tupleComparator.compare(leftTuple, rightTuple) < 0) {
-                this.left.getNextTuple();
+            } else {
+                int compareResult = this.tupleComparator.compare(leftTuple, rightTuple);
+                
+                if (compareResult < 0) {
+                    this.left.getNextTuple();
 
-                if (this.lastMatchingRight != -1) {
-                    this.right.seek(this.lastMatchingRight);
-                    this.lastMatchingRight = -1;
+                    if (this.lastMatchingRight != -1) {
+                        this.right.seek(this.lastMatchingRight);
+                        this.lastMatchingRight = -1;
+                    }
+                } else if (compareResult > 0) {
+                    this.right.getNextTuple();
+                } else /* compareResult == 0 */ {
+                    if (this.lastMatchingRight == -1) {
+                        this.lastMatchingRight = this.right.getTupleIndex();
+                    }
+                    this.right.getNextTuple();
+                    return leftTuple.join(rightTuple);
                 }
-            } else if (this.tupleComparator.compare(leftTuple, rightTuple) > 0) {
-                this.right.getNextTuple();
-            } else /* compare(leftTuple, rightTuple) == 0 */ {
-                if (this.lastMatchingRight == -1) {
-                    this.lastMatchingRight = this.right.getTupleIndex();
-                }
-                this.right.getNextTuple();
-                return leftTuple.join(rightTuple);
             }
         }
 

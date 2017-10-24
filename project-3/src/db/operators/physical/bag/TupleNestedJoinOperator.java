@@ -112,6 +112,9 @@ public class TupleNestedJoinOperator extends AbstractOperator implements JoinOpe
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
