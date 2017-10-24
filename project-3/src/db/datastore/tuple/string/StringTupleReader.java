@@ -49,7 +49,7 @@ public class StringTupleReader implements TupleReader {
 
     @Override
     public boolean hasNext() {
-        return this.peek() == null;
+        return this.peek() != null;
     }
 
     @Override
