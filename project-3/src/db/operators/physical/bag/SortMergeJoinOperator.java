@@ -6,47 +6,47 @@ import db.operators.logical.LogicalJoinOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.extended.SortOperator;
-import db.query.visitors.ExpressionEvaluator;
+import db.operators.physical.extended.TupleComparator;
 import net.sf.jsqlparser.expression.Expression;
 
 public class SortMergeJoinOperator implements JoinOperator {
 
     private SortOperator left, right;
+    private TupleComparator tupleComparator;
     private TableHeader resultHeader;
-    private ExpressionEvaluator evaluator;
     private Tuple leftTuple;
     private int lastMatchingRight;
+    private Expression joinExpression;
 
     /**
      * Create an object which joins left and right tuples and filters results based on a conditional clause
      *
      * @param left       The operator which generates the left hand tuples. Must be a SortOperator.
      * @param right      The operator which generates the right hand tuples. Must be a SortOperator.
-     * @param expression The expression to evaluate the resulting tuples on.
      */
-    public SortMergeJoinOperator(SortOperator left, SortOperator right, Expression expression) {
+    public SortMergeJoinOperator(SortOperator left, SortOperator right, Expression joinExpression) {
         this.left = left;
         this.right = right;
+        this.tupleComparator = new TupleComparator(left.getSortHeader(), left.getHeader(), right.getSortHeader(), right.getHeader());
         this.resultHeader = LogicalJoinOperator.computeHeader(left.getHeader(), right.getHeader());
+        this.joinExpression = joinExpression;
 
-        assert expression != null; // "you may assume that ... the join tree will contain at least one equality condition"
-        this.evaluator = new ExpressionEvaluator(expression, this.getHeader());
         this.reset();
     }
 
     @Override
     public Expression getPredicate() {
-        return evaluator.getExpression();
+        return this.joinExpression;
     }
 
     @Override
     public Operator getLeft() {
-        return left;
+        return this.left;
     }
 
     @Override
     public Operator getRight() {
-        return right;
+        return this.right;
     }
 
     @Override
@@ -65,9 +65,9 @@ public class SortMergeJoinOperator implements JoinOperator {
                     this.lastMatchingRight = -1;
                 }
 
-            } else if (this.leftTuple.compareTo(rightTuple) < 0) {
+            } else if (this.tupleComparator.compare(leftTuple, rightTuple) < 0) {
                 this.leftTuple = this.left.getNextTuple();
-            } else if (this.leftTuple.compareTo(rightTuple) > 0) {
+            } else if (this.tupleComparator.compare(leftTuple, rightTuple) > 0) {
                 continue;
             } else /* this.leftTuple.compareTo(rightTuple) == 0 */ {
                 if (this.lastMatchingRight == -1) {
