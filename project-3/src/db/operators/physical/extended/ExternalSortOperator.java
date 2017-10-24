@@ -84,6 +84,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         if (isSorted && Files.exists(sortedRelationFile)) {
             this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
             this.tupleIndex = -1;
+            this.next = null;
             return true;
         } else {
             return false;
@@ -97,7 +98,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
             for (int i = 0; i < index; i++) {
                 getNextTuple();
             }
-            this.tupleIndex = index;
+            this.tupleIndex = index-1;
+            this.next = null;
             return true;
         } else {
             return false;

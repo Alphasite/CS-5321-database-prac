@@ -15,7 +15,6 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
     private SortOperator left, right;
     private TupleComparator tupleComparator;
     private TableHeader resultHeader;
-    private Tuple leftTuple;
     private int lastMatchingRight;
     private Expression joinExpression;
 
@@ -52,8 +51,9 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
 
     @Override
     public Tuple generateNextTuple() {
-        while (this.leftTuple != null) {
-            Tuple rightTuple = this.right.getNextTuple();
+        while (this.left.peekNextTuple() != null) {
+            Tuple leftTuple = this.left.peekNextTuple();
+            Tuple rightTuple = this.right.peekNextTuple();
 
             if (rightTuple == null) {
 
@@ -61,20 +61,26 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
                     // this means this.leftTuple > rightTuple for all tuples in this.right
                     break;
                 } else {
-                    this.leftTuple = this.left.getNextTuple();
+                    this.left.getNextTuple();
                     this.right.reset(this.lastMatchingRight);
                     this.lastMatchingRight = -1;
                 }
 
             } else if (this.tupleComparator.compare(leftTuple, rightTuple) < 0) {
-                this.leftTuple = this.left.getNextTuple();
+                this.left.getNextTuple();
+
+                if (this.lastMatchingRight != -1) {
+                    this.right.reset(this.lastMatchingRight);
+                    this.lastMatchingRight = -1;
+                }
             } else if (this.tupleComparator.compare(leftTuple, rightTuple) > 0) {
-                continue;
-            } else /* this.leftTuple.compareTo(rightTuple) == 0 */ {
+                this.right.getNextTuple();
+            } else /* compare(leftTuple, rightTuple) == 0 */ {
                 if (this.lastMatchingRight == -1) {
                     this.lastMatchingRight = this.right.getTupleIndex();
                 }
-                return this.leftTuple.join(rightTuple);
+                this.right.getNextTuple();
+                return leftTuple.join(rightTuple);
             }
         }
 
@@ -90,7 +96,6 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
     @Override
     public boolean reset() {
         if (this.left.reset() && this.right.reset()) {
-            this.leftTuple = this.left.getNextTuple();
             this.lastMatchingRight = -1;
             return true;
         } else {

@@ -29,6 +29,8 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
 
     private boolean isSorted;
 
+    private int tupleIndex;
+
     /**
      * This creates the sort operator with the specified parameters
      * <p>
@@ -46,6 +48,8 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
         this.isSorted = false;
 
         this.buffer = new ArrayList<>();
+
+        this.tupleIndex = -1;
     }
 
     /**
@@ -62,6 +66,7 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
         }
 
         if (this.bufferIterator.hasNext()) {
+            this.tupleIndex++;
             return (this.bufferIterator.next());
         } else {
             return null;
@@ -82,17 +87,22 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
     @Override
     public boolean reset() {
         this.bufferIterator = this.buffer.iterator();
+        this.tupleIndex = -1;
+        this.next = null;
         return true;
     }
 
     @Override
     public boolean reset(int index) {
-        throw new UnsupportedOperationException();
+        this.bufferIterator = this.buffer.listIterator(index);
+        this.tupleIndex = index-1;
+        this.next = null;
+        return true;
     }
 
     @Override
     public int getTupleIndex() {
-        throw new UnsupportedOperationException();
+        return this.tupleIndex;
     }
 
     /**

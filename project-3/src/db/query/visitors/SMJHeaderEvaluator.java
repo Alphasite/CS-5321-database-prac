@@ -21,6 +21,8 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
     public SMJHeaderEvaluator(TableHeader leftHeader, TableHeader rightHeader) {
         this.leftHeader = leftHeader;
         this.rightHeader = rightHeader;
+        this.leftSortHeader = new TableHeader();
+        this.rightSortHeader = new TableHeader();
     }
 
     public TableHeader getLeftSortHeader() {

@@ -60,8 +60,7 @@ public class SampleQueriesTest {
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
-                        if (joinType != JoinImplementation.SMJ)
-                            testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
+                        testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
             }
