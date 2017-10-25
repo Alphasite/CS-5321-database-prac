@@ -16,11 +16,10 @@ import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
-import java.io.*;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.*;
 
@@ -127,107 +126,6 @@ public class TestUtils {
         }
 
         return i;
-    }
-
-
-    public static void generateRandomData(String dbFolderPath, int numRows, int randRange) throws IOException {
-        Random rand = new Random();
-        List<String> schema = Arrays.asList("Sailors A B C", "Boats D E F", "Reserves G H");
-        TableHeader header;
-
-        // create db folder if it doesn't already exist
-        Path dbFolder = Paths.get(dbFolderPath);
-        Files.createDirectories(dbFolder);
-
-        // write schema.txt file
-        Path schemaFile = dbFolder.resolve("schema.txt");
-        Files.write(schemaFile, schema, Charset.forName("UTF-8"));
-
-        // create data folder if it doesn't already exist
-        Path dataFolder = dbFolder.resolve("data");
-        Files.createDirectories(dataFolder);
-
-        BinaryTupleWriter binaryWriter;
-        StringTupleWriter stringWriter;
-        PrintStream sqlWriter;
-        String sqlTemplate;
-
-        // generate Sailors
-        header = new TableHeader(Arrays.asList("Sailors", "Sailors", "Sailors"), Arrays.asList("A", "B", "C"));
-        binaryWriter = BinaryTupleWriter.get(header, dataFolder.resolve("Sailors"));
-        stringWriter = StringTupleWriter.get(dataFolder.resolve("Sailors_humanreadable"));
-        sqlWriter = new PrintStream(new FileOutputStream(dataFolder.resolve("Sailors_sql.sql").toFile()));
-        sqlTemplate = "INSERT INTO Sailors (A, B, C) VALUES (%d, %d, %d);\n";
-
-        sqlWriter.println("DROP TABLE IF EXISTS Sailors;");
-        sqlWriter.println("CREATE TABLE Sailors (A integer, B integer, C integer);");
-        for (int i = 0; i < numRows; i++) {
-            int val1 = rand.nextInt(randRange);
-            int val2 = rand.nextInt(randRange);
-            int val3 = rand.nextInt(randRange);
-            Tuple t = new Tuple(Arrays.asList(val1, val2, val3));
-
-            binaryWriter.write(t);
-            stringWriter.write(t);
-            sqlWriter.printf(sqlTemplate, val1, val2, val3);
-        }
-        binaryWriter.flush();
-        binaryWriter.close();
-        stringWriter.flush();
-        stringWriter.close();
-        sqlWriter.close();
-
-
-        // generate Boats
-        header = new TableHeader(Arrays.asList("Boats", "Boats", "Boats"), Arrays.asList("D", "E", "F"));
-        binaryWriter = BinaryTupleWriter.get(header, dataFolder.resolve("Boats"));
-        stringWriter = StringTupleWriter.get(dataFolder.resolve("Boats_humanreadable"));
-        sqlWriter = new PrintStream(new FileOutputStream(dataFolder.resolve("Boats_sql.sql").toFile()));
-        sqlTemplate = "INSERT INTO Boats (D, E, F) VALUES (%d, %d, %d);\n";
-
-        sqlWriter.println("DROP TABLE IF EXISTS Boats;");
-        sqlWriter.println("CREATE TABLE Boats (D integer, E integer, F integer);");
-        for (int i = 0; i < numRows; i++) {
-            int val1 = rand.nextInt(randRange);
-            int val2 = rand.nextInt(randRange);
-            int val3 = rand.nextInt(randRange);
-            Tuple t = new Tuple(Arrays.asList(val1, val2, val3));
-
-            binaryWriter.write(t);
-            stringWriter.write(t);
-            sqlWriter.printf(sqlTemplate, val1, val2, val3);
-        }
-        binaryWriter.flush();
-        binaryWriter.close();
-        stringWriter.flush();
-        stringWriter.close();
-        sqlWriter.close();
-
-
-        // generate Reserves
-        header = new TableHeader(Arrays.asList("Reserves", "Reserves"), Arrays.asList("G", "H"));
-        binaryWriter = BinaryTupleWriter.get(header, dataFolder.resolve("Reserves"));
-        stringWriter = StringTupleWriter.get(dataFolder.resolve("Reserves_humanreadable"));
-        sqlWriter = new PrintStream(new FileOutputStream(dataFolder.resolve("Reserves_sql.sql").toFile()));
-        sqlTemplate = "INSERT INTO Reserves (G, H) VALUES (%d, %d);\n";
-
-        sqlWriter.println("DROP TABLE IF EXISTS Reserves;");
-        sqlWriter.println("CREATE TABLE Reserves (G integer, H integer);");
-        for (int i = 0; i < numRows; i++) {
-            int val1 = rand.nextInt(randRange);
-            int val2 = rand.nextInt(randRange);
-            Tuple t = new Tuple(Arrays.asList(val1, val2));
-
-            binaryWriter.write(t);
-            stringWriter.write(t);
-            sqlWriter.printf(sqlTemplate, val1, val2);
-        }
-        binaryWriter.flush();
-        binaryWriter.close();
-        stringWriter.flush();
-        stringWriter.close();
-        sqlWriter.close();
-
     }
 
     public static Map<String, List<Tuple>> populateDatabase(Path dbFolder, List<String> queries, int numColumns, int randRange) {
@@ -391,14 +289,5 @@ public class TestUtils {
         }
 
         return tuples;
-    }
-
-    public static BufferedReader executeBashCmd(String command, boolean shouldWait) throws IOException, InterruptedException {
-        Process proc = new ProcessBuilder("/bin/bash", "-c", command).start();
-        if (shouldWait) {
-            proc.waitFor();
-        }
-
-        return new BufferedReader(new InputStreamReader(proc.getInputStream()));
     }
 }
