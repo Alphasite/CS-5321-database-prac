@@ -137,12 +137,13 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
             previousRunFiles.add(sortedPageFile);
 
             inMemorySort.dump(writer);
-            writer.flush();
+            writer.close();
 
             cache.loadNextBlock();
             blockId++;
         }
 
+        // This releases all resources held by source operator
         cache.close();
 
         // Second to last pass : merge previous runs using a fixed size buffer
@@ -166,8 +167,18 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
                     currentRunFiles.add(mergeOutputFile);
 
                     System.out.println("Merging " + i);
-                    performMultiMerge(currentRunReaders, getWriter(getHeader(), mergeOutputFile));
+
+                    TupleWriter writer = getWriter(getHeader(), mergeOutputFile);
+
+                    performMultiMerge(currentRunReaders, writer);
+
+                    // Release resources
+                    writer.close();
+                    for (TupleReader r : currentRunReaders) {
+                        r.close();
+                    }
                     currentRunReaders.clear();
+
                     System.out.println("Merge done");
 
                     blockId++;
@@ -212,7 +223,6 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         }
 
         output.flush();
-        output.close();
     }
 
     /**
