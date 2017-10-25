@@ -4,6 +4,7 @@ import db.PhysicalPlanConfig.JoinImplementation;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -70,6 +71,11 @@ public class RandomDataTest {
         this.actualResult = logicalOperator;
         this.expectedResult = expectedResult;
         this.isOrdered = query.contains("ORDER BY");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        this.actualResult.close();
     }
 
     @Test
