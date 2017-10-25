@@ -59,8 +59,5 @@ pipeline {
 
             sh "rm -rf */build/reports/"
         }
-        failure {
-
-        }
     }
 }
