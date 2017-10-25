@@ -44,13 +44,20 @@ pipeline {
 
         stage('Results') {
             steps {
-                sh "./gradlew jacocoTestReport"
-                junit '**/test-results/test/TEST-*.xml'
-                jacoco exclusionPattern: '**/classes/java/test/**/*.class', sourcePattern: '**/src/'
                 archiveArtifacts artifacts: '*/build/libs/*.jar'
-                zip zipFile: 'coverage.zip', glob: '*/build/reports/jacoco/', archive: true
-                sh "rm -rf */build/reports/"
             }
+        }
+    }
+
+    post {
+        always {
+            junit '**/test-results/test/TEST-*.xml'
+
+            sh "./gradlew jacocoTestReport"
+            jacoco exclusionPattern: '**/classes/java/test/**/*.class', sourcePattern: '**/src/'
+            zip zipFile: 'coverage.zip', glob: '*/build/reports/jacoco/', archive: true
+
+            sh "rm -rf */build/reports/"
         }
     }
 }
