@@ -17,9 +17,6 @@ import static db.PhysicalPlanConfig.*;
 
 @RunWith(Parameterized.class)
 public class RandomDataTest {
-
-    private final static String DB_PATH = "resources/samples/testData";
-    private final static String MYSQL_DB_NAME = "testdb";
     private final static int ROWS_PER_TABLE = 1500;
     private final static int RAND_RANGE = 3000;
 
