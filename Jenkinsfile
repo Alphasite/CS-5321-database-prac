@@ -51,9 +51,9 @@ pipeline {
 
     post {
         always {
-            sh "./gradlew jacocoTestReport"
-
             junit '**/test-results/test/TEST-*.xml'
+
+            sh "./gradlew jacocoTestReport"
             jacoco exclusionPattern: '**/classes/java/test/**/*.class', sourcePattern: '**/src/'
             zip zipFile: 'coverage.zip', glob: '*/build/reports/jacoco/', archive: true
 
