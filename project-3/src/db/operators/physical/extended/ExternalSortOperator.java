@@ -4,19 +4,13 @@ import db.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.TupleReader;
-import db.datastore.tuple.TupleWriter;
-import db.datastore.tuple.binary.BinaryTupleReader;
-import db.datastore.tuple.binary.BinaryTupleWriter;
-import db.datastore.tuple.string.StringTupleReader;
-import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.UnaryNode;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.utility.BlockCacheOperator;
+import db.operators.physical.utility.ExternalBlockCacheOperator;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -40,10 +34,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     /** Temporary merge sort pages follow the nomenclature 'Sort<opId>_<runId>_<blockId>' */
     private int operatorId;
 
-    private Path sortedRelationFile;
-    private TupleReader sortedRelationReader;
-
-    private boolean STRING_OUTPUT = true;
+    private Operator sortedRelationCache;
 
     /**
      * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
@@ -77,9 +68,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     @Override
     public boolean reset() {
         // No need to sort data again, just reset reader if present
-        if (isSorted && Files.exists(sortedRelationFile)) {
-            this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
-            return true;
+        if (isSorted && sortedRelationCache != null) {
+            return sortedRelationCache.reset();
         } else {
             return false;
         }
@@ -96,54 +86,36 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
             System.out.println("Complete !");
         }
 
-        // Check that we have a valid file to read from
-        if (sortedRelationReader == null) {
-            this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
-        }
-
-        return sortedRelationReader.next();
-    }
-
-    private TupleReader getReader(TableHeader header, Path path) {
-        if (STRING_OUTPUT)
-            return StringTupleReader.get(header, path);
-        else
-            return BinaryTupleReader.get(path);
-    }
-
-    private TupleWriter getWriter(TableHeader header, Path path) {
-        if (STRING_OUTPUT)
-            return StringTupleWriter.get(path);
-        else
-            return BinaryTupleWriter.get(header, path);
+        return sortedRelationCache.getNextTuple();
     }
 
     private void performExternalSort() {
         // First pass : read pages from source, sort then in-memory and write the resulting run to disk
-        List<Path> previousRunFiles = new ArrayList<>();
+        List<Operator> previousRuns = new ArrayList<>();
         int blockId = 1;
 
         // Create a cache that reads tuples from source one page at a time
-        BlockCacheOperator cache = new BlockCacheOperator(source, Database.PAGE_SIZE * bufSize);
+        BlockCacheOperator inputCache = new BlockCacheOperator(source, Database.PAGE_SIZE * bufSize);
 
         System.out.println("Pass 1");
 
-        while (cache.hasNext()) {
+        while (inputCache.hasNext()) {
             System.out.println("Sorting " + blockId);
-            InMemorySortOperator inMemorySort = new InMemorySortOperator(cache, sortHeader);
-            Path sortedPageFile = sortFolder.resolve("Sort" + operatorId + "_1_" + blockId);
-            TupleWriter writer = getWriter(getHeader(), sortedPageFile);
+            InMemorySortOperator inMemorySort = new InMemorySortOperator(inputCache, sortHeader);
+            ExternalBlockCacheOperator tempRun = new ExternalBlockCacheOperator(getHeader(),
+                    sortFolder, "Sort" + operatorId + "_1_" + blockId);
 
-            previousRunFiles.add(sortedPageFile);
+            tempRun.writeSourceToBuffer(inMemorySort);
 
-            inMemorySort.dump(writer);
-            writer.flush();
+            tempRun.flush();
+            previousRuns.add(tempRun);
 
-            cache.loadNextBlock();
+            inputCache.loadNextBlock();
             blockId++;
         }
 
-        cache.close();
+        // This releases all resources held by source operator
+        inputCache.close();
 
         // Second to last pass : merge previous runs using a fixed size buffer
         int runId = 2;
@@ -151,46 +123,54 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
         System.out.println("Pass 2");
 
-        while (previousRunFiles.size() >= 2) {
-            List<Path> currentRunFiles = new ArrayList<>();
+        while (previousRuns.size() >= 2) {
+            List<Operator> currentRuns = new ArrayList<>();
 
             // Load N - 1 input files into memory with N = buffer size
-            List<TupleReader> currentRunReaders = new ArrayList<>();
-            for (int i = 1; i <= previousRunFiles.size(); i++) {
-                TupleReader reader = getReader(getHeader(), previousRunFiles.get(i - 1));
-                currentRunReaders.add(reader);
+            List<Operator> currentMergeInputs = new ArrayList<>();
+            for (int i = 1; i <= previousRuns.size(); i++) {
+                Operator mergeInput = previousRuns.get(i - 1);
+                currentMergeInputs.add(mergeInput);
 
-                if (i % (bufSize - 1) == 0 || i == previousRunFiles.size()) {
+                if (i % (bufSize - 1) == 0 || i == previousRuns.size()) {
                     // All necessary pages are loaded : run merge pass
-                    Path mergeOutputFile = sortFolder.resolve("Sort" + operatorId + "_" + runId + "_" + blockId);
-                    currentRunFiles.add(mergeOutputFile);
+                    ExternalBlockCacheOperator mergeCache = new ExternalBlockCacheOperator(getHeader(),
+                            sortFolder, "Sort" + operatorId + "_" + runId + "_" + blockId);
+                    currentRuns.add(mergeCache);
 
                     System.out.println("Merging " + i);
-                    performMultiMerge(currentRunReaders, getWriter(getHeader(), mergeOutputFile));
-                    currentRunReaders.clear();
+
+                    performMultiMerge(currentMergeInputs, mergeCache);
+
+                    mergeCache.flush();
+
+                    for (Operator op : currentMergeInputs) {
+                        op.close();
+                    }
+                    currentMergeInputs.clear();
+
                     System.out.println("Merge done");
 
                     blockId++;
                 }
             }
 
-            previousRunFiles = currentRunFiles;
+            previousRuns = currentRuns;
             runId++;
         }
 
         this.isSorted = true;
 
-        this.sortedRelationFile = previousRunFiles.get(0);
-        this.sortedRelationReader = getReader(getHeader(), sortedRelationFile);
+        this.sortedRelationCache = previousRuns.get(0);
     }
 
-    private void performMultiMerge(List<TupleReader> readers, TupleWriter output) {
-        List<Tuple> inputTuples = new ArrayList<>(readers.size());
-        int inputRemaining = readers.size();
+    private void performMultiMerge(List<Operator> inputs, ExternalBlockCacheOperator output) {
+        List<Tuple> inputTuples = new ArrayList<>(inputs.size());
+        int inputRemaining = inputs.size();
 
-        // Load first tuple from every reader
-        for (TupleReader reader : readers) {
-            Tuple next = reader.next();
+        // Load first tuple from every source
+        for (Operator source : inputs) {
+            Tuple next = source.getNextTuple();
             inputTuples.add(next);
 
             if (next == null) {
@@ -202,17 +182,14 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         while (inputRemaining > 0) {
             int iMin = Utilities.getFirstTuple(inputTuples, tupleComparator);
 
-            output.write(inputTuples.get(iMin));
-            Tuple next = readers.get(iMin).next();
+            output.writeTupleToBuffer(inputTuples.get(iMin));
+            Tuple next = inputs.get(iMin).getNextTuple();
             inputTuples.set(iMin, next);
 
             if (next == null) {
                 inputRemaining--;
             }
         }
-
-        output.flush();
-        output.close();
     }
 
     /**
@@ -254,8 +231,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     public void close() {
         this.source.close();
 
-        if (this.sortedRelationReader != null) {
-            this.sortedRelationReader.close();
+        if (this.sortedRelationCache != null) {
+            this.sortedRelationCache.close();
         }
     }
 }
