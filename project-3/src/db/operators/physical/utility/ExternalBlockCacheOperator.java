@@ -3,8 +3,12 @@ package db.operators.physical.utility;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.datastore.tuple.TupleReader;
+import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.datastore.tuple.string.StringTupleReader;
+import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
@@ -18,15 +22,17 @@ public class ExternalBlockCacheOperator extends AbstractOperator {
     private final TableHeader header;
     private final Path bufferFile;
 
-    private BinaryTupleWriter out;
-    private BinaryTupleReader in;
+    private TupleWriter out;
+    private TupleReader in;
 
     private boolean flushed;
 
-    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory, String file) {
+    private static final boolean USE_BINARY_PAGES = true;
+
+    public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory, String fileName) {
         this.header = header;
-        this.bufferFile = tempDirectory.resolve(file);
-        this.out = BinaryTupleWriter.get(this.getHeader(), this.bufferFile);
+        this.bufferFile = tempDirectory.resolve(fileName);
+        this.out = getWriter(header, bufferFile);
         this.in = null;
         this.flushed = false;
     }
@@ -101,12 +107,41 @@ public class ExternalBlockCacheOperator extends AbstractOperator {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void close() {
+        if (out != null) {
+            this.out.flush();
+            this.out.close();
+        }
+
+        if (this.in != null) {
+            this.in.close();
+        }
+    }
+
     public void flush() {
         this.out.flush();
         this.out.close();
         this.out = null;
-        this.in = BinaryTupleReader.get(this.bufferFile);
+        this.in = getReader(header, bufferFile);
         this.flushed = true;
+    }
+
+    private TupleReader getReader(TableHeader header, Path path) {
+        if (USE_BINARY_PAGES)
+            return BinaryTupleReader.get(path);
+        else
+            return StringTupleReader.get(header, path);
+    }
+
+    private TupleWriter getWriter(TableHeader header, Path path) {
+        if (USE_BINARY_PAGES)
+            return BinaryTupleWriter.get(header, path);
+        else
+            return StringTupleWriter.get(path);
     }
 
     /**
@@ -134,18 +169,4 @@ public class ExternalBlockCacheOperator extends AbstractOperator {
         // Not implemented, is an internal node.
     }
 
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void close() {
-        if (out != null) {
-            this.out.flush();
-            this.out.close();
-        }
-
-        if (this.in != null) {
-            this.in.close();
-        }
-    }
 }
