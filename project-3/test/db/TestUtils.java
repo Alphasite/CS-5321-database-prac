@@ -127,8 +127,11 @@ public class TestUtils {
 
         return i;
     }
-
     public static Map<String, List<Tuple>> populateDatabase(Path dbFolder, List<String> queries, int numColumns, int randRange) {
+        return populateDatabase(dbFolder, queries, numColumns, randRange, true);
+    }
+
+    public static Map<String, List<Tuple>> populateDatabase(Path dbFolder, List<String> queries, int numColumns, int randRange, boolean generateSamples) {
         try {
             List<String> schema = Arrays.asList("Sailors A B C", "Boats D E F", "Reserves G H");
 
@@ -151,9 +154,13 @@ public class TestUtils {
             dumpTable(boats, dataFolder, "Boats", Arrays.asList("D", "E", "F"));
             dumpTable(reserves, dataFolder, "Reserves", Arrays.asList("G", "H"));
 
-            Map<String, List<Tuple>> results = getSampleResult(queries, sailors, boats, reserves);
+            Map<String, List<Tuple>> results;
 
-            return results;
+            if (generateSamples) {
+                return getSampleResult(queries, sailors, boats, reserves);
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
