@@ -18,7 +18,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * A sort operator implementation that guarantees bounded state.
+ * A merge-sort based sorting operator implementation that guarantees bounded state by only keeping a specified
+ * number of pages in memory. Merge passes are saved as temporary files, direct access is abstracted via Cache classes.
  */
 public class ExternalSortOperator extends AbstractOperator implements SortOperator, UnaryNode<Operator>, SeekableOperator {
     private static int nextOperatorId = 1;
@@ -35,13 +36,16 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     /** Temporary merge sort pages follow the nomenclature 'Sort<opId>_<runId>_<blockId>' */
     private int operatorId;
 
+    /**
+     * When sorting has completed, data can be retrieved from disk through this cache
+     */
     private ExternalBlockCacheOperator sortedRelationCache;
 
     /**
      * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
      *
      * @param source Operator to read tuples from
-     * @param sortHeader Defines against which attributes the relation will be sorted
+     * @param sortHeader Defines against which attributes the relation will be sorted (no tie-break)
      * @param bufferSize Number of buffer pages held in memory. Must be >= 3
      * @param tempFolder Folder to write temporary merged runs to
      */
