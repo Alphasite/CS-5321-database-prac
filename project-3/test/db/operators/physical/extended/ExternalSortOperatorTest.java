@@ -9,6 +9,7 @@ import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
+import db.operators.physical.SeekableOperator;
 import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.physical.ScanOperator;
 import net.sf.jsqlparser.expression.Expression;
@@ -19,12 +20,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -121,6 +125,34 @@ public class ExternalSortOperatorTest {
         sort.close();
 
         output.close();
+    }
+
+    @Test
+    public void seek() throws Exception {
+        TableHeader header = new TableHeader(
+                Arrays.asList("Sailors", "Sailors"),
+                Arrays.asList("C", "B")
+        );
+
+        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
+
+        ScanOperator S = new ScanOperator(DB.getTable("Sailors"));
+
+        SeekableOperator sort = new ExternalSortOperator(S, header, 3, Files.createTempDirectory("test"));
+
+        List<Tuple> tuples = new ArrayList<>();
+        while (sort.hasNextTuple()) {
+            tuples.add(sort.getNextTuple());
+        }
+
+        for (int i = 0; i < 1000; i++) {
+            int index = (int) (Math.random() * tuples.size());
+            sort.seek(index);
+            assertThat("Peek tuple " + index, sort.peekNextTuple(), equalTo(tuples.get(index)));
+            assertThat("Next tuple " + index, sort.getNextTuple(), equalTo(tuples.get(index)));
+        }
+
+        S.close();
     }
 
     @After

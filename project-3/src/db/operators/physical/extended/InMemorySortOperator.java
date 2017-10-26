@@ -6,6 +6,7 @@ import db.operators.UnaryNode;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
+import db.operators.physical.SeekableOperator;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,7 +19,7 @@ import java.util.List;
  *
  * @inheritDoc
  */
-public class InMemorySortOperator extends AbstractOperator implements SortOperator, UnaryNode<Operator> {
+public class InMemorySortOperator extends AbstractOperator implements SortOperator, UnaryNode<Operator>, SeekableOperator {
     private final Operator source;
 
     private final TableHeader sortHeader;
@@ -146,6 +147,9 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
         return sortHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void seek(long index) {
         this.bufferIterator = this.buffer.listIterator((int) index);

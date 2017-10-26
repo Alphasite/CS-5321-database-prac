@@ -4,6 +4,7 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
+import db.operators.physical.SeekableOperator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -67,5 +70,27 @@ public class InMemorySortOperatorTest {
         assertEquals(Arrays.asList(4, 3, 2), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(2, 1, 3), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(1, 2, 3), sort.getNextTuple().fields);
+    }
+
+    @Test
+    public void seek() throws Exception {
+        TableHeader header = new TableHeader(
+                Arrays.asList("Sailors", "Sailors"),
+                Arrays.asList("C", "B")
+        );
+
+        SeekableOperator sort = new InMemorySortOperator(opA, header);
+
+        List<Tuple> tuples = new ArrayList<>();
+        while (sort.hasNextTuple()) {
+            tuples.add(sort.getNextTuple());
+        }
+
+        for (int i = 0; i < 1000; i++) {
+            int index = (int) (Math.random() * tuples.size());
+            sort.seek(index);
+            assertThat("Peek tuple " + index, sort.peekNextTuple(), equalTo(tuples.get(index)));
+            assertThat("Next tuple " + index, sort.getNextTuple(), equalTo(tuples.get(index)));
+        }
     }
 }
