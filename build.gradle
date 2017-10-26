@@ -10,7 +10,7 @@ subprojects {
     }
 
     dependencies {
-        testCompile 'junit:junit:4.+'
+        testCompile 'junit:junit:[4.)'
     }
 
     sourceSets {
@@ -28,6 +28,9 @@ subprojects {
 
     test {
         workingDir = projectDir
+        testLogging {
+            exceptionFormat = 'full'
+        }
     }
 
     findbugsMain {
