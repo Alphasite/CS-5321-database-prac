@@ -3,6 +3,7 @@ package db.datastore.tuple.binary;
 import db.datastore.Database;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
+import db.performance.DiskIOStatistics;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -117,6 +118,8 @@ public class BinaryTupleReader implements TupleReader {
             return false;
         }
 
+        DiskIOStatistics.reads += 1;
+        
         return true;
     }
 

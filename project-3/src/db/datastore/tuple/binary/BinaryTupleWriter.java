@@ -4,6 +4,7 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
+import db.performance.DiskIOStatistics;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -71,6 +72,8 @@ public class BinaryTupleWriter implements TupleWriter {
 
             this.bb.clear();
             this.clearPage();
+
+            DiskIOStatistics.writes += 1;
         } catch (IOException e) {
             e.printStackTrace();
         }
