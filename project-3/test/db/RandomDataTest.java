@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static db.PhysicalPlanConfig.*;
+import static db.PhysicalPlanConfig.SortImplementation;
 
 @RunWith(Parameterized.class)
 public class RandomDataTest {
@@ -57,8 +57,7 @@ public class RandomDataTest {
             for (JoinImplementation joinType : JoinImplementation.values()) {
                 for (SortImplementation sortType : SortImplementation.values()) {
                     for (int blockSize : blockSizes) {
-                        Operator plan = TestUtils.getQueryPlan(dir, query, new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize));
-                        testCases.add(new Object[]{plan, new DummyOperator(results.get(query), plan.getHeader()), query, joinType, sortType, blockSize});
+                        testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize), results.get(query), query, joinType, sortType, blockSize, dir});
                     }
                 }
             }
@@ -67,15 +66,16 @@ public class RandomDataTest {
         return testCases;
     }
 
-    public RandomDataTest(Operator logicalOperator, Operator expectedResult, String query, JoinImplementation join, SortImplementation sort, int blockSize) {
-        this.actualResult = logicalOperator;
-        this.expectedResult = expectedResult;
+    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, Path tempDir) {
+        this.actualResult = TestUtils.getQueryPlan(tempDir, query, config);
+        this.expectedResult = new DummyOperator(expected, actualResult.getHeader());
         this.isOrdered = query.contains("ORDER BY");
     }
 
     @After
     public void tearDown() throws Exception {
         this.actualResult.close();
+        this.expectedResult.close();
     }
 
     @Test

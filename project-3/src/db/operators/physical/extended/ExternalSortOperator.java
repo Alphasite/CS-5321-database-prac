@@ -8,6 +8,7 @@ import db.operators.UnaryNode;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
+import db.operators.physical.SeekableOperator;
 import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.utility.ExternalBlockCacheOperator;
 
@@ -19,7 +20,7 @@ import java.util.List;
 /**
  * A sort operator implementation that guarantees bounded state.
  */
-public class ExternalSortOperator extends AbstractOperator implements SortOperator, UnaryNode<Operator> {
+public class ExternalSortOperator extends AbstractOperator implements SortOperator, UnaryNode<Operator>, SeekableOperator {
     private static int nextOperatorId = 1;
 
     private final Operator source;
@@ -34,7 +35,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     /** Temporary merge sort pages follow the nomenclature 'Sort<opId>_<runId>_<blockId>' */
     private int operatorId;
 
-    private Operator sortedRelationCache;
+    private ExternalBlockCacheOperator sortedRelationCache;
 
     private int tupleIndex;
 
@@ -116,7 +117,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
     private void performExternalSort() {
         // First pass : read pages from source, sort then in-memory and write the resulting run to disk
-        List<Operator> previousRuns = new ArrayList<>();
+        List<ExternalBlockCacheOperator> previousRuns = new ArrayList<>();
         int blockId = 1;
 
         // Create a cache that reads tuples from source one page at a time
@@ -149,7 +150,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         System.out.println("Pass 2");
 
         while (previousRuns.size() >= 2) {
-            List<Operator> currentRuns = new ArrayList<>();
+            List<ExternalBlockCacheOperator> currentRuns = new ArrayList<>();
 
             // Load N - 1 input files into memory with N = buffer size
             List<Operator> currentMergeInputs = new ArrayList<>();
@@ -159,8 +160,12 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
                 if (i % (bufSize - 1) == 0 || i == previousRuns.size()) {
                     // All necessary pages are loaded : run merge pass
-                    ExternalBlockCacheOperator mergeCache = new ExternalBlockCacheOperator(getHeader(),
-                            sortFolder, "Sort" + operatorId + "_" + runId + "_" + blockId);
+                    ExternalBlockCacheOperator mergeCache = new ExternalBlockCacheOperator(
+                            getHeader(),
+                            sortFolder,
+                            "Sort" + operatorId + "_" + runId + "_" + blockId
+                    );
+
                     currentRuns.add(mergeCache);
 
                     System.out.println("Merging " + i);
@@ -172,6 +177,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
                     for (Operator op : currentMergeInputs) {
                         op.close();
                     }
+
                     currentMergeInputs.clear();
 
                     System.out.println("Merge done");
@@ -259,5 +265,13 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         if (this.sortedRelationCache != null) {
             this.sortedRelationCache.close();
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void seek(long index) {
+        this.sortedRelationCache.seek(index);
     }
 }
