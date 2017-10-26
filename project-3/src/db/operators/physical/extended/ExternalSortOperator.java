@@ -41,6 +41,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
      */
     private ExternalBlockCacheOperator sortedRelationCache;
 
+    private long tupleIndex;
+
     /**
      * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
      *
@@ -65,6 +67,8 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
         // Assign a new ID to keep temporary files separate from other instances
         this.operatorId = nextOperatorId++;
+
+        this.tupleIndex = -1;
     }
 
     /**
@@ -80,6 +84,11 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         }
     }
 
+    @Override
+    public long getTupleIndex() {
+        return tupleIndex;
+    }
+
     /**
      * @inheritDoc
      */
@@ -91,6 +100,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
             System.out.println("Complete !");
         }
 
+        this.tupleIndex++;
         return sortedRelationCache.getNextTuple();
     }
 
@@ -252,5 +262,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     @Override
     public void seek(long index) {
         this.sortedRelationCache.seek(index);
+        this.next = null;
+        this.tupleIndex = index-1;
     }
 }
