@@ -84,17 +84,22 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                 TableHeader rightSortHeader = smjEval.getRightSortHeader();
                 Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
 
-                SortOperator leftOpSorted, rightOpSorted;
+                if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
+                    SortOperator leftOpSorted, rightOpSorted;
 
-                if (config.sortImplementation == IN_MEMORY) {
-                    leftOpSorted = new InMemorySortOperator(leftOp, leftSortHeader);
-                    rightOpSorted = new InMemorySortOperator(rightOp, rightSortHeader);
-                } else /* EXTERNAL */ {
-                    leftOpSorted = new ExternalSortOperator(leftOp, leftSortHeader, config.sortParameter, temporaryFolder);
-                    rightOpSorted = new ExternalSortOperator(rightOp, rightSortHeader, config.sortParameter, temporaryFolder);
+                    if (config.sortImplementation == IN_MEMORY) {
+                        leftOpSorted = new InMemorySortOperator(leftOp, leftSortHeader);
+                        rightOpSorted = new InMemorySortOperator(rightOp, rightSortHeader);
+                    } else /* EXTERNAL */ {
+                        leftOpSorted = new ExternalSortOperator(leftOp, leftSortHeader, config.sortParameter, temporaryFolder);
+                        rightOpSorted = new ExternalSortOperator(rightOp, rightSortHeader, config.sortParameter, temporaryFolder);
+                    }
+
+                    join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
+                } else {
+                    // when no equijoins, just use BNLJ
+                    join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
                 }
-
-                join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
                 break;
             default:
                 throw new NotImplementedException();
