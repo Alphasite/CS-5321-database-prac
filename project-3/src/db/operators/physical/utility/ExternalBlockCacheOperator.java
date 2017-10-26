@@ -12,13 +12,14 @@ import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
+import db.operators.physical.SeekableOperator;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
-public class ExternalBlockCacheOperator extends AbstractOperator {
+public class ExternalBlockCacheOperator extends AbstractOperator implements SeekableOperator {
     private final TableHeader header;
     private final Path bufferFile;
 
