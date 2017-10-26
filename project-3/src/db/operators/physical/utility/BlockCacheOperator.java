@@ -54,6 +54,9 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
         return this.operator.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);

@@ -81,22 +81,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     }
 
     @Override
-    public boolean seek(int index) {
-        // TODO: FIX LATER
-        if (reset()) {
-            for (int i = 0; i < index; i++) {
-                generateNextTuple();
-            }
-            this.tupleIndex = index-1;
-            this.next = null;
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public int getTupleIndex() {
+    public long getTupleIndex() {
         return tupleIndex;
     }
 

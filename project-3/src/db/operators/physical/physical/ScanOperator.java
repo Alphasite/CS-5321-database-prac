@@ -67,6 +67,9 @@ public class ScanOperator extends AbstractOperator {
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);

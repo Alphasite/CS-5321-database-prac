@@ -29,7 +29,7 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
 
     private boolean isSorted;
 
-    private int tupleIndex;
+    private long tupleIndex;
 
     /**
      * This creates the sort operator with the specified parameters
@@ -93,15 +93,7 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
     }
 
     @Override
-    public boolean seek(int index) {
-        this.bufferIterator = this.buffer.listIterator(index);
-        this.tupleIndex = index-1;
-        this.next = null;
-        return true;
-    }
-
-    @Override
-    public int getTupleIndex() {
+    public long getTupleIndex() {
         return this.tupleIndex;
     }
 
@@ -152,5 +144,12 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
      */
     public TableHeader getSortHeader() {
         return sortHeader;
+    }
+
+    @Override
+    public void seek(long index) {
+        this.bufferIterator = this.buffer.listIterator((int) index);
+        this.tupleIndex = index-1;
+        this.next = null;
     }
 }
