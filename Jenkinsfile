@@ -55,7 +55,9 @@ pipeline {
 
             sh "./gradlew jacocoTestReport"
             jacoco exclusionPattern: '**/classes/java/test/**/*.class', sourcePattern: '**/src/'
+
             zip zipFile: 'coverage.zip', glob: '*/build/reports/jacoco/', archive: true
+            zip zipFile: 'tests.zip', glob: '*/build/reports/tests/', archive: true
 
             sh "rm -rf */build/reports/"
         }
