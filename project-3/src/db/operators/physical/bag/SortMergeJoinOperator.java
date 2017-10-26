@@ -42,7 +42,11 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
 
     @Override
     public Expression getPredicate() {
-        return this.evaluator.getExpression();
+        if (this.evaluator != null) {
+            return this.evaluator.getExpression();
+        } else {
+            return null;
+        }
     }
 
     @Override
