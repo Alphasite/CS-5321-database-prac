@@ -140,7 +140,7 @@ public class BlockNestedJoinOperator extends AbstractOperator implements JoinOpe
      */
     @Override
     public Expression getPredicate() {
-        return evaluator.getExpression();
+        return evaluator != null ? evaluator.getExpression() : null;
     }
 
     /**
