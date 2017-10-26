@@ -15,7 +15,7 @@ public interface SortOperator extends Operator, UnaryNode<Operator> {
 
     /**
      * Reset the operator to the specified tuple index such that the next call to <pre>getNextTuple()</pre> will return
-     * the tuple with that index. Calling <pre>reset(0)</pre> is equivalent to calling <pre>reset()</pre>.
+     * the tuple with that index. Calling <pre>seek(0)</pre> is equivalent to calling <pre>reset()</pre>.
      * <p>
      * This may reset the internal state of an operator.
      *

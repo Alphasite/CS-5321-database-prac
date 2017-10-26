@@ -84,7 +84,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         // TODO: FIX LATER
         if (reset()) {
             for (int i = 0; i < index; i++) {
-                getNextTuple();
+                generateNextTuple();
             }
             this.tupleIndex = index-1;
             this.next = null;
@@ -110,6 +110,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
             System.out.println("Complete !");
         }
 
+        this.tupleIndex++;
         return sortedRelationCache.getNextTuple();
     }
 
