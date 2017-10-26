@@ -11,6 +11,7 @@ import db.operators.physical.extended.ExternalSortOperator;
 import db.operators.physical.extended.InMemorySortOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
+import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
@@ -81,6 +82,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
                 TableHeader leftSortHeader = smjEval.getLeftSortHeader();
                 TableHeader rightSortHeader = smjEval.getRightSortHeader();
+                Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
 
                 SortOperator leftOpSorted, rightOpSorted;
 
@@ -92,7 +94,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                     rightOpSorted = new ExternalSortOperator(rightOp, rightSortHeader, config.sortParameter, temporaryFolder);
                 }
 
-                join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, node.getJoinCondition());
+                join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
                 break;
             default:
                 throw new NotImplementedException();

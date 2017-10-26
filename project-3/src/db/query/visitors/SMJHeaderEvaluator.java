@@ -14,6 +14,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public class SMJHeaderEvaluator implements ExpressionVisitor {
     private TableHeader leftHeader, rightHeader;
     private TableHeader leftSortHeader, rightSortHeader;
+    private Expression leftoverExpression;
 
     /**
      * Setup evaluator
@@ -23,6 +24,7 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
         this.rightHeader = rightHeader;
         this.leftSortHeader = new TableHeader();
         this.rightSortHeader = new TableHeader();
+        this.leftoverExpression = null;
     }
 
     public TableHeader getLeftSortHeader() {
@@ -31,6 +33,10 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
 
     public TableHeader getRightSortHeader() {
         return this.rightSortHeader;
+    }
+
+    public Expression getLeftoverExpression() {
+        return this.leftoverExpression;
     }
 
     @Override
@@ -76,6 +82,39 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
         assert this.leftSortHeader.size() == this.rightSortHeader.size();
     }
 
+    public void handleNonEquijoin(Expression expression) {
+        if (leftoverExpression == null) {
+            leftoverExpression = expression;
+        } else {
+            leftoverExpression = new AndExpression(leftoverExpression, expression);
+        }
+    }
+
+    @Override
+    public void visit(GreaterThan greaterThan) {
+        handleNonEquijoin(greaterThan);
+    }
+
+    @Override
+    public void visit(GreaterThanEquals greaterThanEquals) {
+        handleNonEquijoin(greaterThanEquals);
+    }
+
+    @Override
+    public void visit(MinorThan minorThan) {
+        handleNonEquijoin(minorThan);
+    }
+
+    @Override
+    public void visit(MinorThanEquals minorThanEquals) {
+        handleNonEquijoin(minorThanEquals);
+    }
+
+    @Override
+    public void visit(NotEqualsTo notEqualsTo) {
+        handleNonEquijoin(notEqualsTo);
+    }
+
     @Override
     public void visit(Addition addition) {
         throw new NotImplementedException();
@@ -98,31 +137,6 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
 
     @Override
     public void visit(OrExpression orExpression) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(GreaterThan greaterThan) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(GreaterThanEquals greaterThanEquals) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(MinorThan minorThan) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(MinorThanEquals minorThanEquals) {
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public void visit(NotEqualsTo notEqualsTo) {
         throw new NotImplementedException();
     }
 
