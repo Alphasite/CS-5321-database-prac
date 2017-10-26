@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class Utilities {
@@ -38,6 +39,35 @@ public class Utilities {
         for (int i : keys) {
             int a = A.get(i);
             int b = B.get(i);
+
+            int result = Integer.compare(a, b);
+
+            if (result != 0) {
+                return result;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Compare two lists by comparing fields in the specified order
+     * @param keysA list of indices used to compare list A
+     * @param keysB list of indices used to compare list B
+     * @return Standard comparator contract : 0 if A == B, -1 if A < B, 1 if A > B
+     */
+    public static int compareLists(List<Integer> A, List<Integer> B, List<Integer> keysA, List<Integer> keysB) {
+        if (A == B)
+            return 0;
+
+        assert keysA.size() == keysB.size();
+
+        Iterator<Integer> iterA = keysA.iterator();
+        Iterator<Integer> iterB = keysB.iterator();
+
+        while (iterA.hasNext()) {
+            int a = A.get( iterA.next() );
+            int b = B.get( iterB.next() );
 
             int result = Integer.compare(a, b);
 

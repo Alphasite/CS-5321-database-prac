@@ -10,16 +10,21 @@ import db.operators.physical.PhysicalTreeVisitor;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * An in-memory buffer that reads from source source one block at a time, allowing to retrieve previously accessed
+ * tuples without recomputing the whole query
+ */
 public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Operator> {
-    private boolean valid;
-    private Operator operator;
-    private List<Tuple> block;
-    private int index;
+    private Operator source;
     private int blockSizeBytes;
 
-    public BlockCacheOperator(Operator operator, int blockSizeBytes) {
-        this.valid = false;
-        this.operator = operator;
+    private List<Tuple> block;
+    private int index;
+    private boolean blockLoaded;
+
+    public BlockCacheOperator(Operator source, int blockSizeBytes) {
+        this.blockLoaded = false;
+        this.source = source;
         this.index = 0;
         this.blockSizeBytes = blockSizeBytes;
         this.block = new ArrayList<>(this.getPageCapacity());
@@ -42,7 +47,7 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
      */
     @Override
     public TableHeader getHeader() {
-        return this.operator.getHeader();
+        return this.source.getHeader();
     }
 
     /**
@@ -50,8 +55,8 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
      */
     @Override
     public boolean reset() {
-        this.valid = false;
-        return this.operator.reset();
+        this.blockLoaded = false;
+        return this.source.reset();
     }
 
     /**
@@ -67,11 +72,11 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
      */
     @Override
     public void close() {
-        this.operator.close();
+        this.source.close();
     }
 
     private int getPageCapacity() {
-        return (this.blockSizeBytes - 2) / 4 / this.operator.getHeader().size();
+        return (this.blockSizeBytes - 2) / 4 / this.source.getHeader().size();
     }
 
     public void resetPage() {
@@ -79,7 +84,7 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
     }
 
     public boolean hasNext() {
-        if (!this.valid) {
+        if (!this.blockLoaded) {
             this.loadNextBlock();
         }
 
@@ -90,19 +95,24 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
         }
     }
 
+    /**
+     * Erase current buffer contents and read a block from source
+     *
+     * @return
+     */
     public boolean loadNextBlock() {
         this.resetPage();
         this.block.clear();
 
         for (int i = 0; i < this.getPageCapacity(); i++) {
-            Tuple next = operator.getNextTuple();
+            Tuple next = source.getNextTuple();
             this.block.add(next);
 
             if (next == null)
                 break;
         }
 
-        this.valid = true;
+        this.blockLoaded = true;
 
         return this.block.get(0) != null;
     }
@@ -112,6 +122,6 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
      */
     @Override
     public Operator getChild() {
-        return operator;
+        return source;
     }
 }
