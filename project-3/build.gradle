@@ -12,6 +12,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 dependencies {
     // https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser
     compile fileTree(dir: 'lib', include: '*.jar')
+    testCompile group: 'com.h2database', name: 'h2', version: '1.4.196'
 }
 
 jar {

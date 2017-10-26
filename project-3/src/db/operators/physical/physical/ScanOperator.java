@@ -23,6 +23,11 @@ public class ScanOperator extends AbstractOperator {
         this.reset();
     }
 
+    public ScanOperator(TupleReader reader) {
+        this.table = null;
+        this.reader = reader;
+    }
+
     /**
      * This method reads the next tuple from the file,
      * the file is parsed according to the scheme provided in the catalog.
