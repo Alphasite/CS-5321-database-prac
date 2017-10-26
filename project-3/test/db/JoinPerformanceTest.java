@@ -1,9 +1,10 @@
 package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
-import db.datastore.tuple.Tuple;
 import db.operators.physical.Operator;
+import db.performance.DiskIOStatistics;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -11,7 +12,9 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class JoinPerformanceTest {
@@ -20,7 +23,7 @@ public class JoinPerformanceTest {
 
     private static String[] testQueries = new String[]{
             "SELECT * FROM Sailors, Reserves, Boats WHERE Sailors.A = Reserves.G AND Sailors.A = Boats.D;",
-            "SELECT * FROM Sailors S, Reserves R, WHERE S.A = R.G AND R.H = S.B;",
+            "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
             "SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D;"
     };
 
@@ -35,6 +38,7 @@ public class JoinPerformanceTest {
     private JoinImplementation join;
     private int blockSize;
     private int queryIdx;
+    private Path tempDir;
 
     @Parameterized.Parameters(name = "{index}: join={3} block={4} query={1}")
     public static Collection<Object[]> data() throws IOException {
@@ -42,7 +46,7 @@ public class JoinPerformanceTest {
 
         Path dir = Files.createTempDirectory("RandomTest");
 
-        Map<String, List<Tuple>> results = TestUtils.populateDatabase(dir, Arrays.asList(testQueries), ROWS_PER_TABLE, RAND_RANGE);
+        TestUtils.populateDatabase(dir, Arrays.asList(testQueries), ROWS_PER_TABLE, RAND_RANGE, false);
 
         int idx = 0;
         for (String query : testQueries) {
@@ -59,6 +63,13 @@ public class JoinPerformanceTest {
         this.join = join;
         this.blockSize = blockSize;
         this.queryIdx = queryIdx;
+        this.tempDir = tempDir;
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        DiskIOStatistics.reads = 0;
+        DiskIOStatistics.writes = 0;
     }
 
     @After
@@ -78,5 +89,8 @@ public class JoinPerformanceTest {
 
         long elapsedTime = System.currentTimeMillis() - startTime;
         System.out.println(this.join + " (blockSize=" + this.blockSize + ") " + outputRows + " rows found, took " + elapsedTime + " ms");
+        System.out.println("Reads: " + DiskIOStatistics.reads);
+        System.out.println("Write: " + DiskIOStatistics.writes);
+        System.out.println("Temp: " + this.tempDir);
     }
 }
