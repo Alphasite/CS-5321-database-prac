@@ -155,16 +155,16 @@ public class ExternalSortOperatorTest {
         }
 
         sort.seek(tuples.size() - 1);
-        assertThat(sort.peekNextTuple(), equalTo(tuples.get(tuples.size() - 1)));
+        assertThat(sort.getNextTuple(), equalTo(tuples.get(tuples.size() - 1)));
         assertThat(sort.peekNextTuple(), is(nullValue()));
         sort.seek(0);
-        assertThat(sort.peekNextTuple(), equalTo(tuples.get(0)));
+        assertThat(sort.getNextTuple(), equalTo(tuples.get(0)));
         assertThat(sort.peekNextTuple(), is(notNullValue()));
         sort.seek(10);
-        assertThat(sort.peekNextTuple(), equalTo(tuples.get(10)));
+        assertThat(sort.getNextTuple(), equalTo(tuples.get(10)));
         assertThat(sort.peekNextTuple(), is(notNullValue()));
         sort.seek(999);
-        assertThat(sort.peekNextTuple(), equalTo(tuples.get(999)));
+        assertThat(sort.getNextTuple(), equalTo(tuples.get(999)));
         assertThat(sort.peekNextTuple(), is(nullValue()));
 
         for (int i = 0; i < 1000; i++) {
