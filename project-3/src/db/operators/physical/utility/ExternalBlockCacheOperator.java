@@ -56,6 +56,10 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
         }
     }
 
+    /**
+     * @inheritDoc
+     */
+    @Override
     public void seek(long index) {
         if (!flushed) {
             this.flush();

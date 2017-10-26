@@ -55,7 +55,7 @@ public class Database {
                 tables.put(tableName, tableInfo);
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         return new Database(tables);

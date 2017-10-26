@@ -27,8 +27,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -144,6 +147,25 @@ public class ExternalSortOperatorTest {
         while (sort.hasNextTuple()) {
             tuples.add(sort.getNextTuple());
         }
+
+        for (int i = 0; i < tuples.size(); i++) {
+            sort.seek(i);
+            assertThat("Peek tuple " + i, sort.peekNextTuple(), equalTo(tuples.get(i)));
+            assertThat("Next tuple " + i, sort.getNextTuple(), equalTo(tuples.get(i)));
+        }
+
+        sort.seek(tuples.size() - 1);
+        assertThat(sort.peekNextTuple(), equalTo(tuples.get(tuples.size() - 1)));
+        assertThat(sort.peekNextTuple(), is(nullValue()));
+        sort.seek(0);
+        assertThat(sort.peekNextTuple(), equalTo(tuples.get(0)));
+        assertThat(sort.peekNextTuple(), is(notNullValue()));
+        sort.seek(10);
+        assertThat(sort.peekNextTuple(), equalTo(tuples.get(10)));
+        assertThat(sort.peekNextTuple(), is(notNullValue()));
+        sort.seek(999);
+        assertThat(sort.peekNextTuple(), equalTo(tuples.get(999)));
+        assertThat(sort.peekNextTuple(), is(nullValue()));
 
         for (int i = 0; i < 1000; i++) {
             int index = (int) (Math.random() * tuples.size());

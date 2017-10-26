@@ -103,8 +103,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         while (inputCache.hasNext()) {
             System.out.println("Sorting " + blockId);
             InMemorySortOperator inMemorySort = new InMemorySortOperator(inputCache, sortHeader);
-            ExternalBlockCacheOperator tempRun = new ExternalBlockCacheOperator(getHeader(),
-                    sortFolder, "Sort" + operatorId + "_1_" + blockId);
+            ExternalBlockCacheOperator tempRun = new ExternalBlockCacheOperator(getHeader(), sortFolder, "Sort" + operatorId + "_1_" + blockId);
 
             tempRun.writeSourceToBuffer(inMemorySort);
 
