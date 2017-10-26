@@ -41,7 +41,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
      */
     private ExternalBlockCacheOperator sortedRelationCache;
 
-    private int tupleIndex;
+    private long tupleIndex;
 
     /**
      * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
@@ -262,5 +262,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
     @Override
     public void seek(long index) {
         this.sortedRelationCache.seek(index);
+        this.next = null;
+        this.tupleIndex = index-1;
     }
 }
