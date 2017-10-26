@@ -4,6 +4,7 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
+import db.performance.DiskIOStatistics;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -34,7 +35,7 @@ public class BinaryTupleWriter implements TupleWriter {
      * Create a new writer outputting binary tuples to the specified file object
      * @param header The relation header, used to properly size the buffers
      * @param file The output file. Will be created if it doesn't exist
-     * @return
+     * @return The writer instance.
      */
     public static BinaryTupleWriter get(TableHeader header, Path file) {
         try {
@@ -71,6 +72,8 @@ public class BinaryTupleWriter implements TupleWriter {
 
             this.bb.clear();
             this.clearPage();
+
+            DiskIOStatistics.writes += 1;
         } catch (IOException e) {
             e.printStackTrace();
         }
