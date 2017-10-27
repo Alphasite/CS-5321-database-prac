@@ -18,11 +18,17 @@ public class ScanOperator extends AbstractOperator {
     private final TableInfo table;
     private TupleReader reader;
 
+    /**
+     * @param tableInfo the table which is to be scanned
+     */
     public ScanOperator(TableInfo tableInfo) {
         this.table = tableInfo;
         this.reset();
     }
 
+    /**
+     * @param reader the reader for the scan
+     */
     public ScanOperator(TupleReader reader) {
         this.table = null;
         this.reader = reader;

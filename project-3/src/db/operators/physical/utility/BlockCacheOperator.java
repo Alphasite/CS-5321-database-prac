@@ -22,6 +22,10 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
     private int index;
     private boolean blockLoaded;
 
+    /**
+     * @param source         the child operator of the cache
+     * @param blockSizeBytes the size of the cache in bytes
+     */
     public BlockCacheOperator(Operator source, int blockSizeBytes) {
         this.blockLoaded = false;
         this.source = source;
@@ -75,14 +79,23 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
         this.source.close();
     }
 
+    /**
+     * @return the number of tuples which can be stored in the buffer.
+     */
     private int getPageCapacity() {
         return (this.blockSizeBytes - 2) / 4 / this.source.getHeader().size();
     }
 
+    /**
+     * reset the tuple offset for the page.
+     */
     public void resetPage() {
         this.index = 0;
     }
 
+    /**
+     * @return see if there are more tuples in the buffer.
+     */
     public boolean hasNext() {
         if (!this.blockLoaded) {
             this.loadNextBlock();
@@ -98,7 +111,7 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
     /**
      * Erase current buffer contents and read a block from source
      *
-     * @return
+     * @return whether or not the block load succeed.
      */
     public boolean loadNextBlock() {
         this.resetPage();

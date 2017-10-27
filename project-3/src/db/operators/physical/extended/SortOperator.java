@@ -6,7 +6,7 @@ import db.operators.physical.Operator;
 import db.operators.physical.SeekableOperator;
 
 /**
- *
+ * Operators which sort the child relation and buffer the output.
  */
 public interface SortOperator extends Operator, UnaryNode<Operator>, SeekableOperator {
     /**

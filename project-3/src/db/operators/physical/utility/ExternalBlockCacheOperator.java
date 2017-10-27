@@ -60,6 +60,9 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
         this(header, tempDirectory, UUID.randomUUID().toString());
     }
 
+    /**
+     * @return the path of the output buffer
+     */
     public Path getBufferFile() {
         return bufferFile;
     }
@@ -100,6 +103,11 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
         return this.reader.next();
     }
 
+    /**
+     * Write the tuple the underlying buffer file. It can only write to open streams.
+     *
+     * @param tuple the tuple to write.
+     */
     public void writeTupleToBuffer(Tuple tuple) {
         if (flushed) {
             throw new RuntimeException("Cant write to flushed buffer.");
@@ -109,7 +117,11 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
     }
 
     /**
-     * Dump contents of source into buffer file
+     * Dump contents of source into buffer file.
+     *
+     * Can only write to open streams.
+     *
+     * @param source the operator which is to be dumped to the buffer.
      */
     public void writeSourceToBuffer(Operator source) {
         if (flushed) {
@@ -120,7 +132,12 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
     }
 
     /**
-     * Write specified number of pages from source into buffer file
+     * Write specified number of pages from source into buffer file.
+     *
+     * Can only write to open streams.
+     *
+     * @param source the source operator
+     * @param pagesToIngest the number of pages of relations to fetch from the child.
      */
     public void writeSourceToBuffer(Operator source, int pagesToIngest) {
         if (flushed) {
@@ -150,6 +167,9 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
         }
     }
 
+    /**
+     * Flush any tuples to disk and close the writer, opening a reader.
+     */
     public void flush() {
         this.writer.flush();
         this.writer.close();
@@ -159,6 +179,13 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
         this.flushed = true;
     }
 
+    /**
+     * Get a new reader for the buffer.
+     *
+     * @param header the header of the buffer
+     * @param path the path of the buffer
+     * @return a reader for the buffer
+     */
     private TupleReader getReader(TableHeader header, Path path) {
         if (USE_BINARY_PAGES)
             return BinaryTupleReader.get(path);
@@ -166,6 +193,13 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
             return StringTupleReader.get(header, path);
     }
 
+    /**
+     * Get a new writer for the underlying buffer.
+     *
+     * @param header the header for the buffer
+     * @param path the path for the buffer file
+     * @return the writer
+     */
     private TupleWriter getWriter(TableHeader header, Path path) {
         if (USE_BINARY_PAGES)
             return BinaryTupleWriter.get(header, path);

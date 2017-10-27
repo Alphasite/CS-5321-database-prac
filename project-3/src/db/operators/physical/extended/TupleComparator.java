@@ -20,8 +20,10 @@ public class TupleComparator implements Comparator<Tuple> {
     /**
      * Build a comparator that compares fields in the order specified by the sortHeader parameter.
      * If two tuples match on the sorting fields they are considered equal (ie. no tie resolution on the other fields)
-     * @param sortHeader
-     * @param tupleHeader Header structure of the tuples to be compared
+     * @param sortHeader1 The header which defines the sort order of the left tuple
+     * @param tupleHeader1 Header structure of the right tuples to be compared
+     * @param sortHeader2 The header which defines the sort order of the right tuple
+     * @param tupleHeader2 Header structure of the right tuples to be compared
      */
     public TupleComparator(TableHeader sortHeader1, TableHeader tupleHeader1, TableHeader sortHeader2, TableHeader tupleHeader2) {
         comparisonKeys1 = new ArrayList<>();
@@ -45,20 +47,21 @@ public class TupleComparator implements Comparator<Tuple> {
                 throw new RuntimeException("Sort mappings are incorrect. " + alias1 + "." + header1 + " or " + alias2 + "." + header2 + " has no match.");
             }
         }
-
-        // TODO: add remaining fields ?
     }
 
     /**
      * Build a comparator that compares fields in the order specified by the sortHeader parameter.
      * If two tuples match on the sorting fields they are considered equal (ie. no tie resolution on the other fields)
-     * @param sortHeader
+     * @param sortHeader the header used to sort relation
      * @param tupleHeader Header structure of the tuples to be compared
      */
     public TupleComparator(TableHeader sortHeader, TableHeader tupleHeader) {
         this(sortHeader, tupleHeader, sortHeader, tupleHeader);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public int compare(Tuple o1, Tuple o2) {
         return Utilities.compareLists(o1.fields, o2.fields, comparisonKeys1, comparisonKeys2);

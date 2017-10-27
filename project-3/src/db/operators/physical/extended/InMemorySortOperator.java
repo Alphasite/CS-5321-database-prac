@@ -93,6 +93,9 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
         return true;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public long getTupleIndex() {
         return this.tupleIndex;

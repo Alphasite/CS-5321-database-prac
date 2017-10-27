@@ -9,20 +9,48 @@ import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
 
+/**
+ * A visitor for the physical operators.
+ */
 public interface PhysicalTreeVisitor {
+    /**
+     * @param node the join node to visit.
+     */
     void visit(JoinOperator node);
 
+    /**
+     * @param node the rename node to visit.
+     */
     void visit(RenameOperator node);
 
+    /**
+     * @param node the selection node to visit.
+     */
     void visit(SelectionOperator node);
 
+
+    /**
+     * @param node the projection node to visit.
+     */
     void visit(ProjectionOperator node);
 
+    /**
+     * @param node the projection node to visit.
+     */
     void visit(ScanOperator node);
 
+    /**
+     * @param node the distinct node to visit.
+     */
     void visit(DistinctOperator node);
 
+    /**
+     * @param node the sort node to visit.
+     */
     void visit(SortOperator node);
 
+    /**
+     * @param node the cache node to visit.
+     */
     void visit(BlockCacheOperator node);
 }

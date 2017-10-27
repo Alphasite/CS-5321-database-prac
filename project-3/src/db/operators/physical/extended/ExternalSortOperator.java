@@ -84,6 +84,9 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public long getTupleIndex() {
         return tupleIndex;
@@ -104,6 +107,9 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         return sortedRelationCache.getNextTuple();
     }
 
+    /**
+     * Sort and buffer the input tuples from the child relations, using the external sort algorithm.
+     */
     private void performExternalSort() {
         // First pass : read pages from source, sort then in-memory and write the resulting run to disk
         List<ExternalBlockCacheOperator> previousRuns = new ArrayList<>();
@@ -183,6 +189,12 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         this.sortedRelationCache = previousRuns.get(0);
     }
 
+    /**
+     * Merge the input runs and write the results to the output run.
+     *
+     * @param inputs the input runs to merge.
+     * @param output the run which will contain the output tuples.
+     */
     private void performMultiMerge(List<Operator> inputs, ExternalBlockCacheOperator output) {
         List<Tuple> inputTuples = new ArrayList<>(inputs.size());
         int inputRemaining = inputs.size();

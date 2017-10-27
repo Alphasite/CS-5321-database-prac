@@ -11,6 +11,13 @@ import db.operators.physical.extended.TupleComparator;
 import db.query.visitors.ExpressionEvaluator;
 import net.sf.jsqlparser.expression.Expression;
 
+/**
+ * A join which uses the sort merge join to join the child relations.
+ * <p>
+ * It expects its children to be sorted.
+ *
+ * @inheritDoc
+ */
 public class SortMergeJoinOperator extends AbstractOperator implements JoinOperator {
 
     private SortOperator left, right;
@@ -40,6 +47,9 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
         this.reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Expression getPredicate() {
         if (this.evaluator != null) {
@@ -49,16 +59,25 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getLeft() {
         return this.left;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Operator getRight() {
         return this.right;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Tuple generateNextTuple() {
         while (this.left.peekNextTuple() != null) {
@@ -78,7 +97,7 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
 
             } else {
                 int compareResult = this.tupleComparator.compare(leftTuple, rightTuple);
-                
+
                 if (compareResult < 0) {
                     this.left.getNextTuple();
 
@@ -106,11 +125,17 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
         return null;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return resultHeader;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
         if (this.left.reset() && this.right.reset()) {
@@ -121,11 +146,17 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         left.close();
