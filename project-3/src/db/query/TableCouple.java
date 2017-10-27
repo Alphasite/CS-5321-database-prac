@@ -31,10 +31,16 @@ public class TableCouple {
         }
     }
 
+    /**
+     * @return lhs relation
+     */
     public String getTable1() {
         return table1;
     }
 
+    /**
+     * @return rhs relation
+     */
     public String getTable2() {
         return table2;
     }

@@ -14,6 +14,11 @@ import db.operators.physical.utility.BlockCacheOperator;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Print the physical tree structure.
+ *
+ * @inheritDoc
+ */
 public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     private int depth;
     private List<String> lines;
@@ -29,6 +34,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         System.out.println(String.join("\n", printer.lines));
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(JoinOperator node) {
         StringBuilder line = new StringBuilder();
@@ -49,6 +57,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth -= 1;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(SortOperator node) {
         String operatorClass = node.getClass().getSimpleName();
@@ -59,6 +70,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth -= 1;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(RenameOperator node) {
         lines.add(pad("Rename " + node.getNewTableName()));
@@ -68,11 +82,17 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth -= 1;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(ScanOperator node) {
         lines.add(pad("Scan " + node.getTable().file.getFileName()));
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(SelectionOperator node) {
         lines.add(pad("Select on " + node.getPredicate()));
@@ -82,11 +102,17 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth -= 1;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(BlockCacheOperator node) {
         node.getChild().accept(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(ProjectionOperator node) {
         lines.add(pad("Project to " + node.getHeader()));
@@ -96,6 +122,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth -= 1;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(DistinctOperator node) {
         lines.add(pad("Distinct"));
@@ -105,6 +134,12 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.depth -= 1;
     }
 
+    /**
+     * Pad the line to the correct depth.
+     *
+     * @param lineBody the line to pad
+     * @return the padded line
+     */
     private String pad(String lineBody) {
         StringBuilder line = new StringBuilder();
 

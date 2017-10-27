@@ -37,18 +37,33 @@ public class WhereDecomposer implements ExpressionVisitor {
         expression.accept(this);
     }
 
+    /**
+     * @return the filter expressions
+     */
     public Map<String, Expression> getSelectionExpressions() {
         return selectionExpressions;
     }
 
+    /**
+     * @return the join conditions
+     */
     public Map<TableCouple, Expression> getJoinExpressions() {
         return joinExpressions;
     }
 
+    /**
+     * @return the where expression without breaking it down in to join and filter expressions
+     */
     public Expression getNakedExpression() {
         return nakedExpression;
     }
 
+    /**
+     * Add a selection expression to the internal list.
+     *
+     * @param tableId    the table which it operates on
+     * @param comparison the expression
+     */
     private void addSelection(String tableId, Expression comparison) {
         if (selectionExpressions.containsKey(tableId)) {
             // If a condition already exists for this key, compose it with an AND
@@ -59,6 +74,12 @@ public class WhereDecomposer implements ExpressionVisitor {
         }
     }
 
+    /**
+     * Add a join expression to the list
+     * @param leftId the left relation
+     * @param rightId the right relation
+     * @param comparison the join expression
+     */
     private void addJoin(String leftId, String rightId, Expression comparison) {
         TableCouple key = new TableCouple(leftId, rightId);
 
@@ -105,16 +126,24 @@ public class WhereDecomposer implements ExpressionVisitor {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Column column) {
         this.referencedTables.offer(column.getTable().getName());
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(AndExpression andExpression) {
         andExpression.getLeftExpression().accept(this);
         andExpression.getRightExpression().accept(this);
     }
+
+    // Not used.
 
     @Override
     public void visit(OrExpression orExpression) {

@@ -59,6 +59,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         return operators.pollLast();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalJoinOperator node) {
         node.getLeft().accept(this);
@@ -108,6 +111,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         operators.add(join);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalRenameOperator node) {
         node.getChild().accept(this);
@@ -116,12 +122,18 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         operators.add(rename);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalScanOperator node) {
         Operator scan = new ScanOperator(node.getTable());
         operators.add(scan);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalSelectOperator node) {
         node.getChild().accept(this);
@@ -130,6 +142,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         operators.add(select);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalSortOperator node) {
         node.getChild().accept(this);
@@ -151,6 +166,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         operators.add(sort);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalProjectOperator node) {
         node.getChild().accept(this);
@@ -160,6 +178,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LogicalDistinctOperator node) {
         node.getChild().accept(this);

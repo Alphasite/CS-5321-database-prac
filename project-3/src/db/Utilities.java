@@ -11,6 +11,9 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
+/**
+ * A collection of unrelated utility methods.
+ */
 public class Utilities {
 
     /**
@@ -108,6 +111,11 @@ public class Utilities {
         return currentMin;
     }
 
+    /**
+     * There the files in the specified directory.
+     *
+     * @param directory the directory to empty.
+     */
     public static void cleanDirectory(Path directory) {
         try {
             Files.walk(directory).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
