@@ -53,10 +53,16 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         return this.result;
     }
 
+    /**
+     * @return the underlying expression for this evaluator.
+     */
     public Expression getExpression() {
         return this.expressionRoot;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Column column) {
         // TODO: move this computation to object construction
@@ -71,16 +77,25 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         System.out.println(new Exception("Invalid column reference : " + column).getMessage());
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(LongValue longValue) {
         this.value = longValue.getValue();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Parenthesis parenthesis) {
         parenthesis.getExpression().accept(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Addition addition) {
         addition.getLeftExpression().accept(this);
@@ -91,6 +106,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.value = lhs + rhs;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Division division) {
         division.getLeftExpression().accept(this);
@@ -101,6 +119,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.value = lhs / rhs;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Multiplication multiplication) {
         multiplication.getLeftExpression().accept(this);
@@ -111,6 +132,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.value = lhs * rhs;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(Subtraction subtraction) {
         subtraction.getLeftExpression().accept(this);
@@ -121,6 +145,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.value = lhs - rhs;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(AndExpression andExpression) {
         andExpression.getLeftExpression().accept(this);
@@ -131,6 +158,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = lhs && rhs;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(OrExpression orExpression) {
         orExpression.getLeftExpression().accept(this);
@@ -141,6 +171,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = lhs || rhs;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(EqualsTo equalsTo) {
         equalsTo.getLeftExpression().accept(this);
@@ -151,6 +184,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = (lhs == rhs);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(GreaterThan greaterThan) {
         greaterThan.getLeftExpression().accept(this);
@@ -161,6 +197,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = (lhs > rhs);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(GreaterThanEquals greaterThanEquals) {
         greaterThanEquals.getLeftExpression().accept(this);
@@ -171,6 +210,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = (lhs >= rhs);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(MinorThan minorThan) {
         minorThan.getLeftExpression().accept(this);
@@ -181,6 +223,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = (lhs < rhs);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(MinorThanEquals minorThanEquals) {
         minorThanEquals.getLeftExpression().accept(this);
@@ -191,6 +236,9 @@ public class ExpressionEvaluator implements ExpressionVisitor {
         this.result = (lhs <= rhs);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(NotEqualsTo notEqualsTo) {
         notEqualsTo.getLeftExpression().accept(this);
