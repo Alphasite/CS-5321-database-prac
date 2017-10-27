@@ -25,6 +25,9 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
         this.sortHeader = computeSortHeader(sortHeader, source.getHeader());
     }
 
+    /**
+     * Compute the full sorting header for this sort from partial sort header and tuple layout
+     */
     public static TableHeader computeSortHeader(TableHeader sortHeader, TableHeader tupleLayout) {
         Set<String> alreadySortedColumns = new HashSet<>();
 
