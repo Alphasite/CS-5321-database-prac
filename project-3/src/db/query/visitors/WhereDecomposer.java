@@ -23,11 +23,15 @@ public class WhereDecomposer implements ExpressionVisitor {
     private Map<String, Expression> selectionExpressions;
     private Map<TableCouple, Expression> joinExpressions;
 
+    private Expression nakedExpression;
+
     private Queue<String> referencedTables;
 
     public WhereDecomposer(Expression expression) {
         this.selectionExpressions = new HashMap<>();
         this.joinExpressions = new HashMap<>();
+        this.nakedExpression = null;
+
         this.referencedTables = new ArrayDeque<>();
 
         expression.accept(this);
@@ -39,6 +43,10 @@ public class WhereDecomposer implements ExpressionVisitor {
 
     public Map<TableCouple, Expression> getJoinExpressions() {
         return joinExpressions;
+    }
+
+    public Expression getNakedExpression() {
+        return nakedExpression;
     }
 
     private void addSelection(String tableId, Expression comparison) {
@@ -77,8 +85,12 @@ public class WhereDecomposer implements ExpressionVisitor {
 
         // Handle constant expressions
         if (tableLeft == null) {
-            // TODO
-            throw new NotImplementedException();
+            if (nakedExpression != null) {
+                nakedExpression = new AndExpression(nakedExpression, comparator);
+            } else {
+                nakedExpression = comparator;
+            }
+            return;
         }
 
         if (tableRight == null) {
