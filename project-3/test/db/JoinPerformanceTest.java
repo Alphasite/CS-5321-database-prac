@@ -19,7 +19,7 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class JoinPerformanceTest {
     private final static int ROWS_PER_TABLE = 5000;
-    private final static int RAND_RANGE = 7500;
+    private final static int RAND_RANGE = 5000;
 
     private static String[] testQueries = new String[]{
             "SELECT * FROM Sailors, Reserves, Boats WHERE Sailors.A = Reserves.G AND Sailors.A = Boats.D;",
