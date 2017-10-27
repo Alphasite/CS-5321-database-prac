@@ -5,6 +5,7 @@ pipeline {
         stage('Preparation') {
             steps {
                 checkout scm
+                sh "rm -f tests.zip"
                 sh "rm -f pit-test.zip"
                 sh "rm -f coverage.zip"
                 sh "chmod +x gradlew"
