@@ -167,11 +167,13 @@ public class QueryBuilder {
         // Decompose the expression tree and then add the root nodes expressions to the root node.
         Map<String, Expression> selectionExpressions = new HashMap<>();
         Map<TableCouple, Expression> joinExpressions = new HashMap<>();
+        Expression nakedExpression = null;
 
         if (rootExpression != null) {
             WhereDecomposer bwb = new WhereDecomposer(rootExpression);
             selectionExpressions.putAll(bwb.getSelectionExpressions());
             joinExpressions.putAll(bwb.getJoinExpressions());
+            nakedExpression = bwb.getNakedExpression();
         }
 
         TriFunction<LogicalOperator, String, Expression, LogicalOperator> joinTable = (root, tableName, expression) -> {
@@ -214,6 +216,12 @@ public class QueryBuilder {
 
         for (String table : unjoinedTables) {
             rootNode = joinTable.apply(rootNode, table, null);
+        }
+
+        // Add naked expression as root selection
+        // TODO: evaluate condition at build time and act accordingly
+        if (nakedExpression != null) {
+            rootNode = new LogicalSelectOperator(rootNode, nakedExpression);
         }
 
         return rootNode;

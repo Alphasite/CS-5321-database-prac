@@ -18,10 +18,9 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
 public class SimpleIntegrationTest {
-    Database database;
-    TableInfo boats;
-    TableInfo reserves;
-    TableInfo sailors;
+    private TableInfo boats;
+    private TableInfo reserves;
+    private TableInfo sailors;
 
     @Before
     public void setUp() throws Exception {

@@ -11,6 +11,10 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+/**
+ * Expression visitor used to collect the sort conditions and leftover join
+ * expressions for a Sort-Merge Join
+ */
 public class SMJHeaderEvaluator implements ExpressionVisitor {
     private TableHeader leftHeader, rightHeader;
     private TableHeader leftSortHeader, rightSortHeader;
@@ -18,6 +22,8 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
 
     /**
      * Setup evaluator
+     * @param leftHeader The header for the left operator of the Sort-Merge Join
+     * @param rightHeader The header for the right operator of the Sort-Merge Join
      */
     public SMJHeaderEvaluator(TableHeader leftHeader, TableHeader rightHeader) {
         this.leftHeader = leftHeader;
@@ -27,14 +33,29 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
         this.leftoverExpression = null;
     }
 
+    /**
+     * Gets the sort header for the left operator
+     * @return The sort header for the left operator
+     */
     public TableHeader getLeftSortHeader() {
         return this.leftSortHeader;
     }
 
+    /**
+     * Gets the sort header for the right operator
+     * @return The sort header for the right operator
+     */
     public TableHeader getRightSortHeader() {
         return this.rightSortHeader;
     }
 
+    /**
+     * Gets any remaining expressions, i.e. non-equijoin conditions, which
+     * cannot be optimized by the Sort-Merge Join
+     * @return An expression that consists of all non-equijoin conditions used
+     *         for this Sort-Merge Join, or null if all of the expressions are
+     *         equijoins
+     */
     public Expression getLeftoverExpression() {
         return this.leftoverExpression;
     }
