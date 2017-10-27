@@ -10,8 +10,8 @@ import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
-import db.query.visitors.PhysicalPlanBuilder;
 import db.query.QueryBuilder;
+import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -104,6 +104,35 @@ public class QueryBuilderTest {
         assertEquals("64 | 113 | 139 | 64 | 70", root.getNextTuple().toString());
 
         root.close();
+    }
+
+    @Test
+    public void testNakedConditions() {
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors WHERE 4 < 8 AND 6 >= 3;");
+
+        LogicalOperator logRoot = logicalBuilder.buildQuery(tokens);
+        Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
+
+        int count = 0;
+        while (root.getNextTuple() != null) {
+            count++;
+        }
+
+        assertEquals(1000, count);
+
+        init();
+
+        tokens = TestUtils.parseQuery("SELECT * FROM Sailors WHERE 6 <= 8 AND 1 > 5;");
+
+        logRoot = logicalBuilder.buildQuery(tokens);
+        root = physicalBuilder.buildFromLogicalTree(logRoot);
+
+        count = 0;
+        while (root.getNextTuple() != null) {
+            count++;
+        }
+
+        assertEquals(0, count);
     }
 
     @Test

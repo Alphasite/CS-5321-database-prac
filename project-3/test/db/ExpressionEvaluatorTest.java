@@ -39,7 +39,7 @@ public class ExpressionEvaluatorTest {
      */
     @Test
     public void testNakedCondition() {
-        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM a WHERE 2 * 3 = 6 OR 2 = 6 - 3;");
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM a WHERE 2 * 3 = 6 AND 2 = 6 - 4;");
         ExpressionEvaluator whereEvaluator = new ExpressionEvaluator(tokens.getWhere(), header);
         for (Tuple T : tuples) {
             assertTrue(whereEvaluator.matches(T));
