@@ -15,6 +15,10 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
     private final LogicalOperator source;
     private TableHeader sortHeader;
 
+    /**
+     * @param source     the child operator
+     * @param sortHeader the header which controls the sort order.
+     */
     public LogicalSortOperator(LogicalOperator source, TableHeader sortHeader) {
         this.source = source;
 

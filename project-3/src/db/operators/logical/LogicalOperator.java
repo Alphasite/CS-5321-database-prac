@@ -11,5 +11,10 @@ public interface LogicalOperator {
      */
     TableHeader getHeader();
 
+    /**
+     * Accept a visitor and pass it this operator.
+     *
+     * @param visitor the visitor to visit.
+     */
     void accept(LogicalTreeVisitor visitor);
 }

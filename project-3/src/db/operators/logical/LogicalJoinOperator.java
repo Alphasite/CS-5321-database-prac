@@ -23,6 +23,13 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
         this.outputSchema = computeHeader(left.getHeader(), right.getHeader());
     }
 
+    /**
+     * Compute the result header for this join.
+     *
+     * @param left  the left node.
+     * @param right the right node.
+     * @return The resultant header.
+     */
     public static TableHeader computeHeader(TableHeader left, TableHeader right) {
         int tableWidth = left.size() + right.size();
 

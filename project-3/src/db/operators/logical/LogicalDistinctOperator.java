@@ -3,6 +3,11 @@ package db.operators.logical;
 import db.datastore.TableHeader;
 import db.operators.UnaryNode;
 
+/**
+ * A logical node which represents the distinct operation.
+ *
+ * @inheritDoc
+ */
 public class LogicalDistinctOperator implements LogicalOperator, UnaryNode<LogicalOperator> {
 
     private LogicalOperator source;
