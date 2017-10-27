@@ -8,12 +8,26 @@ The packages/classes of interest are:
  - Logical operators: db.operators.logical 
  - Builder: db.query.visitors.PhysicalPlanBuilder
 
-Many parametrized tests are also provided in the test folder to verify the behavior of our
-operator classes and query builder.
+Many parametrized tests are also provided in the test folder to verify the behavior of our 
+implementation.
+ 
+Logic for Partition Reset during SMJ:
+    Our SMJ operator resets back to a particular tuple by calling the
+    seek(index) method of the right child sort operator. Our external
+    sort operator seeks by using the seek method of its underlying
+    BinaryTupleReader class, which calculates the target page from
+    the index, and directly loads that page (and only that page) into
+    memory.
+    Since our SMJ and external sort operators are not saving any tuples
+    in memory for the purposes of resetting back to an index, SMJ does
+    not keep unbounded state.
 
-The query builder and WHERE expression decomposer can both be found in the db.query package,
- they are well commented and detail the logic that we use to dispatch expression
- evaluation down the operator tree.
+Logic for Handling DISTINCT:
+    Our distinct operator uses a sorting approach, so since our
+    external sort operator does not keep unbounded state, neither
+    does our distinct operator.
+
+No known bugs.
  
 ### Install notes
 
