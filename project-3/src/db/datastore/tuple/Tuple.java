@@ -28,6 +28,9 @@ public class Tuple {
         return new Tuple(fields);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -40,6 +43,9 @@ public class Tuple {
         return builder.toString();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -50,6 +56,9 @@ public class Tuple {
         return fields.equals(tuple.fields);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public int hashCode() {
         return fields.hashCode();

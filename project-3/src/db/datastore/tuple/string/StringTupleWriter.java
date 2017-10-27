@@ -10,17 +10,34 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
 
+/**
+ * @inheritDoc
+ */
 public class StringTupleWriter implements TupleWriter {
     private final PrintStream output;
 
+    /**
+     * Create a new string writer.
+     *
+     * @param output the stream which tuples will be written to.
+     */
     public StringTupleWriter(PrintStream output) {
         this.output = output;
     }
 
+    /**
+     * Create a new string writer.
+     * @param output the stream which tuples will be written to.
+     */
     public StringTupleWriter(OutputStream output) {
         this.output = new PrintStream(output);
     }
 
+    /**
+     * Get a new writer for this file.
+     * @param path The path which the file will be written to.
+     * @return The new writer.
+     */
     public static StringTupleWriter get(Path path) {
         try {
             return new StringTupleWriter(new PrintStream(Files.newOutputStream(path)));
@@ -29,6 +46,9 @@ public class StringTupleWriter implements TupleWriter {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void write(Tuple tuple) {
         String line = tuple.fields.stream()
@@ -38,11 +58,17 @@ public class StringTupleWriter implements TupleWriter {
         this.output.println(line);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void flush() {
         this.output.flush();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.output.close();

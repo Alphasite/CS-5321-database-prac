@@ -10,6 +10,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * A tuple reader which reads tuples in string form, as specified by the requirements doc.
+ *
+ * @inheritDoc
+ */
 public class StringTupleReader implements TupleReader {
     private final Path path;
     private final TableHeader header;
@@ -17,6 +22,12 @@ public class StringTupleReader implements TupleReader {
 
     private Tuple next;
 
+    /**
+     * Create a new reader.
+     *
+     * @param header The header of the output tuples.
+     * @param path   The file path for the reader.
+     */
     public StringTupleReader(TableHeader header, Path path) {
         this.header = header;
         this.path = path;
@@ -24,10 +35,21 @@ public class StringTupleReader implements TupleReader {
         this.next = null;
     }
 
+    /**
+     * Get a new instance of a tuple reader for this file.
+     * @param header The header of the new reader.
+     * @param path The path of the string form table.
+     * @return The new reader.
+     */
     public static StringTupleReader get(TableHeader header, Path path) {
         return new StringTupleReader(header, path);
     }
 
+    /**
+     *
+     * @param path
+     * @return
+     */
     private static Scanner getScanner(Path path) {
         try {
             Scanner scanner = new Scanner(Files.newInputStream(path));
@@ -38,6 +60,9 @@ public class StringTupleReader implements TupleReader {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Tuple peek() {
         if (this.next == null) {
@@ -47,11 +72,17 @@ public class StringTupleReader implements TupleReader {
         return this.next;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean hasNext() {
         return this.peek() != null;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public Tuple next() {
         if (this.next == null) {
@@ -63,6 +94,9 @@ public class StringTupleReader implements TupleReader {
         }
     }
 
+    /**
+     * @return the next tuple from the underlying file, or null if none exists.
+     */
     private Tuple getNextTuple() {
         if (this.tableFile.hasNextLine()) {
             int cellNumber = this.header.columnHeaders.size();
@@ -82,6 +116,9 @@ public class StringTupleReader implements TupleReader {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void seek(long index) {
         this.tableFile.close();
@@ -92,6 +129,9 @@ public class StringTupleReader implements TupleReader {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         this.tableFile.close();

@@ -63,6 +63,9 @@ public class TableHeader {
         return Optional.empty();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -81,6 +84,9 @@ public class TableHeader {
         return builder.toString();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader clone() {
         return new TableHeader(

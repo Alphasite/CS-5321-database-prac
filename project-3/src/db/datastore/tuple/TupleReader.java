@@ -36,5 +36,8 @@ public interface TupleReader {
      */
     void seek(long index);
 
+    /**
+     * Close the underlying file descriptor for the reader.
+     */
     void close();
 }

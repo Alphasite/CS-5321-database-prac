@@ -12,6 +12,11 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
+/**
+ * Writes tuples in a binary format as specified by the requirements document.
+ *
+ * @inheritDoc
+ */
 public class BinaryTupleWriter implements TupleWriter {
     private final TableHeader header;
     private final FileChannel channel;
@@ -20,6 +25,12 @@ public class BinaryTupleWriter implements TupleWriter {
 
     private int tuples_written;
 
+    /**
+     * Create a new writer with the provided header and write it to the specified channel.
+     *
+     * @param header  The header of the input tuples.
+     * @param channel The output channel.
+     */
     public BinaryTupleWriter(TableHeader header, FileChannel channel) {
         this.header = header;
         this.channel = channel;
@@ -47,6 +58,9 @@ public class BinaryTupleWriter implements TupleWriter {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void write(Tuple tuple) {
         int offset = this.getTupleOffset();
@@ -63,6 +77,9 @@ public class BinaryTupleWriter implements TupleWriter {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void flush() {
         try {
@@ -79,6 +96,9 @@ public class BinaryTupleWriter implements TupleWriter {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         try {
@@ -88,6 +108,9 @@ public class BinaryTupleWriter implements TupleWriter {
         }
     }
 
+    /**
+     * Zero the page buffer.
+     */
     private void clearPage() {
         for (int i = 0; i < Database.PAGE_SIZE / 4; i++) {
             this.bb.asIntBuffer().put(i, 0);
@@ -98,10 +121,16 @@ public class BinaryTupleWriter implements TupleWriter {
         this.bb.asIntBuffer().put(1, 0);
     }
 
+    /**
+     * @return The number of tuples which can be written to this page.
+     */
     private int getRemainingCapacity() {
         return (1024 - this.getTupleOffset()) / (this.header.size());
     }
 
+    /**
+     * @return The offset of the tuple, relative to the start of the page.
+     */
     private int getTupleOffset() {
         return 2 + this.tuples_written * this.header.size();
     }
