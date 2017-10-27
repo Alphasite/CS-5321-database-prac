@@ -36,7 +36,8 @@ public class RandomDataTest {
             "SELECT * FROM Sailors S1, Sailors S2 WHERE S1.A < S2.A;",
             "SELECT B.F, B.D FROM Boats B ORDER BY B.D, B.F;",
             "SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
-            "SELECT DISTINCT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;"
+            "SELECT DISTINCT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
+            "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
     };
 
     private static final int[] blockSizes = new int[]{10, 50, 100};
