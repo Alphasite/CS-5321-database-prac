@@ -31,6 +31,7 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
      *
      * @param left       The operator which generates the left hand tuples. Must be a SortOperator.
      * @param right      The operator which generates the right hand tuples. Must be a SortOperator.
+     * @param expression An expression that contains all of the non-equijoin conditions between these two operators, or null.
      */
     public SortMergeJoinOperator(SortOperator left, SortOperator right, Expression expression) {
         this.left = left;
