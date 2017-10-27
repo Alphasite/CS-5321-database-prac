@@ -22,6 +22,10 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
     public LogicalSortOperator(LogicalOperator source, TableHeader sortHeader) {
         this.source = source;
 
+        this.sortHeader = computeSortHeader(sortHeader, source.getHeader());
+    }
+
+    public static TableHeader computeSortHeader(TableHeader sortHeader, TableHeader tupleLayout) {
         Set<String> alreadySortedColumns = new HashSet<>();
 
         List<String> aliases = new ArrayList<>();
@@ -39,10 +43,9 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
             }
         }
 
-        TableHeader header = this.source.getHeader();
-        for (int i = 0; i < header.columnAliases.size(); i++) {
-            String alias = header.columnAliases.get(i);
-            String column = header.columnHeaders.get(i);
+        for (int i = 0; i < tupleLayout.columnAliases.size(); i++) {
+            String alias = tupleLayout.columnAliases.get(i);
+            String column = tupleLayout.columnHeaders.get(i);
             String fullName = alias + "." + column;
 
             // Append non specified columns so that they are used to break ties
@@ -53,7 +56,7 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
             }
         }
 
-        this.sortHeader = new TableHeader(aliases, columns);
+        return new TableHeader(aliases, columns);
     }
 
     /**

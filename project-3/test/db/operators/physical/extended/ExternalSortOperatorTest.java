@@ -7,6 +7,7 @@ import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
+import db.operators.logical.LogicalSortOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.SeekableOperator;
 import db.operators.physical.bag.TupleNestedJoinOperator;
@@ -112,7 +113,8 @@ public class ExternalSortOperatorTest {
         Expression cmp2 = new EqualsTo(new Column(new Table(null, "Reserves"), "H"), new Column(new Table(null, "Boats"), "D"));
         join = new TupleNestedJoinOperator(join, B, cmp2);
 
-        Operator sort = new ExternalSortOperator(join, header, 10, Paths.get(Project3.TEMP_PATH));
+        TableHeader sortHeaders = LogicalSortOperator.computeSortHeader(header, join.getHeader());
+        Operator sort = new ExternalSortOperator(join, sortHeaders, 10, Paths.get(Project3.TEMP_PATH));
 
         assertEquals(25224, TestUtils.countNotNullTuples(sort));
 
