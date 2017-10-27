@@ -1,12 +1,11 @@
 package db.operators.physical.extended;
 
 import db.Project3;
-import db.Utilities;
+import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.TableHeader;
+import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.TupleWriter;
-import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.SeekableOperator;
@@ -103,8 +102,8 @@ public class ExternalSortOperatorTest {
         ScanOperator B = new ScanOperator(DB.getTable("Boats"));
 
         TableHeader header = new TableHeader(
-                Arrays.asList("Sailors", "Sailors", "Sailors"),
-                Arrays.asList("C", "A", "B")
+                Arrays.asList("Sailors", "Sailors"),
+                Arrays.asList("C", "A")
         );
 
         Expression cmp1 = new EqualsTo(new Column(new Table(null, "Sailors"), "A"), new Column(new Table(null, "Reserves"), "G"));
@@ -113,21 +112,19 @@ public class ExternalSortOperatorTest {
         Expression cmp2 = new EqualsTo(new Column(new Table(null, "Reserves"), "H"), new Column(new Table(null, "Boats"), "D"));
         join = new TupleNestedJoinOperator(join, B, cmp2);
 
-        Operator sort = new ExternalSortOperator(join, header, 5, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(join, header, 10, Paths.get(Project3.TEMP_PATH));
 
-        Path out = Paths.get(Project3.OUTPUT_PATH).resolve("ExternalSortTest");
-        TupleWriter output = StringTupleWriter.get(out);
-        int total = sort.dump(output);
+        assertEquals(25224, TestUtils.countNotNullTuples(sort));
 
-        assertEquals(25224, total);
+        sort.reset();
 
-        S.close();
-        R.close();
-        B.close();
+        Path sampleFile = Paths.get("resources/samples/expected").resolve("query14_humanreadable");
+        Operator sampleOp = new ScanOperator(new TableInfo(sort.getHeader(), sampleFile, false));
+
+        TestUtils.compareTuples(sampleOp, sort);
 
         sort.close();
-
-        output.close();
+        sampleOp.close();
     }
 
     @Test
@@ -179,6 +176,6 @@ public class ExternalSortOperatorTest {
 
     @After
     public void cleanup() {
-        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
+//        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
     }
 }
