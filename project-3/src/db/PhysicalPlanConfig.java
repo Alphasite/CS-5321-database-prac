@@ -33,6 +33,8 @@ public class PhysicalPlanConfig {
     public int joinParameter;
     public int sortParameter;
 
+    public boolean useIndices = false;
+
     /**
      * @param join the join type
      * @param sort the sort type
@@ -69,17 +71,22 @@ public class PhysicalPlanConfig {
             JoinImplementation join = JoinImplementation.values()[Integer.parseInt(joinParams[0])];
             SortImplementation sort = SortImplementation.values()[Integer.parseInt(sortParams[0])];
 
-            int joinBufferPages = 0;
+            PhysicalPlanConfig config = new PhysicalPlanConfig(join, sort);
+
+            // Wrap to ensure compatibility with previous format
+            if (scanner.hasNextLine()) {
+                config.useIndices = (Integer.parseInt(scanner.nextLine()) == 1);
+            }
+
             if (join == JoinImplementation.BNLJ) {
-                joinBufferPages = Integer.parseInt(joinParams[1]);
+                config.joinParameter = Integer.parseInt(joinParams[1]);
             }
 
-            int sortBufferPages = 0;
             if (sort == SortImplementation.EXTERNAL) {
-                sortBufferPages = Integer.parseInt(sortParams[1]);
+                config.sortParameter = Integer.parseInt(sortParams[1]);
             }
 
-            return new PhysicalPlanConfig(join, sort, joinBufferPages, sortBufferPages);
+            return config;
         } catch (Exception e) {
             e.printStackTrace();
             return DEFAULT_CONFIG;
