@@ -28,7 +28,7 @@ public class GeneralConfig {
             config.outputDir = Paths.get(scanner.nextLine());
             config.tempDir = Paths.get(scanner.nextLine());
 
-            config.dbPath = config.dbPath.resolve("db");
+            config.dbPath = config.inputDir.resolve("db");
 
             config.buildIndexes = (Integer.parseInt(scanner.nextLine()) == 1);
             config.evaluateQueries = (Integer.parseInt(scanner.nextLine()) == 1);
