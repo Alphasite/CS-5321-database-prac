@@ -2,7 +2,7 @@ package db;
 
 import db.datastore.Database;
 import db.datastore.tuple.TupleWriter;
-import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.datastore.tuple.binary.BinaryTupleReaderWriter;
 import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
@@ -87,7 +87,7 @@ public class Project3 {
 
                     Path outputFile = Paths.get(OUTPUT_PATH + "/query" + i++);
                     if (BINARY_OUTPUT) {
-                        fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
+                        fileWriter = BinaryTupleReaderWriter.get(queryPlanRoot.getHeader(), outputFile);
                     } else {
                         fileWriter = StringTupleWriter.get(outputFile);
                     }

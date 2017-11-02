@@ -9,5 +9,5 @@ public interface SeekableOperator extends Operator {
      *
      * @param index The index of the tuple.
      */
-    void seek(long index);
+    void seek(int index);
 }

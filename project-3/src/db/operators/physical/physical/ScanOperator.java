@@ -4,7 +4,7 @@ import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
-import db.datastore.tuple.binary.BinaryTupleReader;
+import db.datastore.tuple.binary.BinaryTupleReaderWriter;
 import db.datastore.tuple.string.StringTupleReader;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
@@ -65,7 +65,7 @@ public class ScanOperator extends AbstractOperator {
     @Override
     public boolean reset() {
         if (this.table.binary) {
-            this.reader = BinaryTupleReader.get(this.table.file);
+            this.reader = BinaryTupleReaderWriter.get(this.table.header, this.table.file);
         } else {
             this.reader = StringTupleReader.get(this.table.header, this.table.file);
         }

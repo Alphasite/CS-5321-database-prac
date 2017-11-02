@@ -12,6 +12,7 @@ import db.operators.physical.Operator;
 import db.operators.physical.SeekableOperator;
 import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.physical.ScanOperator;
+import db.performance.DiskIOStatistics;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.schema.Column;
@@ -179,5 +180,7 @@ public class ExternalSortOperatorTest {
     @After
     public void cleanup() {
 //        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 }

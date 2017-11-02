@@ -4,7 +4,7 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleWriter;
-import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.datastore.tuple.binary.BinaryTupleReaderWriter;
 import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
@@ -52,7 +52,7 @@ public class TestUtils {
             } else if (ref == null) {
                 fail("output has more tuples (" + i + ") than expected");
             } else {
-                assertThat(test, equalTo(ref));
+                assertThat("output: " + i + " does not match.", test, equalTo(ref));
             }
 
             i++;
@@ -174,7 +174,7 @@ public class TestUtils {
             aliases.add(tableName);
         }
 
-        TupleWriter binaryWriter = BinaryTupleWriter.get(
+        TupleWriter binaryWriter = BinaryTupleReaderWriter.get(
                 new TableHeader(aliases, columns),
                 dataFolder.resolve(tableName)
         );

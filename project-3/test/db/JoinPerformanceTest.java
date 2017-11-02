@@ -75,6 +75,8 @@ public class JoinPerformanceTest {
     @After
     public void tearDown() throws Exception {
         this.actualResult.close();
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 
     @Test

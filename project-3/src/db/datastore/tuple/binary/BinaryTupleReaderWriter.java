@@ -1,13 +1,15 @@
 package db.datastore.tuple.binary;
 
 import db.datastore.Database;
+import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.TupleReader;
+import db.datastore.tuple.TupleReaderWriter;
 import db.performance.DiskIOStatistics;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
@@ -16,14 +18,15 @@ import java.util.List;
 /**
  * @inheritDoc
  */
-public class BinaryTupleReader implements TupleReader {
+public class BinaryTupleReaderWriter implements TupleReaderWriter {
+    private final TableHeader header;
     private final Path path;
     private final FileChannel channel;
 
     private final ByteBuffer bb;
 
-    private long index;
-    private long pageNumber;
+    private int index;
+    private int pageNumber;
 
 
     /**
@@ -32,24 +35,34 @@ public class BinaryTupleReader implements TupleReader {
      * @param path    The file path, used for logging.
      * @param channel The file input channel.
      */
-    public BinaryTupleReader(Path path, FileChannel channel) {
+    public BinaryTupleReaderWriter(TableHeader header, Path path, FileChannel channel) {
+        this.header = header;
         this.path = path;
         this.channel = channel;
 
         this.bb = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
+        this.clearPage();
+
         this.index = -1;
         this.pageNumber = -1;
+
+        DiskIOStatistics.handles_opened += 1;
     }
 
     /**
-     * Get a new instance of a binary reader.
+     * Get a new instance of a binary reader/writer.
+     * @param header the header for the tuples.
      * @param path The path for the binary file.
      * @return The instance of the reader.
      */
-    public static BinaryTupleReader get(Path path) {
+    public static BinaryTupleReaderWriter get(TableHeader header, Path path) {
         try {
-            return new BinaryTupleReader(path, FileChannel.open(path, StandardOpenOption.READ));
+            if (!Files.exists(path)) {
+                Files.createFile(path);
+            }
+
+            return new BinaryTupleReaderWriter(header, path, FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -94,15 +107,15 @@ public class BinaryTupleReader implements TupleReader {
      * @inheritDoc
      */
     @Override
-    public void seek(long index) {
+    public void seek(int index) {
         if (this.index == -1) {
             loadPage(channel, bb);
             this.index = 0;
         }
 
         try {
-            long page = index / this.getCapacity();
-            long offset = index % this.getCapacity();
+            int page = index / this.getCapacity();
+            int offset = index % this.getCapacity();
 
 
             if (this.pageNumber != page) {
@@ -121,9 +134,58 @@ public class BinaryTupleReader implements TupleReader {
      * @inheritDoc
      */
     @Override
+    public void write(Tuple tuple) {
+        if (this.index == -1 || this.getRemainingCapacity() <= 0) {
+            this.loadPage(channel, bb);
+            this.index = 0;
+            this.pageNumber += 1;
+        }
+
+        int offset = this.getTupleOffset();
+
+        this.index += 1;
+        this.bb.asIntBuffer().put(1, this.index);
+
+        for (int i = 0; i < tuple.fields.size(); i++) {
+            this.bb.asIntBuffer().put(offset + i, tuple.fields.get(i));
+        }
+
+        if (this.getRemainingCapacity() <= 0) {
+            this.flush();
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public void flush() {
+        try {
+            while (this.bb.hasRemaining()) {
+                this.channel.write(this.bb);
+            }
+
+            this.bb.clear();
+            this.clearPage();
+
+            this.loadPage(channel, bb);
+            this.index = 0;
+            this.pageNumber += 1;
+
+            DiskIOStatistics.writes += 1;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
     public void close() {
         try {
             this.channel.close();
+            DiskIOStatistics.handles_closed += 1;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -137,7 +199,7 @@ public class BinaryTupleReader implements TupleReader {
      */
     private boolean loadPage(FileChannel channel, ByteBuffer bb) {
         try {
-            long len = channel.read(bb);
+            int len = channel.read(bb);
 
             if (len == Database.PAGE_SIZE) {
                 bb.flip();
@@ -185,19 +247,46 @@ public class BinaryTupleReader implements TupleReader {
      * @param index The page offset of the tuple which is to be loaded.
      * @return The tuple at the specified offset.
      */
-    private Tuple getTupleOnPage(long index) {
+    private Tuple getTupleOnPage(int index) {
         if (this.getNumberOfTuples() <= index) {
             return null;
         }
 
-        long startOffset = 2 + this.getTupleSize() * index;
+        int startOffset = 2 + this.getTupleSize() * index;
 
         List<Integer> tupleBacking = new ArrayList<>(this.getTupleSize());
 
-        for (long i = startOffset; i < startOffset + this.getTupleSize(); i++) {
-            tupleBacking.add(this.bb.asIntBuffer().get((int) i));
+        for (int i = startOffset; i < startOffset + this.getTupleSize(); i++) {
+            tupleBacking.add(this.bb.asIntBuffer().get(i));
         }
 
         return new Tuple(tupleBacking);
+    }
+
+    /**
+     * Zero the page buffer.
+     */
+    private void clearPage() {
+        for (int i = 0; i < Database.PAGE_SIZE / 4; i++) {
+            this.bb.asIntBuffer().put(i, 0);
+        }
+
+        this.index = 0;
+        this.bb.asIntBuffer().put(0, this.header.columnAliases.size());
+        this.bb.asIntBuffer().put(1, 0);
+    }
+
+    /**
+     * @return The number of tuples which can be written to this page.
+     */
+    private int getRemainingCapacity() {
+        return (1024 - this.getTupleOffset()) / (this.header.size());
+    }
+
+    /**
+     * @return The offset of the tuple, relative to the start of the page.
+     */
+    private int getTupleOffset() {
+        return 2 + this.index * this.header.size();
     }
 }

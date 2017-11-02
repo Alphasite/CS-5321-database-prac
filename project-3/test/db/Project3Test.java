@@ -1,5 +1,7 @@
 package db;
 
+import db.performance.DiskIOStatistics;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,5 +15,11 @@ public class Project3Test {
     @Test
     public void main() throws Exception {
         Project3.main(new String[]{});
+    }
+
+    @After
+    public void openCloseStats() throws Exception {
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 }

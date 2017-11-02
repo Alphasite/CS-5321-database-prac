@@ -23,7 +23,7 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
     private SortOperator left, right;
     private TupleComparator tupleComparator;
     private TableHeader resultHeader;
-    private long lastMatchingRight;
+    private int lastMatchingRight;
     private ExpressionEvaluator evaluator;
 
     /**

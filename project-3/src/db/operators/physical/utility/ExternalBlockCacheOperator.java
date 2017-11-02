@@ -5,8 +5,7 @@ import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.TupleWriter;
-import db.datastore.tuple.binary.BinaryTupleReader;
-import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.datastore.tuple.binary.BinaryTupleReaderWriter;
 import db.datastore.tuple.string.StringTupleReader;
 import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.physical.AbstractOperator;
@@ -83,7 +82,7 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
      * @inheritDoc
      */
     @Override
-    public void seek(long index) {
+    public void seek(int index) {
         if (!flushed) {
             this.flush();
         }
@@ -188,7 +187,7 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
      */
     private TupleReader getReader(TableHeader header, Path path) {
         if (USE_BINARY_PAGES)
-            return BinaryTupleReader.get(path);
+            return BinaryTupleReaderWriter.get(header, path);
         else
             return StringTupleReader.get(header, path);
     }
@@ -202,7 +201,7 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
      */
     private TupleWriter getWriter(TableHeader header, Path path) {
         if (USE_BINARY_PAGES)
-            return BinaryTupleWriter.get(header, path);
+            return BinaryTupleReaderWriter.get(header, path);
         else
             return StringTupleWriter.get(path);
     }

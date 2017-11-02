@@ -3,6 +3,7 @@ package db.datastore.tuple.binary;
 import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
+import db.datastore.tuple.TupleReader;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,7 +32,7 @@ public class BinaryTupleReaderTest {
 
     @Test
     public void next() throws Exception {
-        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
+        TupleReader reader = BinaryTupleReaderWriter.get(table.header, table.file);
 
         assertThat(reader, notNullValue());
 
@@ -62,7 +63,7 @@ public class BinaryTupleReaderTest {
 
     @Test
     public void seek() throws Exception {
-        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
+        TupleReader reader = BinaryTupleReaderWriter.get(table.header, table.file);
 
         List<Tuple> tuples = new ArrayList<>();
 
@@ -95,7 +96,7 @@ public class BinaryTupleReaderTest {
 
     @Test
     public void randomSeek() throws Exception {
-        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
+        TupleReader reader = BinaryTupleReaderWriter.get(table.header, table.file);
 
         List<Tuple> tuples = new ArrayList<>();
 

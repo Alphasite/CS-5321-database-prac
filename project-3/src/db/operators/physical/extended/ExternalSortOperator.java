@@ -11,6 +11,7 @@ import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.SeekableOperator;
 import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.utility.ExternalBlockCacheOperator;
+import db.performance.DiskIOStatistics;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
      */
     private ExternalBlockCacheOperator sortedRelationCache;
 
-    private long tupleIndex;
+    private int tupleIndex;
 
     /**
      * Configure a new operator to handle External sorting. Sorting is only performed when the first tuple is requested
@@ -88,7 +89,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
      * @inheritDoc
      */
     @Override
-    public long getTupleIndex() {
+    public int getTupleIndex() {
         return tupleIndex;
     }
 
@@ -119,6 +120,10 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         BlockCacheOperator inputCache = new BlockCacheOperator(source, Database.PAGE_SIZE * bufSize);
 
         System.out.println("Pass 1");
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
+
+        System.out.println("Pass 1");
 
         while (inputCache.hasNext()) {
             System.out.println("Sorting " + blockId);
@@ -132,6 +137,10 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
             inputCache.loadNextBlock();
             blockId++;
+
+            System.out.println("block " + blockId);
+            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
         }
 
         // This releases all resources held by source operator
@@ -142,6 +151,9 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         blockId = 1;
 
         System.out.println("Pass 2");
+
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
         while (previousRuns.size() >= 2) {
             List<ExternalBlockCacheOperator> currentRuns = new ArrayList<>();
@@ -187,6 +199,9 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         this.isSorted = true;
 
         this.sortedRelationCache = previousRuns.get(0);
+
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 
     /**
@@ -271,7 +286,7 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
      * @inheritDoc
      */
     @Override
-    public void seek(long index) {
+    public void seek(int index) {
         this.sortedRelationCache.seek(index);
         this.next = null;
         this.tupleIndex = index-1;

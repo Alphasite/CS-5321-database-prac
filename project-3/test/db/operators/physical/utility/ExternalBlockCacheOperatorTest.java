@@ -4,7 +4,8 @@ import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.binary.BinaryTupleReader;
+import db.datastore.tuple.TupleReader;
+import db.datastore.tuple.binary.BinaryTupleReaderWriter;
 import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
@@ -134,7 +135,7 @@ public class ExternalBlockCacheOperatorTest {
 
     @Test
     public void seek() throws Exception {
-        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
+        TupleReader reader = BinaryTupleReaderWriter.get(table.header, table.file);
 
         List<Tuple> tuples = new ArrayList<>();
 

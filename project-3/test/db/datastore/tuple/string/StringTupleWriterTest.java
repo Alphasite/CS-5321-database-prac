@@ -5,8 +5,9 @@ import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.binary.BinaryTupleReader;
-import db.datastore.tuple.binary.BinaryTupleWriter;
+import db.datastore.tuple.TupleReader;
+import db.datastore.tuple.TupleWriter;
+import db.datastore.tuple.binary.BinaryTupleReaderWriter;
 import db.operators.DummyOperator;
 import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
@@ -44,13 +45,11 @@ public class StringTupleWriterTest {
         tempFile = Files.createTempFile("test", "BinaryWriter");
 
         tableInfo = new TableInfo(header, tempFile, false);
-
-        BinaryTupleWriter.get(header, tempFile);
     }
 
     @Test
     public void write() throws Exception {
-        StringTupleWriter writer = StringTupleWriter.get(tempFile);
+        TupleWriter writer = StringTupleWriter.get(tempFile);
 
         assertThat(writer, notNullValue());
 
@@ -74,9 +73,9 @@ public class StringTupleWriterTest {
         Database database = Database.loadDatabase(inputDir);
         TableInfo table = database.getTable("Sailors");
 
-        BinaryTupleReader reader = BinaryTupleReader.get(table.file);
+        TupleReader reader = BinaryTupleReaderWriter.get(table.header, table.file);
 
-        StringTupleWriter writer = StringTupleWriter.get(tempFile);
+        TupleWriter writer = StringTupleWriter.get(tempFile);
 
         assertThat(writer, notNullValue());
 

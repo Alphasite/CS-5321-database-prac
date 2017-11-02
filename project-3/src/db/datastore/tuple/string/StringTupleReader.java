@@ -3,6 +3,7 @@ package db.datastore.tuple.string;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
+import db.performance.DiskIOStatistics;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +34,8 @@ public class StringTupleReader implements TupleReader {
         this.path = path;
         this.tableFile = getScanner(path);
         this.next = null;
+
+        DiskIOStatistics.handles_opened += 1;
     }
 
     /**
@@ -41,7 +44,7 @@ public class StringTupleReader implements TupleReader {
      * @param path The path of the string form table.
      * @return The new reader.
      */
-    public static StringTupleReader get(TableHeader header, Path path) {
+    public static TupleReader get(TableHeader header, Path path) {
         return new StringTupleReader(header, path);
     }
 
@@ -120,7 +123,7 @@ public class StringTupleReader implements TupleReader {
      * @inheritDoc
      */
     @Override
-    public void seek(long index) {
+    public void seek(int index) {
         this.tableFile.close();
         this.tableFile = getScanner(path);
 
@@ -136,5 +139,7 @@ public class StringTupleReader implements TupleReader {
     public void close() {
         this.tableFile.close();
         this.tableFile = null;
+
+        DiskIOStatistics.handles_closed += 1;
     }
 }
