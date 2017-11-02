@@ -9,11 +9,15 @@ import db.operators.physical.Operator;
 import db.query.QueryBuilder;
 import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.parser.CCJSqlParser;
+import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,70 +41,93 @@ public class Project3 {
         GeneralConfig config = GeneralConfig.fromFile(filePath);
 
         Database DB = Database.loadDatabase(config.dbPath);
-        QueryBuilder builder = new QueryBuilder(DB);
 
+        if (config.buildIndexes) {
+            DB.buildIndices();
+        }
+
+        if (config.evaluateQueries) {
+            try {
+                runQueries(new FileReader(config.inputDir.resolve("queries.sql").toFile()), DB, config);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void runQueries(Reader queryReader, Database DB, GeneralConfig config) {
+        CCJSqlParser parser = new CCJSqlParser(queryReader);
+        Statement statement;
+        int i = 1;
+
+        // Load plan config
+        PhysicalPlanConfig planConfig = PhysicalPlanConfig.fromFile(config.inputDir.resolve("plan_builder_config.txt"));
+
+        // Create directories if needed
         try {
-            CCJSqlParser parser = new CCJSqlParser(new FileReader(config.inputDir.resolve("queries.sql").toFile()));
-            Statement statement;
-            int i = 1;
-
-            // Load plan config
-            PhysicalPlanConfig planConfig = PhysicalPlanConfig.fromFile(config.inputDir.resolve("plan_builder_config.txt"));
-
-            // Create directories if needed
             Files.createDirectories(config.outputDir);
             Files.createDirectories(config.tempDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-            PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(planConfig, config.tempDir);
-
+        try {
             while ((statement = parser.Statement()) != null) {
                 System.out.println("Read statement: " + statement);
 
                 // Get select body from statement
-                PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
+                PlainSelect selectQuery = (PlainSelect) ((Select) statement).getSelectBody();
+                Path outputFile = config.outputDir.resolve("query" + i++);
 
-                // Build logical query plan
-                LogicalOperator logicalPlan = builder.buildQuery(select);
+                long start = System.currentTimeMillis();
 
-                // Create physical plan optimized for query on given data
-                Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
+                runQuery(selectQuery, outputFile, config.tempDir, DB, planConfig);
 
-                // Write output to file
-                TupleWriter fileWriter = null;
+                System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
 
-                try {
-                    if (DUMP_TO_CONSOLE) {
-                        TupleWriter consoleWriter = new StringTupleWriter(System.out);
-                        queryPlanRoot.dump(consoleWriter);
-                        queryPlanRoot.reset();
-                    }
-
-                    Path outputFile = config.outputDir.resolve("query" + i++);
-                    if (BINARY_OUTPUT) {
-                        fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
-                    } else {
-                        fileWriter = StringTupleWriter.get(outputFile);
-                    }
-
-                    long start = System.currentTimeMillis();
-
-                    queryPlanRoot.dump(fileWriter);
-
-                    System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
-
-                    if (CLEANUP) {
-                        Utilities.cleanDirectory(config.tempDir);
-                    }
-                } finally {
-                    queryPlanRoot.close();
-
-                    if (fileWriter != null) {
-                        fileWriter.close();
-                    }
+                if (CLEANUP) {
+                    Utilities.cleanDirectory(config.tempDir);
                 }
             }
-        } catch (Exception e) {
+        } catch (ParseException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void runQuery(PlainSelect selectQuery, Path outputFile, Path tempDir, Database DB, PhysicalPlanConfig config) {
+        QueryBuilder builder = new QueryBuilder(DB);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, tempDir);
+
+        // Build logical query plan
+        LogicalOperator logicalPlan = builder.buildQuery(selectQuery);
+
+        // Create physical plan optimized for query on given data
+        Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
+
+        // Write output to file
+        TupleWriter fileWriter = null;
+
+        try {
+            if (DUMP_TO_CONSOLE) {
+                TupleWriter consoleWriter = new StringTupleWriter(System.out);
+                queryPlanRoot.dump(consoleWriter);
+                queryPlanRoot.reset();
+            }
+
+            if (BINARY_OUTPUT) {
+                fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
+            } else {
+                fileWriter = StringTupleWriter.get(outputFile);
+            }
+
+            queryPlanRoot.dump(fileWriter);
+
+        } finally {
+            queryPlanRoot.close();
+
+            if (fileWriter != null) {
+                fileWriter.close();
+            }
         }
     }
 

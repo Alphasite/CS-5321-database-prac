@@ -61,6 +61,11 @@ public class Database {
         return new Database(tables);
     }
 
+    // TODO
+    public void buildIndices() {
+
+    }
+
     /**
      * Get information about a table by name.
      *

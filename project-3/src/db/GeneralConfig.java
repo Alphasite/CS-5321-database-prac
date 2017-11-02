@@ -7,7 +7,11 @@ import java.util.Scanner;
 
 public class GeneralConfig {
 
-    // TODO: fail gracefully ? (provide defaults)
+    private static final Path INPUT_PATH = Paths.get("resources/samples-4/input");
+    private static final Path OUTPUT_PATH = Paths.get("resources/samples-4/output");
+    private static final Path TEMP_PATH = Paths.get("resources/samples-4/tmp");
+
+    public static final GeneralConfig DEFAULT_CONFIG = new GeneralConfig(INPUT_PATH, OUTPUT_PATH, TEMP_PATH);
 
     public Path inputDir;
     public Path outputDir;
@@ -18,17 +22,26 @@ public class GeneralConfig {
     public boolean buildIndexes;
     public boolean evaluateQueries;
 
+    public GeneralConfig(Path inputDir, Path outputDir, Path tempDir) {
+        this.inputDir = inputDir;
+        this.outputDir = outputDir;
+        this.tempDir = tempDir;
+
+        this.dbPath = inputDir.resolve("db");
+
+        this.buildIndexes = false;
+        this.evaluateQueries = true;
+    }
+
     public static GeneralConfig fromFile(Path configFile) {
         try {
             Scanner scanner = new Scanner(configFile);
 
-            GeneralConfig config = new GeneralConfig();
+            Path inputDir = Paths.get(scanner.nextLine());
+            Path outputDir = Paths.get(scanner.nextLine());
+            Path tempDir = Paths.get(scanner.nextLine());
 
-            config.inputDir = Paths.get(scanner.nextLine());
-            config.outputDir = Paths.get(scanner.nextLine());
-            config.tempDir = Paths.get(scanner.nextLine());
-
-            config.dbPath = config.inputDir.resolve("db");
+            GeneralConfig config = new GeneralConfig(inputDir, outputDir, tempDir);
 
             config.buildIndexes = (Integer.parseInt(scanner.nextLine()) == 1);
             config.evaluateQueries = (Integer.parseInt(scanner.nextLine()) == 1);
@@ -36,7 +49,7 @@ public class GeneralConfig {
             return config;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return DEFAULT_CONFIG;
         }
     }
 }
