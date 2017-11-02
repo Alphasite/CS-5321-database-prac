@@ -1,20 +1,16 @@
 package db.operators.physical.bag;
 
-import db.Project3;
 import db.TestUtils;
 import db.Utilities;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
-import db.operators.logical.LogicalJoinOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.extended.ExternalSortOperator;
-import db.operators.physical.extended.InMemorySortOperator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -66,8 +62,8 @@ public class SortMergeJoinTest {
                 Arrays.asList("D")
         );
 
-        ExternalSortOperator sortedLeft = new ExternalSortOperator(opLeft, sortHeaderLeft, 3, Paths.get(Project3.TEMP_PATH));
-        ExternalSortOperator sortedRight = new ExternalSortOperator(opRight, sortHeaderRight, 3, Paths.get(Project3.TEMP_PATH));
+        ExternalSortOperator sortedLeft = new ExternalSortOperator(opLeft, sortHeaderLeft, 3, TestUtils.TEMP_PATH);
+        ExternalSortOperator sortedRight = new ExternalSortOperator(opRight, sortHeaderRight, 3, TestUtils.TEMP_PATH);
         SortMergeJoinOperator smj = new SortMergeJoinOperator(sortedLeft, sortedRight, null);
 
         HashSet<Tuple> tuplesRef = new HashSet<>();
@@ -107,8 +103,8 @@ public class SortMergeJoinTest {
                 Arrays.asList("D", "E")
         );
 
-        ExternalSortOperator sortedLeft = new ExternalSortOperator(opLeft, sortHeaderLeft, 3, Paths.get(Project3.TEMP_PATH));
-        ExternalSortOperator sortedRight = new ExternalSortOperator(opRight, sortHeaderRight, 3, Paths.get(Project3.TEMP_PATH));
+        ExternalSortOperator sortedLeft = new ExternalSortOperator(opLeft, sortHeaderLeft, 3, TestUtils.TEMP_PATH);
+        ExternalSortOperator sortedRight = new ExternalSortOperator(opRight, sortHeaderRight, 3, TestUtils.TEMP_PATH);
         SortMergeJoinOperator smj = new SortMergeJoinOperator(sortedLeft, sortedRight, null);
 
         HashSet<Tuple> tuplesRef = new HashSet<>();
@@ -170,8 +166,8 @@ public class SortMergeJoinTest {
                 Arrays.asList("G")
         );
 
-        ExternalSortOperator sortedLeft = new ExternalSortOperator(opLeft, sortHeaderLeft, 3, Paths.get(Project3.TEMP_PATH));
-        ExternalSortOperator sortedRight = new ExternalSortOperator(opRight, sortHeaderRight, 3, Paths.get(Project3.TEMP_PATH));
+        ExternalSortOperator sortedLeft = new ExternalSortOperator(opLeft, sortHeaderLeft, 3, TestUtils.TEMP_PATH);
+        ExternalSortOperator sortedRight = new ExternalSortOperator(opRight, sortHeaderRight, 3, TestUtils.TEMP_PATH);
         SortMergeJoinOperator smj = new SortMergeJoinOperator(sortedLeft, sortedRight, null);
 
         HashSet<Tuple> tuplesRef = new HashSet<>();
@@ -193,6 +189,6 @@ public class SortMergeJoinTest {
     }
     @After
     public void cleanup() {
-        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
+        Utilities.cleanDirectory(TestUtils.TEMP_PATH);
     }
 }

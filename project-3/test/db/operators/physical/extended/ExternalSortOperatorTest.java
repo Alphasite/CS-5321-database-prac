@@ -1,6 +1,5 @@
 package db.operators.physical.extended;
 
-import db.Project3;
 import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.TableHeader;
@@ -63,7 +62,7 @@ public class ExternalSortOperatorTest {
                 Arrays.asList("B")
         );
 
-        Operator sort = new ExternalSortOperator(opA, header, 3, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(opA, header, 3, TestUtils.TEMP_PATH);
 
         assertEquals(Arrays.asList(2, 1, 3), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
@@ -82,7 +81,7 @@ public class ExternalSortOperatorTest {
                 Arrays.asList("C", "B")
         );
 
-        Operator sort = new ExternalSortOperator(opA, header, 3, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(opA, header, 3, TestUtils.TEMP_PATH);
 
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(1, 2, 1), sort.getNextTuple().fields);
@@ -96,7 +95,7 @@ public class ExternalSortOperatorTest {
 
     @Test
     public void testMultiPageQuery() {
-        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
+        Database DB = Database.loadDatabase(TestUtils.DB_PATH);
 
         ScanOperator S = new ScanOperator(DB.getTable("Sailors"));
         ScanOperator R = new ScanOperator(DB.getTable("Reserves"));
@@ -114,7 +113,7 @@ public class ExternalSortOperatorTest {
         join = new TupleNestedJoinOperator(join, B, cmp2);
 
         TableHeader sortHeaders = LogicalSortOperator.computeSortHeader(header, join.getHeader());
-        Operator sort = new ExternalSortOperator(join, sortHeaders, 10, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(join, sortHeaders, 10, TestUtils.TEMP_PATH);
 
         assertEquals(25224, TestUtils.countNotNullTuples(sort));
 
@@ -136,7 +135,7 @@ public class ExternalSortOperatorTest {
                 Arrays.asList("C", "B")
         );
 
-        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
+        Database DB = Database.loadDatabase(TestUtils.DB_PATH);
 
         ScanOperator S = new ScanOperator(DB.getTable("Sailors"));
 

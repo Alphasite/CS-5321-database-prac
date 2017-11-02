@@ -23,6 +23,7 @@ public class InteractiveShell {
     public static String DB_PATH = INPUT_PATH + "/db";
 
     public static String OUTPUT_PATH = "resources/samples/output";
+    public static String TEMP_PATH = "resources/samples/tmp";
 
     /**
      * @param args If present : [inputFolder] [outputFolder]
@@ -62,7 +63,7 @@ public class InteractiveShell {
                 LogicalOperator logicalPlan = builder.buildQuery(select);
 
                 // Create physical plan optimized for query on given data
-                PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder();
+                PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(Paths.get(TEMP_PATH));
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 TupleWriter writer = new StringTupleWriter(System.out);

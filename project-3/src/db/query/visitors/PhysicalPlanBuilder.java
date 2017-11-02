@@ -1,7 +1,6 @@
 package db.query.visitors;
 
 import db.PhysicalPlanConfig;
-import db.Project3;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
@@ -15,7 +14,6 @@ import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -38,10 +36,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     private Path temporaryFolder;
 
     private PhysicalPlanConfig config;
-
-    public PhysicalPlanBuilder() {
-        this(Paths.get(Project3.TEMP_PATH));
-    }
 
     public PhysicalPlanBuilder(Path temporaryFolder) {
         this(PhysicalPlanConfig.DEFAULT_CONFIG, temporaryFolder);

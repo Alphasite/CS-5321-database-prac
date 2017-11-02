@@ -24,44 +24,34 @@ import java.nio.file.Paths;
  * results in specified output folder
  */
 public class Project3 {
-    public static String INPUT_PATH = "resources/samples/input";
-    public static String DB_PATH = INPUT_PATH + "/db";
-
-    public static String OUTPUT_PATH = "resources/samples/output";
-    public static String TEMP_PATH = "resources/samples/tmp";
 
     public static boolean DUMP_TO_CONSOLE = false;
     private static final boolean CLEANUP = true;
     private static final boolean BINARY_OUTPUT = true;
 
     /**
-     * @param args If present : [inputFolder] [outputFolder] [tempFolder]
+     * @param args If present : [configFile]
      */
     public static void main(String args[]) {
-        if (args.length >= 2) {
-            INPUT_PATH = args[0];
-            DB_PATH = INPUT_PATH + "/db";
-            OUTPUT_PATH = args[1];
-            TEMP_PATH = args[2];
-            System.out.println(INPUT_PATH + "\n" + OUTPUT_PATH + "\n" + TEMP_PATH);
-        }
+        Path filePath = args.length >= 1 ? Paths.get(args[0]) : Paths.get("resources/samples/input/config.txt");
+        GeneralConfig config = GeneralConfig.fromFile(filePath);
 
-        Database DB = Database.loadDatabase(Paths.get(DB_PATH));
+        Database DB = Database.loadDatabase(config.dbPath);
         QueryBuilder builder = new QueryBuilder(DB);
 
         try {
-            CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + "/queries.sql"));
+            CCJSqlParser parser = new CCJSqlParser(new FileReader(config.inputDir.resolve("queries.sql").toFile()));
             Statement statement;
             int i = 1;
 
             // Load plan config
-            PhysicalPlanConfig config = PhysicalPlanConfig.fromFile(Paths.get(INPUT_PATH + "/plan_builder_config.txt"));
+            PhysicalPlanConfig planConfig = PhysicalPlanConfig.fromFile(config.inputDir.resolve("plan_builder_config.txt"));
 
             // Create directories if needed
-            Files.createDirectories(Paths.get(OUTPUT_PATH));
-            Files.createDirectories(Paths.get(TEMP_PATH));
+            Files.createDirectories(config.outputDir);
+            Files.createDirectories(config.tempDir);
 
-            PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
+            PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(planConfig, config.tempDir);
 
             while ((statement = parser.Statement()) != null) {
                 System.out.println("Read statement: " + statement);
@@ -85,7 +75,7 @@ public class Project3 {
                         queryPlanRoot.reset();
                     }
 
-                    Path outputFile = Paths.get(OUTPUT_PATH + "/query" + i++);
+                    Path outputFile = config.outputDir.resolve("query" + i++);
                     if (BINARY_OUTPUT) {
                         fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
                     } else {
@@ -99,7 +89,7 @@ public class Project3 {
                     System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
 
                     if (CLEANUP) {
-                        Utilities.cleanDirectory(Paths.get(TEMP_PATH));
+                        Utilities.cleanDirectory(config.tempDir);
                     }
                 } finally {
                     queryPlanRoot.close();

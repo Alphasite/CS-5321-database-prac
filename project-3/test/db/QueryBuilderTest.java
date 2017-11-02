@@ -17,8 +17,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.nio.file.Paths;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -35,13 +33,13 @@ public class QueryBuilderTest {
 
     @BeforeClass
     public static void loadData() {
-        DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
+        DB = Database.loadDatabase(TestUtils.DB_PATH);
     }
 
     @Before
     public void init() {
         this.logicalBuilder = new QueryBuilder(DB);
-        this.physicalBuilder = new PhysicalPlanBuilder();
+        this.physicalBuilder = new PhysicalPlanBuilder(TestUtils.TEMP_PATH);
     }
 
     @Test

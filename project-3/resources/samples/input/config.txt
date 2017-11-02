@@ -1,0 +1,5 @@
+resources/samples/input
+resources/samples/output
+resources/samples/tmp
+0
+1

@@ -21,19 +21,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class SampleQueriesTest {
-
-    private static final String INPUT_PATH = "resources/samples/input";
-    private static final String EXPECTED_PATH = "resources/samples/expected";
-    private static final String TEMP_PATH = "resources/samples/tmp";
 
     private LogicalOperator logicalOperator;
     private Operator queryPlanRoot;
@@ -45,18 +39,18 @@ public class SampleQueriesTest {
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
-        Database DB = Database.loadDatabase(Paths.get(Project3.DB_PATH));
+        Database DB = Database.loadDatabase(TestUtils.DB_PATH);
         QueryBuilder builder = new QueryBuilder(DB);
 
         try {
-            CCJSqlParser parser = new CCJSqlParser(new FileReader(INPUT_PATH + File.separator + "queries.sql"));
+            CCJSqlParser parser = new CCJSqlParser(new FileReader(TestUtils.INPUT_PATH.resolve("queries.sql").toFile()));
             Statement statement;
             int i = 1;
 
             while ((statement = parser.Statement()) != null) {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                Path expectedFile = Paths.get(EXPECTED_PATH).resolve("query" + i++);
+                Path expectedFile = TestUtils.EXPECTED_PATH.resolve("query" + i++);
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
@@ -83,7 +77,7 @@ public class SampleQueriesTest {
         }
 
         PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, Paths.get(TEMP_PATH));
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, TestUtils.TEMP_PATH);
 
         this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
 
@@ -99,7 +93,7 @@ public class SampleQueriesTest {
 
         this.sampleTuples.close();
 
-        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
+        Utilities.cleanDirectory(TestUtils.TEMP_PATH);
     }
 
     @Test
