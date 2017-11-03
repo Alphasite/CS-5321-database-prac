@@ -11,7 +11,6 @@ import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.SeekableOperator;
 import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.utility.ExternalBlockCacheOperator;
-import db.performance.DiskIOStatistics;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -120,36 +119,20 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         BlockCacheOperator inputCache = new BlockCacheOperator(source, Database.PAGE_SIZE * bufSize);
 
         System.out.println("Pass 1");
-        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
         while (inputCache.hasNext()) {
             System.out.println("Sorting " + blockId);
-            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
             InMemorySortOperator inMemorySort = new InMemorySortOperator(inputCache, sortHeader);
             ExternalBlockCacheOperator tempRun = new ExternalBlockCacheOperator(getHeader(), sortFolder, "Sort" + operatorId + "_1_" + blockId);
 
-            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
-
             tempRun.writeSourceToBuffer(inMemorySort);
-
-            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
             tempRun.flush();
             previousRuns.add(tempRun);
 
-            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
-
             inputCache.loadNextBlock();
             blockId++;
-
-            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
         }
 
         // This releases all resources held by source operator
@@ -160,9 +143,6 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         blockId = 1;
 
         System.out.println("Pass 2");
-
-        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
         while (previousRuns.size() >= 2) {
             List<ExternalBlockCacheOperator> currentRuns = new ArrayList<>();
@@ -185,9 +165,6 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
                     System.out.println("Merging " + i);
 
-                    System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-                    System.out.println("Closed: " + DiskIOStatistics.handles_closed);
-
                     performMultiMerge(currentMergeInputs, mergeCache);
 
                     mergeCache.flush();
@@ -201,9 +178,6 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
                     System.out.println("Merge done");
 
                     blockId++;
-
-                    System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-                    System.out.println("Closed: " + DiskIOStatistics.handles_closed);
                 }
             }
 
@@ -214,9 +188,6 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         this.isSorted = true;
 
         this.sortedRelationCache = previousRuns.get(0);
-
-        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
-        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 
     /**

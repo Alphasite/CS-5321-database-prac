@@ -5,6 +5,7 @@ import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class JoinPerformanceTest {
     private final static int ROWS_PER_TABLE = 5000;
@@ -79,6 +81,7 @@ public class JoinPerformanceTest {
         System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 
+    @Ignore
     @Test
     public void test() {
         long startTime = System.currentTimeMillis();
