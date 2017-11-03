@@ -28,7 +28,6 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
     private int index;
     private int pageNumber;
 
-
     /**
      * Create a new reader from the file at the specified path
      *
