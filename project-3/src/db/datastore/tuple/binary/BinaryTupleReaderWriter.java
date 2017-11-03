@@ -28,6 +28,8 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
     private int index;
     private int pageNumber;
 
+    private boolean dirty;
+
     /**
      * Create a new reader from the file at the specified path
      *
@@ -45,6 +47,7 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
 
         this.index = -1;
         this.pageNumber = -1;
+        this.dirty = false;
 
         DiskIOStatistics.handles_opened += 1;
     }
@@ -108,8 +111,7 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
     @Override
     public void seek(int index) {
         if (this.index == -1) {
-            loadPage(channel, bb);
-            this.index = 0;
+            this.peek();
         }
 
         try {
@@ -127,6 +129,9 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        System.out.println("Seek: " + pageNumber);
+
     }
 
     /**
@@ -135,6 +140,9 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
     @Override
     public void write(Tuple tuple) {
         if (this.index == -1 || this.getRemainingCapacity() <= 0) {
+            this.bb.clear();
+            this.clearPage();
+
             this.loadPage(channel, bb);
             this.index = 0;
             this.pageNumber += 1;
@@ -143,14 +151,25 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
         int offset = this.getTupleOffset();
 
         this.index += 1;
-        this.bb.asIntBuffer().put(1, this.index);
+        this.bb.asIntBuffer().put(1, Math.max(index, this.getNumberOfTuples()));
 
         for (int i = 0; i < tuple.fields.size(); i++) {
             this.bb.asIntBuffer().put(offset + i, tuple.fields.get(i));
         }
 
+        this.dirty = true;
+
+        System.out.println("Wrote: " + tuple + " to " + pageNumber + ":" + index);
+
         if (this.getRemainingCapacity() <= 0) {
             this.flush();
+
+            this.bb.clear();
+            this.clearPage();
+
+            this.loadPage(channel, bb);
+            this.index = 0;
+            this.pageNumber += 1;
         }
     }
 
@@ -159,19 +178,21 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
      */
     @Override
     public void flush() {
+        System.out.println("Flush: " + pageNumber);
+
         try {
             while (this.bb.hasRemaining()) {
                 this.channel.write(this.bb);
             }
 
-            this.bb.clear();
-            this.clearPage();
+            this.channel.force(false);
 
-            this.loadPage(channel, bb);
-            this.index = 0;
-            this.pageNumber += 1;
+            this.dirty = false;
+
+            this.bb.flip();
 
             DiskIOStatistics.writes += 1;
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -197,6 +218,12 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
      * @return Whether or not the page loaded.
      */
     private boolean loadPage(FileChannel channel, ByteBuffer bb) {
+        System.out.println("Load: " + pageNumber);
+
+        if (this.dirty) {
+            this.flush();
+        }
+
         try {
             int len = channel.read(bb);
 
@@ -287,5 +314,9 @@ public class BinaryTupleReaderWriter implements TupleReaderWriter {
      */
     private int getTupleOffset() {
         return 2 + this.index * this.header.size();
+    }
+
+    protected ByteBuffer getBb() {
+        return bb;
     }
 }
