@@ -43,7 +43,7 @@ public class Project3 {
         Database DB = Database.loadDatabase(config.dbPath);
 
         if (config.buildIndexes) {
-            DB.buildIndices();
+            DB.buildIndexes();
         }
 
         if (config.evaluateQueries) {

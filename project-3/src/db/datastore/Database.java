@@ -3,6 +3,7 @@ package db.datastore;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -13,15 +14,21 @@ import java.util.*;
 public class Database {
     public static final int PAGE_SIZE = 4096;
 
+    private final Path dbPath;
+
     private final Map<String, TableInfo> tables;
+    private List<IndexInfo> indexInfo;
 
     /**
      * Instantiate the catalogue.
      *
      * @param tables The mapping of table names to table definitions.
      */
-    private Database(Map<String, TableInfo> tables) {
+    private Database(Path dbPath, Map<String, TableInfo> tables) {
+        this.dbPath = dbPath;
+
         this.tables = tables;
+        this.indexInfo = new ArrayList<>();
     }
 
     /**
@@ -58,11 +65,26 @@ public class Database {
             throw new RuntimeException(e);
         }
 
-        return new Database(tables);
+        Database database = new Database(inputPath, tables);
+        database.loadIndexInfo(inputPath.resolve("index_info.txt"));
+
+        return database;
     }
 
-    // TODO
-    public void buildIndices() {
+    private void loadIndexInfo(Path indexConfigFile) {
+        try {
+            Scanner scanner = new Scanner(indexConfigFile);
+
+            while (scanner.hasNextLine()) {
+                IndexInfo info = IndexInfo.parse(scanner.nextLine());
+                indexInfo.add(info);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void buildIndexes() {
 
     }
 
