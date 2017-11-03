@@ -119,10 +119,11 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
 
         for (int i = 0; i < this.getPageCapacity(); i++) {
             Tuple next = source.getNextTuple();
-            this.block.add(next);
 
             if (next == null)
                 break;
+
+            this.block.add(next);
         }
 
         this.blockLoaded = true;
