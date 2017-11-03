@@ -101,11 +101,7 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
             this.loadNextBlock();
         }
 
-        if (this.index < this.block.size()) {
-            return this.block.get(this.index) != null;
-        } else {
-            return false;
-        }
+        return this.index < this.block.size();
     }
 
     /**
@@ -128,7 +124,7 @@ public class BlockCacheOperator extends AbstractOperator implements UnaryNode<Op
 
         this.blockLoaded = true;
 
-        return this.block.get(0) != null;
+        return !this.block.isEmpty();
     }
 
     /**
