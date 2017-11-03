@@ -7,6 +7,7 @@ import db.datastore.TableInfo;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.physical.ScanOperator;
+import db.performance.DiskIOStatistics;
 import db.query.QueryBuilder;
 import db.query.visitors.LogicalTreePrinter;
 import db.query.visitors.PhysicalPlanBuilder;
@@ -60,6 +61,10 @@ public class SampleQueriesTest {
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
+                        if (joinType.equals(JoinImplementation.SMJ) || sortType.equals(SortImplementation.EXTERNAL)) {
+                            continue;
+                        }
+
                         testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
@@ -89,6 +94,10 @@ public class SampleQueriesTest {
 
         TableInfo tableInfo = new TableInfo(queryPlanRoot.getHeader(), expectedFile, true);
         this.sampleTuples = new ScanOperator(tableInfo);
+
+        System.out.println("Constructor: " + joinType + " " + sortType);
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 
     @After
@@ -100,6 +109,10 @@ public class SampleQueriesTest {
         this.sampleTuples.close();
 
         Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
+
+        System.out.println("Tear down");
+        System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+        System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }
 
     @Test

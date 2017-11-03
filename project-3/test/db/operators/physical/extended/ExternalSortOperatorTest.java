@@ -2,6 +2,7 @@ package db.operators.physical.extended;
 
 import db.Project3;
 import db.TestUtils;
+import db.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
@@ -21,6 +22,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,9 +45,10 @@ public class ExternalSortOperatorTest {
     private List<Tuple> tuplesA;
     private TableHeader headerA;
     private DummyOperator opA;
+    private Path path;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
         tuplesA = new ArrayList<>();
         tuplesA.add(new Tuple(Arrays.asList(1, 2, 1)));
         tuplesA.add(new Tuple(Arrays.asList(1, 2, 3)));
@@ -55,6 +58,7 @@ public class ExternalSortOperatorTest {
         tuplesA.add(new Tuple(Arrays.asList(5, 1, 1)));
         headerA = new TableHeader(Arrays.asList("Sailors", "Sailors", "Sailors"), Arrays.asList("A", "B", "C"));
         opA = new DummyOperator(tuplesA, headerA);
+        path = Files.createTempDirectory("test");
     }
 
     @Test
@@ -64,7 +68,7 @@ public class ExternalSortOperatorTest {
                 Arrays.asList("B")
         );
 
-        Operator sort = new ExternalSortOperator(opA, header, 3, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(opA, header, 3, path);
 
         assertEquals(Arrays.asList(2, 1, 3), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
@@ -83,7 +87,7 @@ public class ExternalSortOperatorTest {
                 Arrays.asList("C", "B")
         );
 
-        Operator sort = new ExternalSortOperator(opA, header, 3, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(opA, header, 3, path);
 
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(1, 2, 1), sort.getNextTuple().fields);
@@ -115,7 +119,7 @@ public class ExternalSortOperatorTest {
         join = new TupleNestedJoinOperator(join, B, cmp2);
 
         TableHeader sortHeaders = LogicalSortOperator.computeSortHeader(header, join.getHeader());
-        Operator sort = new ExternalSortOperator(join, sortHeaders, 10, Paths.get(Project3.TEMP_PATH));
+        Operator sort = new ExternalSortOperator(join, sortHeaders, 10, path);
 
         assertEquals(25224, TestUtils.countNotNullTuples(sort));
 
@@ -141,7 +145,7 @@ public class ExternalSortOperatorTest {
 
         ScanOperator S = new ScanOperator(DB.getTable("Sailors"));
 
-        SeekableOperator sort = new ExternalSortOperator(S, header, 3, Files.createTempDirectory("test"));
+        SeekableOperator sort = new ExternalSortOperator(S, header, 3, path);
 
         List<Tuple> tuples = new ArrayList<>();
         while (sort.hasNextTuple()) {
@@ -179,7 +183,7 @@ public class ExternalSortOperatorTest {
 
     @After
     public void cleanup() {
-//        Utilities.cleanDirectory(Paths.get(Project3.TEMP_PATH));
+        Utilities.cleanDirectory(path);
         System.out.println("Opened: " + DiskIOStatistics.handles_opened);
         System.out.println("Closed: " + DiskIOStatistics.handles_closed);
     }

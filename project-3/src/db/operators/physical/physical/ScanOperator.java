@@ -64,6 +64,10 @@ public class ScanOperator extends AbstractOperator {
      */
     @Override
     public boolean reset() {
+        if (this.reader != null) {
+            this.reader.close();
+        }
+
         if (this.table.binary) {
             this.reader = BinaryTupleReaderWriter.get(this.table.header, this.table.file);
         } else {

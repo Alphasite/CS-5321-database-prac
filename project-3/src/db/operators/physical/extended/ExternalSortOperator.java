@@ -123,22 +123,31 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         System.out.println("Opened: " + DiskIOStatistics.handles_opened);
         System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
-        System.out.println("Pass 1");
-
         while (inputCache.hasNext()) {
             System.out.println("Sorting " + blockId);
+            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
+
             InMemorySortOperator inMemorySort = new InMemorySortOperator(inputCache, sortHeader);
             ExternalBlockCacheOperator tempRun = new ExternalBlockCacheOperator(getHeader(), sortFolder, "Sort" + operatorId + "_1_" + blockId);
 
+            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
+
             tempRun.writeSourceToBuffer(inMemorySort);
+
+            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
 
             tempRun.flush();
             previousRuns.add(tempRun);
 
+            System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+            System.out.println("Closed: " + DiskIOStatistics.handles_closed);
+
             inputCache.loadNextBlock();
             blockId++;
 
-            System.out.println("block " + blockId);
             System.out.println("Opened: " + DiskIOStatistics.handles_opened);
             System.out.println("Closed: " + DiskIOStatistics.handles_closed);
         }
@@ -176,6 +185,9 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
 
                     System.out.println("Merging " + i);
 
+                    System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+                    System.out.println("Closed: " + DiskIOStatistics.handles_closed);
+
                     performMultiMerge(currentMergeInputs, mergeCache);
 
                     mergeCache.flush();
@@ -189,6 +201,9 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
                     System.out.println("Merge done");
 
                     blockId++;
+
+                    System.out.println("Opened: " + DiskIOStatistics.handles_opened);
+                    System.out.println("Closed: " + DiskIOStatistics.handles_closed);
                 }
             }
 
