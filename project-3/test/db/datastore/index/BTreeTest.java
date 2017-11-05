@@ -36,13 +36,15 @@ public class BTreeTest {
     public void testSearch() {
         BTree indexTree = BTree.createTree(indexFile);
 
-        Rid res = indexTree.search(4);
-        assertEquals(6, res.pageid);
-        assertEquals(272, res.recordid);
+        DataEntry res = indexTree.search(4);
+        assertEquals(3, res.rids.length);
+        assertEquals(6, res.rids[0].pageid);
+        assertEquals(272, res.rids[0].recordid);
 
-        res = indexTree.search(4997);
-        assertEquals(8, res.pageid);
-        assertEquals(98, res.recordid);
+        res = indexTree.search(2504);
+        assertEquals(6, res.rids.length);
+        assertEquals(26, res.rids[5].pageid);
+        assertEquals(329, res.rids[5].recordid);
 
         res = indexTree.search(1453);
         assertEquals(null, res);
