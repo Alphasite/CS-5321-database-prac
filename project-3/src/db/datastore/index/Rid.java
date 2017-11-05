@@ -1,5 +1,8 @@
 package db.datastore.index;
 
+/**
+ * Rid = ( pageid, tupleid )
+ */
 public class Rid {
 
     public int pageid;

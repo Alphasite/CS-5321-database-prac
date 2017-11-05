@@ -13,7 +13,7 @@ public class BTreeTest {
 
     @Test
     public void testLoadIndex() {
-        BTree indexTree = BTree.deserialize(indexFile);
+        BTree indexTree = BTree.createTree(indexFile);
 
         assertEquals(10, indexTree.getOrder());
         assertEquals(316, indexTree.getNbLeaves());
@@ -34,7 +34,7 @@ public class BTreeTest {
 
     @Test
     public void testSearch() {
-        BTree indexTree = BTree.deserialize(indexFile);
+        BTree indexTree = BTree.createTree(indexFile);
 
         Rid res = indexTree.search(4);
         assertEquals(6, res.pageid);

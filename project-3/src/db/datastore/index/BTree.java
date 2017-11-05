@@ -6,14 +6,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * B+ Tree class for indexing. Uses a tree of index nodes to efficiently access data records in leaf nodes.
  * <p>
  * Only the root node is kept in memory, all other nodes are lazily loaded from disk when requested.
- * However the tree structure is
  */
 public class BTree {
 
@@ -23,8 +20,6 @@ public class BTree {
     private IndexNode root;
 
     private FileChannel channel;
-
-    private Map<Integer, BTreeNode> loadedNodes;
 
     private BTree(int order, IndexNode root) {
         this.order = order;
@@ -38,17 +33,12 @@ public class BTree {
         this.nbLeaves = nbLeaves;
 
         this.root = (IndexNode) readNode(rootIndex);
-
-        this.loadedNodes = new HashMap<>();
-        this.loadedNodes.put(rootIndex, root);
     }
 
     /**
-     *
-     * @param file
-     * @return
+     * Build a new tree backed by specified file. Only header page and root node are deserialized.
      */
-    public static BTree deserialize(Path file) {
+    public static BTree createTree(Path file) {
         try {
             FileChannel channel = FileChannel.open(file);
             ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
@@ -98,7 +88,7 @@ public class BTree {
      * @param key The search key
      * @return The corresponding data entry, or null if not found
      */
-    public Rid search(int key) {
+    public DataEntry search(int key) {
         IndexNode currentNode = root;
         LeafNode leafNode = null;
 
@@ -106,11 +96,7 @@ public class BTree {
         while (leafNode == null) {
             int nextNode = currentNode.search(key);
 
-            if (!loadedNodes.containsKey(nextNode)) {
-                loadedNodes.put(nextNode, readNode(nextNode));
-            }
-
-            BTreeNode next = loadedNodes.get(nextNode);
+            BTreeNode next = readNode(nextNode);
 
             if (next instanceof IndexNode) {
                 currentNode = (IndexNode) next;
@@ -119,12 +105,11 @@ public class BTree {
             }
         }
 
-        return leafNode.search(key);
+        return leafNode.get(key);
     }
 
     /**
      * Save tree structure to file according to specification.
-     * <p>
      * <p>
      * Pages are laid out as follows :
      * <ul>

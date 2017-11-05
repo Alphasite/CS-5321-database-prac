@@ -13,29 +13,18 @@ public class LeafNode implements BTreeNode {
 
     private List<DataEntry> dataEntries;
 
-    public static class DataEntry {
-        public int key;
-        public Rid[] rids;
-
-        public DataEntry(int key, Rid[] rids) {
-            this.key = key;
-            this.rids = rids;
-        }
-    }
-
     public LeafNode(List<DataEntry> entries) {
         this.dataEntries = entries;
     }
 
     /**
-     * Search for the data entry with specified key
-     * @param key
+     * Retrieve data entry with specified key
      * @return The corresponding data entry, or null if not found
      */
-    public Rid search(int key) {
+    public DataEntry get(int key) {
         for (DataEntry entry : dataEntries) {
             if (entry.key == key) {
-                return entry.rids[0];
+                return entry;
             }
         }
         return null;

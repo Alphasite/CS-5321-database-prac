@@ -18,7 +18,8 @@ public class IndexNode implements BTreeNode {
     }
 
     /**
-     * @param key
+     * B+ Tree index search for specified key. Returned child index c[i] is such that  keys[i-1] <= c[i] < keys[i]
+     *
      * @return The index of the next node in search path
      */
     public int search(int key) {
