@@ -1,35 +1,63 @@
 package db.datastore.index;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.IntBuffer;
 
+/**
+ * A B+ Tree index node
+ * <p>
+ * Does not keep references to child nodes, only the page indices are stored
+ */
 public class IndexNode implements BTreeNode {
 
     int[] keys;
-    List<BTreeNode> children;
+    int[] children;
 
     public IndexNode(int nbKeys) {
         this.keys = new int[nbKeys];
-        this.children = new ArrayList<>(nbKeys + 1);
+        this.children = new int[nbKeys + 1];
     }
 
-    @Override
-    public Rid search(int key) {
+    /**
+     * @param key
+     * @return The index of the next node in search path
+     */
+    public int search(int key) {
         // TODO: implement binary search ?
         for (int i = 0; i < keys.length; i++) {
             if (key < keys[i]) {
-                return children.get(i).search(key);
+                return children[i];
             }
         }
 
-        return children.get(keys.length).search(key);
+        return children[keys.length];
     }
 
-    public static IndexNode deserialize() {
+    /**
+     * Read an index node from buffer page
+     *
+     * @param buffer Readable buffer containing a serialized index node
+     */
+    public static IndexNode deserialize(IntBuffer buffer) {
+        // Check flag
+        assert buffer.get() == 1;
 
+        int nbKeys = buffer.get();
+
+        IndexNode node = new IndexNode(nbKeys);
+
+        for (int i = 0; i < nbKeys; i++) {
+            node.keys[i] = buffer.get();
+        }
+
+        for (int i = 0; i < nbKeys + 1; i++) {
+            node.children[i] = buffer.get();
+        }
+
+        return node;
     }
 
-    public void serialize() {
+    @Override
+    public void serialize(IntBuffer buffer) {
 
     }
 
