@@ -34,7 +34,7 @@ public class LeafNode implements BTreeNode {
      */
     public Rid search(int key) {
         for (DataEntry entry : dataEntries) {
-            if (entry.key >= key) {
+            if (entry.key == key) {
                 return entry.rids[0];
             }
         }

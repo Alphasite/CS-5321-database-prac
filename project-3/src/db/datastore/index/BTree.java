@@ -54,7 +54,7 @@ public class BTree {
             ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
             // Read header page
-            assert channel.read(buf) == 12;
+            channel.read(buf);
 
             buf.flip();
             int rootAddress = buf.getInt();
@@ -147,5 +147,9 @@ public class BTree {
 
     public int getOrder() {
         return order;
+    }
+
+    public int getNbLeaves() {
+        return nbLeaves;
     }
 }
