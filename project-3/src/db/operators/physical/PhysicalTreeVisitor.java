@@ -1,13 +1,14 @@
 package db.operators.physical;
 
-import db.operators.physical.utility.BlockCacheOperator;
 import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
 import db.operators.physical.bag.RenameOperator;
 import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
+import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
+import db.operators.physical.utility.BlockCacheOperator;
 
 /**
  * A visitor for the physical operators.
@@ -35,7 +36,7 @@ public interface PhysicalTreeVisitor {
     void visit(ProjectionOperator node);
 
     /**
-     * @param node the projection node to visit.
+     * @param node the scan node to visit.
      */
     void visit(ScanOperator node);
 
@@ -53,4 +54,9 @@ public interface PhysicalTreeVisitor {
      * @param node the cache node to visit.
      */
     void visit(BlockCacheOperator node);
+
+    /**
+     * @param node the index scan node to visit.
+     */
+    void visit(IndexScanOperator node);
 }

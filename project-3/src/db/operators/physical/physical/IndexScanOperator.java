@@ -1,7 +1,6 @@
 package db.operators.physical.physical;
 
 import db.datastore.TableHeader;
-import db.datastore.TableInfo;
 import db.datastore.index.BTree;
 import db.datastore.tuple.Tuple;
 import db.operators.physical.AbstractOperator;
@@ -13,17 +12,20 @@ public class IndexScanOperator extends AbstractOperator{
     private final Integer lowVal;
     private final Integer highVal;
 
+    private BTree.BTreeDataIterator indexTreeIterator;
 
     /**
      * Note: colName is *just* the column name. Alias is not needed because this scans the base table.
-     * @param source
-     * @param colName
+     * @param indexTree The B+ tree that serves as the index for the table we are pulling tuples from
+     * @param lowVal The minimum value (inclusive) tuples should contain for the key of indexTree
+     * @param highVal The maximum value (inclusive) tuples should contain for the key of indexTree
      */
-    public IndexScanOperator(BTree indexTree, String colName, Integer lowVal, Integer highVal) {
+    public IndexScanOperator(BTree indexTree, Integer lowVal, Integer highVal) {
         this.indexTree = indexTree;
         this.lowVal = lowVal;
         this.highVal = highVal;
 
+        this.indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
     }
 
     @Override
@@ -38,12 +40,13 @@ public class IndexScanOperator extends AbstractOperator{
 
     @Override
     public boolean reset() {
-        return false;
+        indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
+        return true;
     }
 
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
-
+        visitor.visit(this);
     }
 
     @Override
