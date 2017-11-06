@@ -1,5 +1,6 @@
 package db.datastore.index;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 /**
@@ -58,7 +59,7 @@ public class IndexNode implements BTreeNode {
     }
 
     @Override
-    public void serialize(IntBuffer buffer) {
+    public void serialize(ByteBuffer buffer) {
 
     }
 

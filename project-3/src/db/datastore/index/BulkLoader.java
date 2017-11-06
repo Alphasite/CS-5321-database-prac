@@ -17,6 +17,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 public class BulkLoader {
@@ -63,7 +64,8 @@ public class BulkLoader {
         input.close();
 
         try {
-            this.output = FileChannel.open(file);
+            this.output = FileChannel.open(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
+                    StandardOpenOption.TRUNCATE_EXISTING);
 
             buildLeafNodes(entries);
 
@@ -124,6 +126,8 @@ public class BulkLoader {
             entryMap.get(key).add(rid);
         }
 
+        reader.close();
+
         // Sort by key and generate data entries
         List<DataEntry> entries = new ArrayList<>(entryMap.size());
         entryMap.entrySet().stream()
@@ -143,6 +147,8 @@ public class BulkLoader {
         int entriesRemaining = entries.size();
         int d = treeOrder;
 
+        ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
+
         while (entriesRemaining > 0) {
             int entriesToWrite;
 
@@ -150,21 +156,21 @@ public class BulkLoader {
             if (2 * d < entriesRemaining && entriesRemaining < 3 * d) {
                 entriesToWrite = entriesRemaining / 2;
             } else {
-                entriesToWrite = Math.max(2 * d, entriesRemaining);
+                entriesToWrite = Math.min(2 * d, entriesRemaining);
             }
 
             assert entriesToWrite >= d && entriesToWrite <= 2 * d;
 
             LeafNode node = new LeafNode(entries.subList(currentIndex, currentIndex + entriesToWrite));
 
-            ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
             // node is responsible for zeroing free space
-            node.serialize(buf.asIntBuffer());
+            node.serialize(buf);
             buf.flip();
 
             try {
                 // Write this node as a page in file
                 output.write(buf, currentPage * Database.PAGE_SIZE);
+                buf.clear();
             } catch (IOException e) {
                 e.printStackTrace();
             }

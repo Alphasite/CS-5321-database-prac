@@ -1,5 +1,6 @@
 package db.datastore.index;
 
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,25 +63,25 @@ public class LeafNode implements BTreeNode {
     }
 
     @Override
-    public void serialize(IntBuffer buffer) {
+    public void serialize(ByteBuffer buffer) {
         // Write flag
-        buffer.put(0);
+        buffer.putInt(0);
 
-        buffer.put(dataEntries.size());
+        buffer.putInt(dataEntries.size());
 
         for (DataEntry entry : dataEntries) {
-            buffer.put(entry.key);
-            buffer.put(entry.rids.length);
+            buffer.putInt(entry.key);
+            buffer.putInt(entry.rids.length);
 
             for (Rid rid : entry.rids) {
-                buffer.put(rid.pageid);
-                buffer.put(rid.tupleid);
+                buffer.putInt(rid.pageid);
+                buffer.putInt(rid.tupleid);
             }
         }
 
         // Fill remaining space with zeros
         while (buffer.hasRemaining()) {
-            buffer.put(0);
+            buffer.putInt(0);
         }
     }
 

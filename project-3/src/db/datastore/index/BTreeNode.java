@@ -1,6 +1,6 @@
 package db.datastore.index;
 
-import java.nio.IntBuffer;
+import java.nio.ByteBuffer;
 
 public interface BTreeNode {
 
@@ -13,5 +13,5 @@ public interface BTreeNode {
      *
      * @param buf Writable buffer
      */
-    void serialize(IntBuffer buf);
+    void serialize(ByteBuffer buf);
 }
