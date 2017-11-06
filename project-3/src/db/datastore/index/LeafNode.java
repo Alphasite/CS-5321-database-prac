@@ -74,7 +74,7 @@ public class LeafNode implements BTreeNode {
 
             for (Rid rid : entry.rids) {
                 buffer.put(rid.pageid);
-                buffer.put(rid.recordid);
+                buffer.put(rid.tupleid);
             }
         }
 

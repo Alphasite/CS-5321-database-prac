@@ -177,7 +177,7 @@ public class BinaryTupleReader implements TupleReader {
     /**
      * @return The number of tuples in the current page.
      */
-    private int getNumberOfTuples() {
+    public int getNumberOfTuples() {
         return this.bb.asIntBuffer().get(1);
     }
 

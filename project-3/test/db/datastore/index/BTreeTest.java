@@ -39,12 +39,12 @@ public class BTreeTest {
         DataEntry res = indexTree.search(4);
         assertEquals(3, res.rids.length);
         assertEquals(6, res.rids[0].pageid);
-        assertEquals(272, res.rids[0].recordid);
+        assertEquals(272, res.rids[0].tupleid);
 
         res = indexTree.search(2504);
         assertEquals(6, res.rids.length);
         assertEquals(26, res.rids[5].pageid);
-        assertEquals(329, res.rids[5].recordid);
+        assertEquals(329, res.rids[5].tupleid);
 
         res = indexTree.search(1453);
         assertEquals(null, res);

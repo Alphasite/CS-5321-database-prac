@@ -4,6 +4,8 @@ import db.datastore.Database;
 import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
+import db.datastore.tuple.Tuple;
+import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.operators.physical.Operator;
 import db.operators.physical.extended.InMemorySortOperator;
@@ -15,13 +17,13 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class BulkLoader {
 
     private TableInfo tableInfo;
     private String attributeName;
+    private int attributeIndex;
 
     private int treeOrder;
     private boolean clustered;
@@ -32,6 +34,8 @@ public class BulkLoader {
     private BulkLoader(TableInfo target, IndexInfo parameters, Path file) {
         this.tableInfo = target;
         this.attributeName = parameters.attributeName;
+
+        this.attributeIndex = target.header.resolve(target.tableName, attributeName).get();
 
         this.treeOrder = parameters.treeOrder;
         this.clustered = parameters.isClustered;
@@ -54,7 +58,9 @@ public class BulkLoader {
             sortRelation();
         }
 
-        List<DataEntry> entries = loadDataEntries();
+        BinaryTupleReader input = BinaryTupleReader.get(tableInfo.file);
+        List<DataEntry> entries = loadDataEntries(input);
+        input.close();
 
         try {
             this.output = FileChannel.open(file);
@@ -86,8 +92,49 @@ public class BulkLoader {
         }
     }
 
-    private List<DataEntry> loadDataEntries() {
+    /**
+     * Read tuples from input and generate data entries with the required format :
+     * {@link Rid} array sorted by pageid, tupleid</li>
+     *
+     * @param reader Tuple source
+     * @return List of {@link DataEntry} sorted by search key (ie. indexed attribute value)
+     */
+    private List<DataEntry> loadDataEntries(BinaryTupleReader reader) {
+        Map<Integer, List<Rid>> entryMap = new HashMap<>();
 
+        int pageId = 0;
+        int tuplesOnPage = reader.getNumberOfTuples();
+        int tupleId = -1;
+
+        Tuple tuple;
+        while ((tuple = reader.next()) != null) {
+            tupleId++;
+            if (tupleId == tuplesOnPage) {
+                tupleId = 0;
+                pageId++;
+                tuplesOnPage = reader.getNumberOfTuples();
+            }
+
+            Rid rid = new Rid(pageId, tupleId);
+            int key = tuple.fields.get(attributeIndex);
+
+            if (!entryMap.containsKey(key)) {
+                entryMap.put(key, new ArrayList<>());
+            }
+            entryMap.get(key).add(rid);
+        }
+
+        // Sort by key and generate data entries
+        List<DataEntry> entries = new ArrayList<>(entryMap.size());
+        entryMap.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .forEach((e) -> {
+                    Rid[] arr = e.getValue().toArray(new Rid[e.getValue().size()]);
+                    Arrays.sort(arr);
+                    entries.add(new DataEntry(e.getKey(), arr));
+                });
+
+        return entries;
     }
 
     private void buildLeafNodes(List<DataEntry> entries) {
