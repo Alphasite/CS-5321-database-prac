@@ -203,7 +203,7 @@ public class BTree {
 
             DataEntry nextDataEntry = this.currNodeIterator.next();
 
-            if (nextDataEntry.key > high) {
+            if (high != null && nextDataEntry.key > high) {
                 this.currNodeIterator = null;
                 return false;
             } else {
