@@ -2,13 +2,14 @@ package db.operators.physical.physical;
 
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
+import db.datastore.index.BTree;
 import db.datastore.tuple.Tuple;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
 public class IndexScanOperator extends AbstractOperator{
 
-    private final TableInfo tableInfo;
+    private final BTree indexTree;
     private final Integer lowVal;
     private final Integer highVal;
 
@@ -18,8 +19,8 @@ public class IndexScanOperator extends AbstractOperator{
      * @param source
      * @param colName
      */
-    public IndexScanOperator(TableInfo tableInfo, String colName, Integer lowVal, Integer highVal) {
-        this.tableInfo = tableInfo;
+    public IndexScanOperator(BTree indexTree, String colName, Integer lowVal, Integer highVal) {
+        this.indexTree = indexTree;
         this.lowVal = lowVal;
         this.highVal = highVal;
 
