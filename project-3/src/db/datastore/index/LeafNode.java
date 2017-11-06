@@ -63,7 +63,25 @@ public class LeafNode implements BTreeNode {
 
     @Override
     public void serialize(IntBuffer buffer) {
+        // Write flag
+        buffer.put(0);
 
+        buffer.put(dataEntries.size());
+
+        for (DataEntry entry : dataEntries) {
+            buffer.put(entry.key);
+            buffer.put(entry.rids.length);
+
+            for (Rid rid : entry.rids) {
+                buffer.put(rid.pageid);
+                buffer.put(rid.recordid);
+            }
+        }
+
+        // Fill remaining space with zeros
+        while (buffer.hasRemaining()) {
+            buffer.put(0);
+        }
     }
 
     public List<DataEntry> getDataEntries() {

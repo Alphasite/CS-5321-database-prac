@@ -85,6 +85,9 @@ public class Database {
     }
 
     public void buildIndexes() {
+        // Directpry is guaranteed to exist, no need to create it
+        Path indexFolder = dbPath.resolve("indexes");
+
 
     }
 
@@ -97,4 +100,5 @@ public class Database {
     public TableInfo getTable(String name) {
         return this.tables.get(name);
     }
+
 }
