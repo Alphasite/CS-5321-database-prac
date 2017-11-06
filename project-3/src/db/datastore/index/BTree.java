@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * B+ Tree class for indexing. Uses a tree of index nodes to efficiently access data records in leaf nodes.
@@ -108,6 +110,10 @@ public class BTree {
         return leafNode.get(key);
     }
 
+    public BTreeDataIterator iteratorForRange(Integer low, Integer high) {
+        return new BTreeDataIterator(low, high);
+    }
+
     /**
      * Save tree structure to file according to specification.
      * <p>
@@ -136,5 +142,55 @@ public class BTree {
 
     public int getNbLeaves() {
         return nbLeaves;
+    }
+
+    public class BTreeDataIterator implements Iterator<DataEntry> {
+
+        private Integer low;
+        private Integer high;
+        private int currNodeAddr;
+        private Iterator<DataEntry> currNodeIterator;
+
+        public BTreeDataIterator(Integer low, Integer high) {
+            this.low = low;
+            this.high = high;
+
+            if (this.low == null) {
+                this.currNodeAddr = 1; // one after the header page
+
+                List<DataEntry> dataEntries = ((LeafNode) readNode(this.currNodeAddr)).getDataEntries();
+                this.currNodeIterator = dataEntries.listIterator();
+            } else {
+                IndexNode currentNode = root;
+                int nextNodeAddr = currentNode.search(low);
+
+                while (nextNodeAddr > nbLeaves) {
+                    currentNode = (IndexNode) readNode(nextNodeAddr);
+                    nextNodeAddr = currentNode.search(low);
+                }
+
+                this.currNodeAddr = nextNodeAddr;
+
+                // get iterator starting from low or the smallest key bigger than low
+                List<DataEntry> dataEntries = ((LeafNode) readNode(this.currNodeAddr)).getDataEntries();
+
+                for (int i = 0; i < dataEntries.size(); i++) {
+                    if (dataEntries.get(i).key >= low) {
+                        this.currNodeIterator = dataEntries.listIterator(i);
+                        break;
+                    }
+                }
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return false;
+        }
+
+        @Override
+        public DataEntry next() {
+            return null;
+        }
     }
 }
