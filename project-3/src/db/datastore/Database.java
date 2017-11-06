@@ -77,7 +77,13 @@ public class Database {
 
             while (scanner.hasNextLine()) {
                 IndexInfo info = IndexInfo.parse(scanner.nextLine());
+
+                // add to indexInfo
                 indexInfo.add(info);
+
+                // add to tableInfo
+                TableInfo thisIndexTable = tables.get(info.tableName);
+                thisIndexTable.indices.put(info.attributeName, info);
             }
         } catch (IOException e) {
             e.printStackTrace();
