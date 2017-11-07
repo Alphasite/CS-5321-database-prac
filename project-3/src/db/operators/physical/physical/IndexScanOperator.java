@@ -5,9 +5,7 @@ import db.datastore.TableInfo;
 import db.datastore.index.BTree;
 import db.datastore.index.Rid;
 import db.datastore.tuple.Tuple;
-import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.binary.BinaryTupleReader;
-import db.datastore.tuple.string.StringTupleReader;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -18,7 +16,7 @@ public class IndexScanOperator extends AbstractOperator{
     private final Integer lowVal;
     private final Integer highVal;
 
-    private TupleReader reader;
+    private BinaryTupleReader reader;
     private BTree.BTreeDataIterator indexTreeIterator;
 
     /**
@@ -59,11 +57,7 @@ public class IndexScanOperator extends AbstractOperator{
             this.reader.close();
         }
 
-        if (this.tableInfo.binary) {
-            this.reader = BinaryTupleReader.get(this.tableInfo.file);
-        } else {
-            this.reader = StringTupleReader.get(this.tableInfo.header, this.tableInfo.file);
-        }
+        this.reader = BinaryTupleReader.get(this.tableInfo.file);
 
         indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
         return true;
@@ -79,5 +73,12 @@ public class IndexScanOperator extends AbstractOperator{
         if (this.reader != null) {
             this.reader.close();
         }
+    }
+
+    /**
+     * @return the underlying table info instance.
+     */
+    public TableInfo getTable() {
+        return tableInfo;
     }
 }
