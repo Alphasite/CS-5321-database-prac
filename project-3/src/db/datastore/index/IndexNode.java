@@ -18,6 +18,13 @@ public class IndexNode implements BTreeNode {
         this.children = new int[nbKeys + 1];
     }
 
+    public IndexNode(int[] keys, int[] children) {
+        assert children.length == (keys.length + 1);
+
+        this.keys = keys;
+        this.children = children;
+    }
+
     /**
      * B+ Tree index search for specified key. Returned child index c[i] is such that  keys[i-1] <= c[i] < keys[i]
      *
@@ -60,7 +67,23 @@ public class IndexNode implements BTreeNode {
 
     @Override
     public void serialize(ByteBuffer buffer) {
+        // Write flag
+        buffer.putInt(1);
 
+        buffer.putInt(keys.length);
+
+        for (int key : keys) {
+            buffer.putInt(key);
+        }
+
+        for (int child : children) {
+            buffer.putInt(child);
+        }
+
+        // Fill remaining space with zeros
+        while (buffer.hasRemaining()) {
+            buffer.putInt(0);
+        }
     }
 
 }

@@ -45,6 +45,14 @@ public class BulkLoader {
         this.output = null;
     }
 
+    /**
+     * Build a serialized B+ Tree index on a table in specified folder.
+     *
+     * @param DB
+     * @param parameters
+     * @param folder
+     * @return The file that was created to store the index tree
+     */
     public static Path buildIndex(Database DB, IndexInfo parameters, Path folder) {
         Path outputFile = folder.resolve(parameters.tableName + "." + parameters.attributeName);
 
@@ -67,7 +75,12 @@ public class BulkLoader {
             this.output = FileChannel.open(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
 
-            buildLeafNodes(entries);
+            // We need to keep the nodes in memory to generate the index keys
+            List<LeafNode> leafNodes = buildLeafNodes(entries);
+
+            int nbIndexNodes = buildIndexNodes(leafNodes);
+
+            writeHeader(leafNodes.size(), leafNodes.size() + nbIndexNodes);
 
             output.close();
         } catch (IOException e) {
@@ -75,6 +88,9 @@ public class BulkLoader {
         }
     }
 
+    /**
+     * Read the table from file, sort its contents according to index key (with unbounded state) and then write it back
+     */
     private void sortRelation() {
         Operator scan = new ScanOperator(tableInfo);
         TableHeader sortHeader = new TableHeader(Arrays.asList(tableInfo.tableName), Arrays.asList(attributeName));
@@ -141,12 +157,19 @@ public class BulkLoader {
         return entries;
     }
 
-    private void buildLeafNodes(List<DataEntry> entries) {
+    /**
+     * Serialize data entries as leaf nodes on disk, overwriting contents of pages required starting from number one.
+     *
+     * @param entries data entries to serialize
+     * @return The generated leaf nodes
+     */
+    private List<LeafNode> buildLeafNodes(List<DataEntry> entries) {
         int currentPage = 1;
         int currentIndex = 0;
         int entriesRemaining = entries.size();
         int d = treeOrder;
 
+        List<LeafNode> nodes = new ArrayList<>();
         ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
         while (entriesRemaining > 0) {
@@ -175,10 +198,112 @@ public class BulkLoader {
                 e.printStackTrace();
             }
 
+            nodes.add(node);
+
             currentIndex += entriesToWrite;
             entriesRemaining -= entriesToWrite;
 
             currentPage++;
+        }
+
+        return nodes;
+    }
+
+    /**
+     * @param leafNodes
+     * @return
+     */
+    private int buildIndexNodes(List<LeafNode> leafNodes) {
+        int currentPage = leafNodes.size() + 1;
+        int nodesInPrevLayer = leafNodes.size();
+        int d = treeOrder;
+
+        //
+        int lowerPrevIndex = 1;
+        int higherPrevIndex = leafNodes.size();
+
+        ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
+
+        while (nodesInPrevLayer > 2 * d + 1) {
+            // Build an index layer
+            int nodesInLayer = 0;
+            int nodesRemaining = nodesInPrevLayer;
+
+            while (nodesRemaining > 0) {
+                // Generate index node
+                int nodesToWrite;
+
+                // Prevent underfilling of last node
+                if (2 * d + 1 < nodesRemaining && nodesRemaining < 3 * d + 2) {
+                    nodesToWrite = nodesRemaining / 2;
+                } else {
+                    nodesToWrite = Math.min(2 * d + 1, nodesRemaining);
+                }
+
+                assert nodesToWrite >= d + 1 && nodesToWrite <= 2 * d + 1;
+
+                int[] children = range();
+                int[] keys = ;
+
+                writeIndexNode(keys, children, buf, currentPage);
+
+                nodesRemaining -= nodesToWrite;
+
+                nodesInLayer++;
+                currentPage++;
+            }
+
+            nodesInPrevLayer = nodesInLayer;
+
+            lowerPrevIndex = higherPrevIndex + 1;
+            higherPrevIndex = lowerPrevIndex + nodesInPrevLayer - 1;
+        }
+
+        // Build root node
+        int[] children = range(lowerPrevIndex, higherPrevIndex + 1);
+        int[] keys;
+
+        writeIndexNode(keys, children, buf, currentPage);
+
+    }
+
+    private void writeIndexNode(int[] keys, int[] children, ByteBuffer buffer, int page) {
+        IndexNode node = new IndexNode(keys, children);
+
+        node.serialize(buffer);
+        buffer.flip();
+
+        try {
+            output.write(buffer, page * Database.PAGE_SIZE);
+            buffer.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * @return Array of integers [a, b[
+     */
+    private int[] range(int a, int b) {
+        int[] res = new int[b - a];
+        for (int i = 0; i < res.length; i++) {
+            res[i] = a + i;
+        }
+        return res;
+    }
+
+    private void writeHeader(int nbLeaves, int rootAddress) {
+        ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
+
+        buf.putInt(rootAddress);
+        buf.putInt(nbLeaves);
+        buf.putInt(treeOrder);
+        buf.flip();
+
+        try {
+            output.write(buf, 0);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
