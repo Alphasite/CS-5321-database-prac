@@ -37,6 +37,14 @@ public interface TupleReader {
     void seek(long index);
 
     /**
+     * Move the read header to the tuple at the given page index and tuple index.
+     *
+     * @param pageIndex the page index
+     * @param tupleIndex the tuple index
+     */
+    void seek(long pageIndex, long tupleIndex);
+
+    /**
      * Close the underlying file descriptor for the reader.
      */
     void close();
