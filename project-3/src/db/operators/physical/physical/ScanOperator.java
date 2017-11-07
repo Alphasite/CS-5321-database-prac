@@ -90,7 +90,9 @@ public class ScanOperator extends AbstractOperator {
      */
     @Override
     public void close() {
-        this.reader.close();
+        if (this.reader != null) {
+            this.reader.close();
+        }
     }
 
     /**
