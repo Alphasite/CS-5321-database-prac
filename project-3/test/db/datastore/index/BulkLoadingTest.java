@@ -69,6 +69,9 @@ public class BulkLoadingTest {
                     return false;
                 }
             }
+
+            a.close();
+            b.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -78,9 +78,9 @@ public class BulkLoader {
             // We need to keep the nodes in memory to generate the index keys
             List<LeafNode> leafNodes = buildLeafNodes(entries);
 
-            int nbIndexNodes = buildIndexNodes(leafNodes);
+            int nbNodes = buildIndexNodes(leafNodes);
 
-            writeHeader(leafNodes.size(), leafNodes.size() + nbIndexNodes);
+            writeHeader(leafNodes.size(), nbNodes);
 
             output.close();
         } catch (IOException e) {
@@ -121,18 +121,10 @@ public class BulkLoader {
         Map<Integer, List<Rid>> entryMap = new HashMap<>();
 
         int pageId = 0;
-        int tuplesOnPage = reader.getNumberOfTuples();
-        int tupleId = -1;
+        int tupleId = 0;
 
         Tuple tuple;
         while ((tuple = reader.next()) != null) {
-            tupleId++;
-            if (tupleId == tuplesOnPage) {
-                tupleId = 0;
-                pageId++;
-                tuplesOnPage = reader.getNumberOfTuples();
-            }
-
             Rid rid = new Rid(pageId, tupleId);
             int key = tuple.fields.get(attributeIndex);
 
@@ -140,6 +132,13 @@ public class BulkLoader {
                 entryMap.put(key, new ArrayList<>());
             }
             entryMap.get(key).add(rid);
+
+            tupleId++;
+            if (tupleId == reader.getNumberOfTuples()) {
+                // Mark as new page
+                tupleId = 0;
+                pageId++;
+            }
         }
 
         reader.close();
@@ -211,7 +210,7 @@ public class BulkLoader {
 
     /**
      * @param leafNodes
-     * @return
+     * @return total number of nodes serialized to file (including leaves)
      */
     private int buildIndexNodes(List<LeafNode> leafNodes) {
         int currentPage = leafNodes.size() + 1;
@@ -219,8 +218,16 @@ public class BulkLoader {
         int d = treeOrder;
 
         //
-        int lowerPrevIndex = 1;
-        int higherPrevIndex = leafNodes.size();
+        int lowerRange = 1;
+        int upperRange = leafNodes.size();
+        int current = lowerRange;
+
+        // Generate map associating each node to the minimal search key in corresponding subtree
+        Map<Integer, Integer> keyMap = new HashMap<>();
+        // Since Data entries are sorted by key we can read first entry in each leaf
+        for (int i = 0; i < leafNodes.size(); i++) {
+            keyMap.put(i + 1, leafNodes.get(i).getDataEntries().get(0).key);
+        }
 
         ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
 
@@ -242,12 +249,14 @@ public class BulkLoader {
 
                 assert nodesToWrite >= d + 1 && nodesToWrite <= 2 * d + 1;
 
-                int[] children = range();
-                int[] keys = ;
+                int[] children = range(current, current + nodesToWrite);
+                int[] keys = generateKeys(keyMap, children);
+                keyMap.put(currentPage, leafNodes.get(children[0] - 1).getDataEntries().get(0).key);
 
                 writeIndexNode(keys, children, buf, currentPage);
 
                 nodesRemaining -= nodesToWrite;
+                current += nodesToWrite;
 
                 nodesInLayer++;
                 currentPage++;
@@ -255,16 +264,25 @@ public class BulkLoader {
 
             nodesInPrevLayer = nodesInLayer;
 
-            lowerPrevIndex = higherPrevIndex + 1;
-            higherPrevIndex = lowerPrevIndex + nodesInPrevLayer - 1;
+            lowerRange = upperRange + 1;
+            upperRange = lowerRange + nodesInPrevLayer - 1;
         }
 
         // Build root node
-        int[] children = range(lowerPrevIndex, higherPrevIndex + 1);
-        int[] keys;
+        int[] children = range(lowerRange, upperRange + 1);
+        int[] keys = generateKeys(keyMap, children);
 
         writeIndexNode(keys, children, buf, currentPage);
 
+        return currentPage;
+    }
+
+    private int[] generateKeys(Map<Integer, Integer> keyMap, int[] children) {
+        int[] keys = new int[children.length - 1];
+        for (int i = 1; i < children.length; i++) {
+            keys[i - 1] = keyMap.get(children[i]);
+        }
+        return keys;
     }
 
     private void writeIndexNode(int[] keys, int[] children, ByteBuffer buffer, int page) {
