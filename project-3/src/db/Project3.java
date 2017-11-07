@@ -73,20 +73,26 @@ public class Project3 {
 
         try {
             while ((statement = parser.Statement()) != null) {
-                System.out.println("Read statement: " + statement);
+                try {
+                    System.out.println("Read statement: " + statement);
 
-                // Get select body from statement
-                PlainSelect selectQuery = (PlainSelect) ((Select) statement).getSelectBody();
-                Path outputFile = config.outputDir.resolve("query" + i++);
+                    // Get select body from statement
+                    PlainSelect selectQuery = (PlainSelect) ((Select) statement).getSelectBody();
+                    Path outputFile = config.outputDir.resolve("query" + i++);
 
-                long start = System.currentTimeMillis();
+                    long start = System.currentTimeMillis();
 
-                runQuery(selectQuery, outputFile, config.tempDir, DB, planConfig);
+                    runQuery(selectQuery, outputFile, config.tempDir, DB, planConfig);
 
-                System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
+                    System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
 
-                if (CLEANUP) {
-                    Utilities.cleanDirectory(config.tempDir);
+                    if (CLEANUP) {
+                        Utilities.cleanDirectory(config.tempDir);
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error processing query: " + statement);
+                    System.err.println("Trying next query...");
+                    e.printStackTrace();
                 }
             }
         } catch (ParseException e) {
