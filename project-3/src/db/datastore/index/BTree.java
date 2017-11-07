@@ -6,10 +6,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  * B+ Tree class for indexing. Uses a tree of index nodes to efficiently access data records in leaf nodes.
@@ -146,89 +143,79 @@ public class BTree {
         return nbLeaves;
     }
 
-    public class BTreeDataIterator implements Iterator<DataEntry> {
+    public class BTreeDataIterator implements Iterator<Rid> {
 
         private Integer low;
         private Integer high;
-        private int currNodeAddr;
-        private ListIterator<DataEntry> currNodeIterator; // null when no more data entries
+        private int nextNodeAddr;
+        private Deque<Rid> queue; // null when no more data entries
 
         public BTreeDataIterator(Integer low, Integer high) {
+            this.queue = new ArrayDeque<>();
             this.low = low;
             this.high = high;
 
             if (this.low == null) {
-                this.currNodeAddr = 1; // one after the header page
-
-                List<DataEntry> dataEntries = ((LeafNode) readNode(this.currNodeAddr)).getDataEntries();
-                this.currNodeIterator = dataEntries.listIterator();
+                this.nextNodeAddr = 1; // one after the header page
             } else {
                 IndexNode currentNode = root;
-                int nextNodeAddr = currentNode.search(low);
+                int next = currentNode.search(low);
 
-                while (nextNodeAddr > nbLeaves) {
-                    currentNode = (IndexNode) readNode(nextNodeAddr);
-                    nextNodeAddr = currentNode.search(low);
+                while (next > nbLeaves) {
+                    currentNode = (IndexNode) readNode(next);
+                    next = currentNode.search(low);
                 }
 
-                this.currNodeAddr = nextNodeAddr;
-
-                // get iterator starting from low or the smallest key bigger than low
-                this.currNodeIterator = null;
-                List<DataEntry> dataEntries = ((LeafNode) readNode(this.currNodeAddr)).getDataEntries();
-
-                for (int i = 0; i < dataEntries.size(); i++) {
-                    if (dataEntries.get(i).key >= low) {
-                        this.currNodeIterator = dataEntries.listIterator(i);
-                        break;
-                    }
-                }
+                this.nextNodeAddr = next;
             }
+
+            readNextNode();
         }
 
         @Override
         public boolean hasNext() {
-            if (this.currNodeIterator == null) {
+            if (this.queue == null) {
                 return false;
             }
 
-            if (!this.currNodeIterator.hasNext() && this.currNodeAddr == nbLeaves) {
-                this.currNodeIterator = null;
-                return false;
-            }
+            if (this.queue.isEmpty()) {
+                if (this.nextNodeAddr > nbLeaves) {
+                    this.queue = null;
+                    return false;
+                }
 
-            if (!this.currNodeIterator.hasNext()) {
                 readNextNode();
+                if (this.queue.isEmpty()) {
+                    this.queue = null;
+                    return false;
+                }
             }
 
-            DataEntry nextDataEntry = this.currNodeIterator.next();
-
-            if (high != null && nextDataEntry.key > high) {
-                this.currNodeIterator = null;
-                return false;
-            } else {
-                this.currNodeIterator.previous();
-                return true;
-            }
+            return true;
         }
 
         @Override
-        public DataEntry next() {
+        public Rid next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
 
-            return currNodeIterator.next();
+            return this.queue.poll();
         }
 
         /**
-         * Increment the current node address and load that leaf node's data entries into currNodeIterator
+         * Load the next leaf node's data entries and increment nextNodeAddr
          */
         private void readNextNode() {
-            this.currNodeAddr++;
+            List<DataEntry> dataEntries = ((LeafNode) readNode(this.nextNodeAddr)).getDataEntries();
 
-            List<DataEntry> dataEntries = ((LeafNode) readNode(this.currNodeAddr)).getDataEntries();
-            this.currNodeIterator = dataEntries.listIterator();
+            for (DataEntry d : dataEntries) {
+                if ( (this.low == null || this.low <= d.key) && (this.high == null || this.high >= d.key) ) {
+                    this.queue.addAll(Arrays.asList(d.rids));
+                }
+            }
+
+            this.nextNodeAddr++;
         }
     }
 }
