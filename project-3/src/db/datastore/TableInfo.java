@@ -1,6 +1,8 @@
 package db.datastore;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulates information about a table:
