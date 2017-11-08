@@ -39,7 +39,7 @@ public class QueryBuilderTest {
     @Before
     public void init() {
         this.logicalBuilder = new QueryBuilder(DB);
-        this.physicalBuilder = new PhysicalPlanBuilder(TestUtils.TEMP_PATH);
+        this.physicalBuilder = new PhysicalPlanBuilder(TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
     }
 
     @Test

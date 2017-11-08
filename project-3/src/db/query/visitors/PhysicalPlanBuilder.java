@@ -2,6 +2,7 @@ package db.query.visitors;
 
 import db.PhysicalPlanConfig;
 import db.datastore.TableHeader;
+import db.datastore.index.BTree;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
 import db.operators.physical.bag.*;
@@ -9,6 +10,7 @@ import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.ExternalSortOperator;
 import db.operators.physical.extended.InMemorySortOperator;
 import db.operators.physical.extended.SortOperator;
+import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -34,17 +36,19 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     private Deque<Operator> operators;
 
     private Path temporaryFolder;
+    private Path indexesFolder;
 
     private PhysicalPlanConfig config;
 
-    public PhysicalPlanBuilder(Path temporaryFolder) {
-        this(PhysicalPlanConfig.DEFAULT_CONFIG, temporaryFolder);
+    public PhysicalPlanBuilder(Path temporaryFolder, Path indexesFolder) {
+        this(PhysicalPlanConfig.DEFAULT_CONFIG, temporaryFolder, indexesFolder);
     }
 
-    public PhysicalPlanBuilder(PhysicalPlanConfig config, Path temporaryFolder) {
+    public PhysicalPlanBuilder(PhysicalPlanConfig config, Path temporaryFolder, Path indexesFolder) {
         this.operators = new ArrayDeque<>();
         this.config = config;
         this.temporaryFolder = temporaryFolder;
+        this.indexesFolder = indexesFolder;
     }
 
     public Operator buildFromLogicalTree(LogicalOperator root) {
@@ -132,8 +136,29 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     public void visit(LogicalSelectOperator node) {
         node.getChild().accept(this);
 
-        Operator select = new SelectionOperator(operators.pollLast(), node.getPredicate());
-        operators.add(select);
+        ScanOperator child = (ScanOperator) operators.pollLast();
+
+        if (config.useIndices) {
+            IndexScanEvaluator scanEval = new IndexScanEvaluator(child.getHeader(), child.getTable(), indexesFolder);
+            node.getPredicate().accept(scanEval);
+
+            BTree treeIndex = scanEval.getIndexTree();
+            Expression leftovers = scanEval.getLeftoverExpression();
+            if (treeIndex != null && leftovers != null) {
+                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), treeIndex, scanEval.getLow(), scanEval.getHigh());
+                SelectionOperator select = new SelectionOperator(scanOp, leftovers);
+                operators.add(select);
+            } else if (treeIndex != null && leftovers == null) {
+                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), treeIndex, scanEval.getLow(), scanEval.getHigh());
+                operators.add(scanOp);
+            } else /* treeIndex == null, essentially just a regular scan and select */ {
+                Operator select = new SelectionOperator(child, node.getPredicate());
+                operators.add(select);
+            }
+        } else {
+            Operator select = new SelectionOperator(child, node.getPredicate());
+            operators.add(select);
+        }
     }
 
     /**

@@ -2,6 +2,7 @@ package db.query.visitors;
 
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
+import db.datastore.index.BTree;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -11,23 +12,22 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import java.nio.file.Path;
+
 public class IndexScanEvaluator implements ExpressionVisitor{
-    private TableHeader header;
     private TableInfo tableInfo;
-    private String columnName;
     private Expression leftoverExpression;
     private Integer low, high;
     private Integer expressionVal;
+    private Path indexesFolder;
     private boolean isIndexedCol;
 
     /**
      * Setup evaluator
      * @param header The header for the table we are doing an index scan on
      */
-    public IndexScanEvaluator(TableHeader header, TableInfo tableInfo) {
-        this.header = header;
+    public IndexScanEvaluator(TableHeader header, TableInfo tableInfo, Path indexesFolder) {
         this.tableInfo = tableInfo;
-        this.columnName = null;
         this.leftoverExpression = null;
         this.low = null;
         this.high = null;
@@ -62,10 +62,14 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         Expression right = binop.getRightExpression();
 
         if (left instanceof LongValue || right instanceof LongValue) {
+            assert !(left instanceof LongValue && right instanceof LongValue); // only one should be numeric
+
             binop.getLeftExpression().accept(this);
             binop.getRightExpression().accept(this);
 
-            return isIndexedCol;
+            boolean temp = isIndexedCol;
+            isIndexedCol = false;
+            return temp;
         } else {
             return false;
         }
@@ -80,7 +84,8 @@ public class IndexScanEvaluator implements ExpressionVisitor{
     }
 
     /**
-     * Gets any remaining expressions, i.e. non-equijoin conditions, which
+     * Gets any remaining expressions, i.e. conditions involving columns other
+     * than indexed column and not-equals-to conditions, which
      * cannot be optimized by the Sort-Merge Join
      * @return An expression that consists of all non-equijoin conditions used
      *         for this Sort-Merge Join, or null if all of the expressions are
@@ -88,6 +93,23 @@ public class IndexScanEvaluator implements ExpressionVisitor{
      */
     public Expression getLeftoverExpression() {
         return this.leftoverExpression;
+    }
+
+    public BTree getIndexTree() {
+        if (low == null && high == null) {
+            // index cannot be used
+            return null;
+        } else {
+            return BTree.createTree(indexesFolder.resolve(tableInfo.index.tableName + "." + tableInfo.index.attributeName));
+        }
+    }
+
+    public Integer getLow() {
+        return low;
+    }
+
+    public Integer getHigh() {
+        return high;
     }
 
     @Override
@@ -98,7 +120,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(Column column) {
-        if (column.getColumnName() == tableInfo.index.attributeName) {
+        if (column.getColumnName().equals(tableInfo.index.attributeName)) {
             isIndexedCol = true;
         }
     }
@@ -122,8 +144,6 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         } else {
             addToLeftover(equalsTo);
         }
-
-        isIndexedCol = false;
     }
 
     @Override

@@ -70,14 +70,10 @@ public class SampleQueriesTest {
         this.logicalOperator = logicalOperator;
         this.query = query;
 
-        if (query.contains("ORDER BY") || query.contains("DISTINCT")) {
-            this.isOrdered = true;
-        } else {
-            this.isOrdered = false;
-        }
+        this.isOrdered = query.contains("ORDER BY") || query.contains("DISTINCT");
 
         PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, TestUtils.TEMP_PATH);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
 
         this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
 

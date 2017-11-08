@@ -207,7 +207,7 @@ public class TestUtils {
     public static Operator getQueryPlan(Path dbFolder, String query, PhysicalPlanConfig config) {
         Database DB = Database.loadDatabase(dbFolder);
         QueryBuilder builder = new QueryBuilder(DB);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, dbFolder);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, dbFolder, dbFolder.resolve("indexes"));
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new StringReader(query));
@@ -231,7 +231,7 @@ public class TestUtils {
             throw new RuntimeException(e);
         }
 
-        try (Connection c = DriverManager.getConnection("jdbc:h2:mem:test");) {
+        try (Connection c = DriverManager.getConnection("jdbc:h2:mem:test")) {
             c.createStatement().execute("CREATE TABLE Sailors (A INT, B INT, C INT)");
             c.createStatement().execute("CREATE TABLE Boats (D INT, E INT, F INT)");
             c.createStatement().execute("CREATE TABLE Reserves (G INT, H INT)");

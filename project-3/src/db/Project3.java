@@ -37,7 +37,7 @@ public class Project3 {
      * @param args If present : [configFile]
      */
     public static void main(String args[]) {
-        Path filePath = args.length >= 1 ? Paths.get(args[0]) : Paths.get("resources/samples/input/config.txt");
+        Path filePath = args.length >= 1 ? Paths.get(args[0]) : Paths.get("resources/samples-4/input/config.txt");
         GeneralConfig config = GeneralConfig.fromFile(filePath);
 
         Database DB = Database.loadDatabase(config.dbPath);
@@ -82,7 +82,7 @@ public class Project3 {
 
                     long start = System.currentTimeMillis();
 
-                    runQuery(selectQuery, outputFile, config.tempDir, DB, planConfig);
+                    runQuery(selectQuery, outputFile, config.tempDir, config.inputDir.resolve("db").resolve("indexes"), DB, planConfig);
 
                     System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
 
@@ -100,9 +100,9 @@ public class Project3 {
         }
     }
 
-    public static void runQuery(PlainSelect selectQuery, Path outputFile, Path tempDir, Database DB, PhysicalPlanConfig config) {
+    public static void runQuery(PlainSelect selectQuery, Path outputFile, Path tempDir, Path indexesDir, Database DB, PhysicalPlanConfig config) {
         QueryBuilder builder = new QueryBuilder(DB);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, tempDir);
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, tempDir, indexesDir);
 
         // Build logical query plan
         LogicalOperator logicalPlan = builder.buildQuery(selectQuery);
