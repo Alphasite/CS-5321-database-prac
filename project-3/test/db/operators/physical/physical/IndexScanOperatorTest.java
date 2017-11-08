@@ -56,6 +56,8 @@ public class IndexScanOperatorTest {
 
         TestUtils.unorderedCompareTuples(new ScanOperator(table), operator);
 
+        operator.reset();
+
         while (operator.hasNextTuple()) {
             Tuple tuple = operator.getNextTuple();
             assertThat("not null", tuple, notNullValue());
