@@ -72,7 +72,7 @@ public class SampleQueriesTest {
 
         this.isOrdered = query.contains("ORDER BY") || query.contains("DISTINCT");
 
-        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16);
+        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16, false);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
 
         this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);

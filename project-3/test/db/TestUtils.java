@@ -167,8 +167,6 @@ public class TestUtils {
             dumpTable(boats, dataFolder, "Boats", Arrays.asList("D", "E", "F"));
             dumpTable(reserves, dataFolder, "Reserves", Arrays.asList("G", "H"));
 
-            Map<String, List<Tuple>> results;
-
             if (generateSamples) {
                 return getSampleResult(queries, sailors, boats, reserves);
             } else {
