@@ -1,6 +1,7 @@
 package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.datastore.Database;
 import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
 import org.junit.After;
@@ -19,6 +20,7 @@ import java.util.Collection;
 public class IndexPerformanceTest {
     private static final Path indexFile = Paths.get("resources/samples-4/expected_indexes/Boats.E").toAbsolutePath();
     private static final Path inputDir = Paths.get("resources/samples-4/input/db").toAbsolutePath();
+    private static Database database;
 
     private static String[] testQueries = new String[]{
             // Both indexed
@@ -72,6 +74,9 @@ public class IndexPerformanceTest {
 
     @Before
     public void setUp() throws Exception {
+        database = Database.loadDatabase(inputDir);
+        database.buildIndexes();
+
         DiskIOStatistics.reads = 0;
         DiskIOStatistics.writes = 0;
     }

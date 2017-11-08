@@ -77,7 +77,12 @@ public class IndexScanOperator extends AbstractOperator{
     }
 
     private Tuple generateNextTupleClustered() {
-        return this.reader.next();
+        int index = this.tableInfo.header.resolve(this.tableInfo.tableName, this.tableInfo.index.attributeName).get();
+        if (highVal == null || this.reader.peek().fields.get(index) <= highVal) {
+            return this.reader.next();
+        } else {
+            return null;
+        }
     }
 
     private Tuple generateNextTupleUnclustered() {

@@ -1,5 +1,7 @@
 package db.datastore;
 
+import db.datastore.index.BulkLoader;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -95,7 +97,9 @@ public class Database {
         // Directpry is guaranteed to exist, no need to create it
         Path indexFolder = dbPath.resolve("indexes");
 
-
+        for (IndexInfo info : indexInfo) {
+            BulkLoader.buildIndex(this, info, indexFolder);
+        }
     }
 
     /**

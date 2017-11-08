@@ -65,7 +65,7 @@ public class TestUtils {
             } else if (ref == null) {
                 fail("output has more tuples (" + i + ") than expected");
             } else {
-                assertThat(test, equalTo(ref));
+                assertThat("tuple: " + i, test, equalTo(ref));
             }
 
             i++;
