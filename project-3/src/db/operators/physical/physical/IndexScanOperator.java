@@ -39,7 +39,7 @@ public class IndexScanOperator extends AbstractOperator{
     protected Tuple generateNextTuple() {
         if (indexTreeIterator.hasNext()) {
             Rid r = indexTreeIterator.next();
-            this.reader.seek(r.pageid, r.recordid);
+            this.reader.seek(r.pageid, r.tupleid);
             return this.reader.next();
         } else {
             return null;

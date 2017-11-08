@@ -29,7 +29,7 @@ public class TableInfo {
 
         // Resolve table name from file name
         this.tableName = file.getFileName().toString();
-        
+
         this.indices = new HashMap<>();
     }
 }

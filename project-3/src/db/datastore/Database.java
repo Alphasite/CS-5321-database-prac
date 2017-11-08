@@ -86,7 +86,8 @@ public class Database {
                 thisIndexTable.indices.put(info.attributeName, info);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            // No index_info.txt found
+            System.out.println("WARNING: No index_info.txt found, proceeding with 0 indices...");
         }
     }
 
