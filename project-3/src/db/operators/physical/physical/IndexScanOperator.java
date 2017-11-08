@@ -37,15 +37,12 @@ public class IndexScanOperator extends AbstractOperator{
 
     @Override
     protected Tuple generateNextTuple() {
-        if (indexTreeIterator.hasNext()) {
-            Rid r = indexTreeIterator.next();
-            this.reader.seek(r.pageid, r.tupleid);
-            return this.reader.next();
+        if (this.tableInfo.index.isClustered) {
+            return generateNextTupleClustered();
         } else {
-            return null;
+            return generateNextTupleUnclustered();
         }
     }
-
     @Override
     public TableHeader getHeader() {
         return tableInfo.header;
@@ -53,14 +50,11 @@ public class IndexScanOperator extends AbstractOperator{
 
     @Override
     public boolean reset() {
-        if (this.reader != null) {
-            this.reader.close();
+        if (this.tableInfo.index.isClustered) {
+            return resetClustered();
+        } else {
+            return resetUnclustered();
         }
-
-        this.reader = BinaryTupleReader.get(this.tableInfo.file);
-
-        indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
-        return true;
     }
 
     @Override
@@ -81,4 +75,33 @@ public class IndexScanOperator extends AbstractOperator{
     public TableInfo getTable() {
         return tableInfo;
     }
+
+    private Tuple generateNextTupleClustered() {
+        return this.reader.next();
+    }
+
+    private Tuple generateNextTupleUnclustered() {
+        if (indexTreeIterator.hasNext()) {
+            Rid r = indexTreeIterator.next();
+            this.reader.seek(r.pageid, r.tupleid);
+            return this.reader.next();
+        } else {
+            return null;
+        }
+    }
+
+    private boolean resetClustered() {
+        resetUnclustered();
+        Rid r = indexTreeIterator.next();
+        this.reader.seek(r.pageid, r.tupleid);
+        return true;
+    }
+
+    private boolean resetUnclustered() {
+        close();
+        this.reader = BinaryTupleReader.get(this.tableInfo.file);
+        indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
+        return true;
+    }
+
 }
