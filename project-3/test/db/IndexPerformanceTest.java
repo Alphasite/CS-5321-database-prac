@@ -22,15 +22,15 @@ public class IndexPerformanceTest {
 
     private static String[] testQueries = new String[]{
             // Both indexed
-            "SELECT * FROM Sailors S, Boats B WHERE Boats.E = Sailors.A AND Boats.E > 100 AND Boats.E < 1000 AND Sailors.A > 100 AND Sailors.A < 1000",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E > 100 AND Boats.E < 1000 AND Sailors.A > 100 AND Sailors.A < 1000",
             // 1 indexed
-            "SELECT * FROM Sailors S, Boats B WHERE Boats.E = Sailors.A AND Boats.E > 100 AND Boats.E < 1000",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E > 100 AND Boats.E < 1000",
             // 1 indexed specific
-            "SELECT * FROM Sailors S, Boats B WHERE Boats.E = Sailors.A AND Boats.E = 100",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E = 100",
             // 1 indexed specific & 1 indexed general
-            "SELECT * FROM Sailors S, Boats B WHERE Boats.E = Sailors.A AND Boats.E = 100 AND Sailors.A > 100 AND Sailors.A < 1000",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E = 100 AND Sailors.A > 100 AND Sailors.A < 1000",
             // No indexed
-            "SELECT * FROM Sailors S, Boats B WHERE Boats.E = Sailors.A",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A",
     };
 
     private static final PhysicalPlanConfig[] testConfigs = new PhysicalPlanConfig[]{

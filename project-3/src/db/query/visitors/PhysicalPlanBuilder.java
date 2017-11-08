@@ -139,7 +139,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         ScanOperator child = (ScanOperator) operators.pollLast();
 
         if (config.useIndices) {
-            IndexScanEvaluator scanEval = new IndexScanEvaluator(child.getHeader(), child.getTable(), indexesFolder);
+            IndexScanEvaluator scanEval = new IndexScanEvaluator(child.getTable(), indexesFolder);
             node.getPredicate().accept(scanEval);
 
             BTree treeIndex = scanEval.getIndexTree();

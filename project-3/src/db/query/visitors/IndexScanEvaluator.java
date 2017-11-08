@@ -26,13 +26,14 @@ public class IndexScanEvaluator implements ExpressionVisitor{
      * Setup evaluator
      * @param header The header for the table we are doing an index scan on
      */
-    public IndexScanEvaluator(TableHeader header, TableInfo tableInfo, Path indexesFolder) {
+    public IndexScanEvaluator(TableInfo tableInfo, Path indexesFolder) {
         this.tableInfo = tableInfo;
         this.leftoverExpression = null;
         this.low = null;
         this.high = null;
         this.expressionVal = null;
         this.isIndexedCol = false;
+        this.indexesFolder = indexesFolder;
     }
 
     private Integer minNullCheck(Integer num1, Integer num2) {
