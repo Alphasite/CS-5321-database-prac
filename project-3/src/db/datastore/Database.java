@@ -83,7 +83,7 @@ public class Database {
 
                 // add to tableInfo
                 TableInfo thisIndexTable = tables.get(info.tableName);
-                thisIndexTable.indices.put(info.attributeName, info);
+                thisIndexTable.index = info;
             }
         } catch (IOException e) {
             // No index_info.txt found
