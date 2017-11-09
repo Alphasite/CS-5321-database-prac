@@ -94,7 +94,7 @@ public class Database {
     }
 
     public void buildIndexes() {
-        // Directpry is guaranteed to exist, no need to create it
+        // Directory is guaranteed to exist, no need to create it
         Path indexFolder = dbPath.resolve("indexes");
 
         for (IndexInfo info : indexInfo) {

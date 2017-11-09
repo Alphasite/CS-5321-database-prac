@@ -2,6 +2,8 @@ package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.datastore.Database;
+import db.datastore.IndexInfo;
+import db.datastore.index.BulkLoader;
 import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
 import org.junit.After;
@@ -15,10 +17,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @RunWith(Parameterized.class)
 public class IndexPerformanceTest {
-    private static final Path indexFile = Paths.get("resources/samples-4/expected_indexes/Boats.E").toAbsolutePath();
     private static final Path inputDir = Paths.get("resources/samples-4/input/db").toAbsolutePath();
     private static Database database;
 
@@ -28,54 +30,55 @@ public class IndexPerformanceTest {
             // 1 indexed
             "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E > 100 AND Boats.E < 1000",
             // 1 indexed specific
-            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E = 100",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E = 100 AND Boats.F = Sailors.B",
             // 1 indexed specific & 1 indexed general
             "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E = 100 AND Sailors.A > 100 AND Sailors.A < 1000",
             // No indexed
-            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A",
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A"
     };
 
-    private static final PhysicalPlanConfig[] testConfigs = new PhysicalPlanConfig[]{
-            new PhysicalPlanConfig(JoinImplementation.TNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5, false),
-            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5, false),
-            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, false),
-            new PhysicalPlanConfig(JoinImplementation.SMJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, false),
-            new PhysicalPlanConfig(JoinImplementation.TNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5, true),
-            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5, true),
-            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, true),
-            new PhysicalPlanConfig(JoinImplementation.SMJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, true)
-    };
+    private static PhysicalPlanConfig testConfigIndex = new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, true);
+    private static PhysicalPlanConfig testConfigNoIndex = new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, false);
 
     private Operator actualResult;
-    private JoinImplementation join;
-    private boolean isIndexed;
-
     private long elapsedTime;
     private int outputRows;
 
-    @Parameterized.Parameters(name = "{index}: indexed={3} join={2} query={1}")
+    @Parameterized.Parameters(name = "{index}: <{3}> query={0}")
     public static Collection<Object[]> data() throws IOException {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
+        List<IndexInfo> indexConfigEmpty = new ArrayList<>();
+
+        List<IndexInfo> indexConfigUnclustered = new ArrayList<>();
+        indexConfigUnclustered.add(new IndexInfo("Sailors", "A", false, 15));
+        indexConfigUnclustered.add(new IndexInfo("Boats", "E", false, 15));
+
+        List<IndexInfo> indexConfigClustered = new ArrayList<>();
+        indexConfigClustered.add(new IndexInfo("Sailors", "A", true, 15));
+        indexConfigClustered.add(new IndexInfo("Boats", "E", true, 15));
+
         for (String query : testQueries) {
-            for (PhysicalPlanConfig config : testConfigs) {
-                testCases.add(new Object[]{config, query, config.joinImplementation, config.useIndices});
-            }
+            testCases.add(new Object[]{query, testConfigNoIndex, indexConfigEmpty, "No Index"});                    // no index
+            testCases.add(new Object[]{query, testConfigIndex, indexConfigUnclustered, "Unclustered Index"});       // unclustered index
+            testCases.add(new Object[]{query, testConfigIndex, indexConfigClustered, "Clustered Index"});           // clustered index
         }
 
         return testCases;
     }
 
-    public IndexPerformanceTest(PhysicalPlanConfig config, String query, JoinImplementation join, boolean isIndexed) {
-        this.actualResult = TestUtils.getQueryPlan(inputDir, query, config);
-        this.join = join;
-        this.isIndexed = isIndexed;
+    public IndexPerformanceTest(String query, PhysicalPlanConfig testConfig, List<IndexInfo> indexConfigs, String indexType) {
+        for (IndexInfo indexConfig : indexConfigs) {
+            BulkLoader.buildIndex(database, indexConfig, TestUtils.NEW_DB_PATH.resolve("indexes"));
+        }
+        this.actualResult = TestUtils.getQueryPlan(inputDir, query, testConfig);
+        System.out.println("<" + indexType + "> query=" + query);
     }
 
     @Before
     public void setUp() throws Exception {
+        System.out.println();
         database = Database.loadDatabase(inputDir);
-        database.buildIndexes();
 
         DiskIOStatistics.reads = 0;
         DiskIOStatistics.writes = 0;
@@ -85,7 +88,6 @@ public class IndexPerformanceTest {
     public void tearDown() throws Exception {
         this.actualResult.close();
 
-        System.out.println("indexed=" + this.isIndexed + " join=" + this.join.toString() + outputRows + " rows found, took " + elapsedTime + " ms");
         System.out.println("Reads: " + DiskIOStatistics.reads);
         System.out.println("Write: " + DiskIOStatistics.writes);
     }
@@ -100,5 +102,6 @@ public class IndexPerformanceTest {
         }
 
         elapsedTime = System.currentTimeMillis() - startTime;
+        System.out.println("Query took " + elapsedTime + " ms and found " + outputRows + " rows!");
     }
 }
