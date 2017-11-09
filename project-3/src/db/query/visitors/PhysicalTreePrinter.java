@@ -8,6 +8,7 @@ import db.operators.physical.bag.RenameOperator;
 import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
+import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
 import db.operators.physical.utility.BlockCacheOperator;
 
@@ -108,6 +109,11 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     @Override
     public void visit(BlockCacheOperator node) {
         node.getChild().accept(this);
+    }
+
+    @Override
+    public void visit(IndexScanOperator node) {
+        lines.add(pad("Index Scan " + node.getTable().file.getFileName()));
     }
 
     /**

@@ -118,6 +118,26 @@ public class BinaryTupleReader implements TupleReader {
     }
 
     /**
+     * Move the read header to the tuple at the given page index and tuple index.
+     *
+     * @param pageIndex the page index
+     * @param tupleIndex the tuple index
+     */
+    public void seek(long pageIndex, long tupleIndex) {
+        try {
+            if (this.pageNumber != pageIndex) {
+                this.channel.position(pageIndex * Database.PAGE_SIZE);
+                this.loadPage(channel, bb);
+            }
+
+            this.pageNumber = pageIndex;
+            this.index = tupleIndex;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
      * @inheritDoc
      */
     @Override

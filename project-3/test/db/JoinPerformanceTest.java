@@ -24,14 +24,14 @@ public class JoinPerformanceTest {
     private static String[] testQueries = new String[]{
             "SELECT * FROM Sailors, Reserves, Boats WHERE Sailors.A = Reserves.G AND Sailors.A = Boats.D;",
             "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
-            "SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D;"
+            "SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D;",
     };
 
     private static final PhysicalPlanConfig[] testConfigs = new PhysicalPlanConfig[] {
-            new PhysicalPlanConfig(JoinImplementation.TNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL),
-            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5),
-            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5),
-            new PhysicalPlanConfig(JoinImplementation.SMJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5)
+            new PhysicalPlanConfig(JoinImplementation.TNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5, false),
+            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 1, 5, false),
+            new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, false),
+            new PhysicalPlanConfig(JoinImplementation.SMJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, false),
     };
 
     private Operator actualResult;

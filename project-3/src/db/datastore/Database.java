@@ -85,10 +85,17 @@ public class Database {
 
             while (scanner.hasNextLine()) {
                 IndexInfo info = IndexInfo.parse(scanner.nextLine());
+
+                // add to indexInfo
                 indexInfo.add(info);
+
+                // add to tableInfo
+                TableInfo thisIndexTable = tables.get(info.tableName);
+                thisIndexTable.index = info;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            // No index_info.txt found
+            System.out.println("WARNING: No index_info.txt found, proceeding with 0 indices...");
         }
     }
 

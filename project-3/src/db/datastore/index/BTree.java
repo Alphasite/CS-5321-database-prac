@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.*;
 
 /**
  * B+ Tree class for indexing. Uses a tree of index nodes to efficiently access data records in leaf nodes.
@@ -108,6 +109,10 @@ public class BTree {
         return leafNode.search(key);
     }
 
+    public BTreeDataIterator iteratorForRange(Integer low, Integer high) {
+        return new BTreeDataIterator(low, high);
+    }
+
     /**
      * Save tree structure to file according to specification.
      * <p>
@@ -136,5 +141,81 @@ public class BTree {
 
     public int getNbLeaves() {
         return nbLeaves;
+    }
+
+    public class BTreeDataIterator implements Iterator<Rid> {
+
+        private Integer low;
+        private Integer high;
+        private int nextNodeAddr;
+        private Deque<Rid> queue; // null when no more data entries
+
+        public BTreeDataIterator(Integer low, Integer high) {
+            this.queue = new ArrayDeque<>();
+            this.low = low;
+            this.high = high;
+
+            if (this.low == null) {
+                this.nextNodeAddr = 1; // one after the header page
+            } else {
+                IndexNode currentNode = root;
+                int next = currentNode.search(low);
+
+                while (next > nbLeaves) {
+                    currentNode = (IndexNode) readNode(next);
+                    next = currentNode.search(low);
+                }
+
+                this.nextNodeAddr = next;
+            }
+
+            readNextNode();
+        }
+
+        @Override
+        public boolean hasNext() {
+            if (this.queue == null) {
+                return false;
+            }
+
+            if (this.queue.isEmpty()) {
+                if (this.nextNodeAddr > nbLeaves) {
+                    this.queue = null;
+                    return false;
+                }
+
+                readNextNode();
+                if (this.queue.isEmpty()) {
+                    this.queue = null;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        @Override
+        public Rid next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+
+            return this.queue.poll();
+        }
+
+        /**
+         * Load the next leaf node's data entries and increment nextNodeAddr
+         */
+        private void readNextNode() {
+            List<DataEntry> dataEntries = ((LeafNode) readNode(this.nextNodeAddr)).getDataEntries();
+
+            for (DataEntry d : dataEntries) {
+                if ( (this.low == null || this.low <= d.key) && (this.high == null || this.high >= d.key) ) {
+                    this.queue.addAll(Arrays.asList(d.rids));
+                }
+            }
+
+            this.nextNodeAddr++;
+        }
     }
 }

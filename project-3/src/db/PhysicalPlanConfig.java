@@ -45,20 +45,23 @@ public class PhysicalPlanConfig {
     }
 
     /**
-     * @param join      the join type
-     * @param sort      the sort type
-     * @param joinParam the number of blocks used for the join
-     * @param sortParam the number of blocks used for the sort
+     * @param join       the join type
+     * @param sort       the sort type
+     * @param joinParam  the number of blocks used for the join
+     * @param sortParam  the number of blocks used for the sort
+     * @param useIndices Indicates whether or not indices are used.
      */
-    public PhysicalPlanConfig(JoinImplementation join, SortImplementation sort, int joinParam, int sortParam) {
+    public PhysicalPlanConfig(JoinImplementation join, SortImplementation sort, int joinParam, int sortParam, boolean useIndices) {
         this.joinImplementation = join;
         this.sortImplementation = sort;
         this.joinParameter = joinParam;
         this.sortParameter = sortParam;
+        this.useIndices = useIndices;
     }
 
     /**
      * Build a config by parsing the provided file.
+     *
      * @param configFile the file path for the config file.
      * @return the plan.
      */

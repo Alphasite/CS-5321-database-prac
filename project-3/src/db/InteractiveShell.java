@@ -21,6 +21,7 @@ import java.util.Scanner;
 public class InteractiveShell {
     public static String INPUT_PATH = "resources/samples/input";
     public static String DB_PATH = INPUT_PATH + "/db";
+    public static String INDEXES_PATH = DB_PATH + "/indexes";
 
     public static String OUTPUT_PATH = "resources/samples/output";
     public static String TEMP_PATH = "resources/samples/tmp";
@@ -63,7 +64,7 @@ public class InteractiveShell {
                 LogicalOperator logicalPlan = builder.buildQuery(select);
 
                 // Create physical plan optimized for query on given data
-                PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(Paths.get(TEMP_PATH));
+                PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(Paths.get(TEMP_PATH), Paths.get(INDEXES_PATH));
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
 
                 TupleWriter writer = new StringTupleWriter(System.out);

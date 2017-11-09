@@ -12,6 +12,15 @@ public class IndexInfo {
 
     public int treeOrder;
 
+    public IndexInfo() { }
+
+    public IndexInfo(String tableName, String attributeName, boolean isClustered, int treeOrder) {
+        this.tableName = tableName;
+        this.attributeName = attributeName;
+        this.isClustered = isClustered;
+        this.treeOrder = treeOrder;
+    }
+
     public static IndexInfo parse(String s) {
         IndexInfo info = new IndexInfo();
 
@@ -25,5 +34,10 @@ public class IndexInfo {
         info.treeOrder = Integer.parseInt(tokens[3]);
 
         return info;
+    }
+
+    @Override
+    public String toString() {
+        return tableName + " " + attributeName + " " + isClustered + " " + treeOrder;
     }
 }

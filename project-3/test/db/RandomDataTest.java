@@ -58,7 +58,7 @@ public class RandomDataTest {
             for (JoinImplementation joinType : JoinImplementation.values()) {
                 for (SortImplementation sortType : SortImplementation.values()) {
                     for (int blockSize : blockSizes) {
-                        testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize), results.get(query), query, joinType, sortType, blockSize, dir});
+                        testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize, false), results.get(query), query, joinType, sortType, blockSize, dir});
                     }
                 }
             }

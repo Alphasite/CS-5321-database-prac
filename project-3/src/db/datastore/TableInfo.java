@@ -1,6 +1,8 @@
 package db.datastore;
 
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Encapsulates information about a table:
@@ -11,6 +13,7 @@ public class TableInfo {
     public final Path file;
     public final TableHeader header;
     public final boolean binary;
+    public IndexInfo index;
 
     /**
      * Create a new table info reference.
@@ -26,5 +29,7 @@ public class TableInfo {
 
         // Resolve table name from file name
         this.tableName = file.getFileName().toString();
+
+        this.index = null;
     }
 }
