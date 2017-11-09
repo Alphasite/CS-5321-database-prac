@@ -22,11 +22,6 @@ public class BTree {
 
     private FileChannel channel;
 
-    private BTree(int order, IndexNode root) {
-        this.order = order;
-        this.root = root;
-    }
-
     private BTree(FileChannel channel, int order, int nbLeaves, int rootIndex) {
         this.channel = channel;
 
@@ -93,7 +88,6 @@ public class BTree {
         IndexNode currentNode = root;
         LeafNode leafNode = null;
 
-        // Kind of ugly but should work...
         while (leafNode == null) {
             int nextNode = currentNode.search(key);
 
@@ -111,24 +105,6 @@ public class BTree {
 
     public BTreeDataIterator iteratorForRange(Integer low, Integer high) {
         return new BTreeDataIterator(low, high);
-    }
-
-    /**
-     * Save tree structure to file according to specification.
-     * <p>
-     * Pages are laid out as follows :
-     * <ul>
-     * <li>Header page with layout info</li>
-     * <li>Leaf nodes in left-to-right order</li>
-     * <li>First index node layer in left-to-right order</li>
-     * <li>...</li>
-     * <li>Root node</li>
-     * </ul></p>
-     *
-     * @param file path to file
-     */
-    public void serialize(Path file) {
-
     }
 
     public IndexNode getRoot() {

@@ -1,7 +1,6 @@
 package db.query.visitors;
 
 import db.datastore.TableHeader;
-import db.datastore.tuple.Tuple;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
