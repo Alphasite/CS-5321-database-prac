@@ -1,9 +1,12 @@
 package db.datastore;
 
+import db.datastore.index.BulkLoader;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -72,6 +75,11 @@ public class Database {
     }
 
     private void loadIndexInfo(Path indexConfigFile) {
+        // Prevent crashes when running old tests
+        if (!Files.exists(indexConfigFile)) {
+            return;
+        }
+
         try {
             Scanner scanner = new Scanner(indexConfigFile);
 
@@ -85,10 +93,17 @@ public class Database {
     }
 
     public void buildIndexes() {
-        // Directpry is guaranteed to exist, no need to create it
         Path indexFolder = dbPath.resolve("indexes");
 
+        try {
+            Files.createDirectory(indexFolder);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        for (IndexInfo config : indexInfo) {
+            Path indexFile = BulkLoader.buildIndex(this, config, indexFolder);
+        }
     }
 
     /**
