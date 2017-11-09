@@ -17,6 +17,11 @@ Logic for Index Scan Operator:
   (which reads the tuples differently depending on type of index), BulkLoader (which
   creates the indexes), and PhysicalPlanBuilder (which inserts IndexScanOperators into
   the physical plan when appropriate).
+- The root-to-leaf tree descent is part of the tree data structure code. The entry point is
+  BTree.search(key) that begins at the root and goes down by finding the corresponding child
+  entry, then retrieving the node by directly reading the corresponding page. Thus only
+  nodes along the search path are deserialized which means each index search requires
+  around 3 I/Os (based on typical tree order values as seen in class).
 
 
 Logic for separating out selection handled via the index:

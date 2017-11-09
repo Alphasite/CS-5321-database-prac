@@ -109,7 +109,7 @@ public class Database {
         }
 
         for (IndexInfo config : indexInfo) {
-            Path indexFile = BulkLoader.buildIndex(this, config, indexFolder);
+            BulkLoader.buildIndex(this, config, indexFolder);
         }
     }
 
