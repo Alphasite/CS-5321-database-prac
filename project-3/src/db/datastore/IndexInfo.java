@@ -1,5 +1,8 @@
 package db.datastore;
 
+/**
+ * Holder object for index config : table and attribute, clustered, tree order
+ */
 public class IndexInfo {
 
     public String tableName;

@@ -7,6 +7,7 @@ import java.nio.file.Path;
  * path on disk and the table header information (its schema effectively)
  */
 public class TableInfo {
+    public final String tableName;
     public final Path file;
     public final TableHeader header;
     public final boolean binary;
@@ -22,5 +23,8 @@ public class TableInfo {
         this.header = header;
         this.file = file;
         this.binary = binary;
+
+        // Resolve table name from file name
+        this.tableName = file.getFileName().toString();
     }
 }

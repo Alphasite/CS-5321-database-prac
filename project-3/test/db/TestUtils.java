@@ -34,11 +34,17 @@ import static org.junit.Assert.fail;
  */
 public class TestUtils {
 
-    public static final Path INPUT_PATH = Paths.get("resources/samples/input");
+    public static final Path SAMPLES_PATH = Paths.get("resources/samples");
+
+    public static final Path INPUT_PATH = SAMPLES_PATH.resolve("input");
     public static final Path DB_PATH = INPUT_PATH.resolve("db");
-    public static final Path OUTPUT_PATH = Paths.get("resources/samples/output");
-    public static final Path EXPECTED_PATH = Paths.get("resources/samples/expected");
-    public static final Path TEMP_PATH = Paths.get("resources/samples/tmp");
+    public static final Path OUTPUT_PATH = SAMPLES_PATH.resolve("output");
+    public static final Path EXPECTED_PATH = SAMPLES_PATH.resolve("expected");
+    public static final Path TEMP_PATH = SAMPLES_PATH.resolve("tmp");
+
+    public static final Path NEW_SAMPLES_PATH = Paths.get("resources/samples-4");
+    public static final Path NEW_DB_PATH = NEW_SAMPLES_PATH.resolve("input/db");
+    public static final Path EXPECTED_INDEXES = NEW_SAMPLES_PATH.resolve("expected_indexes");
 
     /**
      * A method to compare the tuple output of two db.operators, e.g. a reference and processed.
