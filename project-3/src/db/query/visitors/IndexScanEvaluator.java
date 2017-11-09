@@ -1,6 +1,5 @@
 package db.query.visitors;
 
-import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
 import net.sf.jsqlparser.expression.*;
@@ -14,6 +13,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
 
+/**
+ * Expression visitor used to collect the selection expressions that may be
+ * optimized by an Index Scan and any leftover expressions
+ */
 public class IndexScanEvaluator implements ExpressionVisitor{
     private TableInfo tableInfo;
     private Expression leftoverExpression;
@@ -24,7 +27,8 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     /**
      * Setup evaluator
-     * @param header The header for the table we are doing an index scan on
+     * @param tableInfo The tableInfo for the table we are doing an index scan on
+     * @param indexesFolder The path to the folder containing our indexes
      */
     public IndexScanEvaluator(TableInfo tableInfo, Path indexesFolder) {
         this.tableInfo = tableInfo;
@@ -36,6 +40,13 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         this.indexesFolder = indexesFolder;
     }
 
+    /**
+     * Returns num2 if num1 is null, num1 if num2 is null, and the minimum value of
+     * the two if neither is null.
+     * @param num1
+     * @param num2
+     * @return The minimum value of num1 and num2, or null if both are null
+     */
     private Integer minNullCheck(Integer num1, Integer num2) {
         if (num1 == null) {
             return num2;
@@ -47,6 +58,13 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         return Math.min(num1, num2);
     }
 
+    /**
+     * Returns num2 if num1 is null, num1 if num2 is null, and the maximum value of
+     * the two if neither is null.
+     * @param num1
+     * @param num2
+     * @return The maximum value of num1 and num2, or null if both are null
+     */
     private Integer maxNullCheck(Integer num1, Integer num2) {
         if (num1 == null) {
             return num2;
@@ -58,6 +76,13 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         return Math.max(num1, num2);
     }
 
+    /**
+     * Visits this BinaryExpression's children and only returns true if
+     * one of the children is the indexed column of this table AND the other
+     * child is a numeric (Long) value.
+     * @param binop The BinaryExpression we are currently looking at
+     * @return true if the conditions above hold, false otherwise
+     */
     private boolean usesIndexedCol(BinaryExpression binop) {
         Expression left = binop.getLeftExpression();
         Expression right = binop.getRightExpression();
@@ -76,6 +101,10 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         }
     }
 
+    /**
+     * Adds the given expression to the leftoverExpression field.
+     * @param e The expression to add to the leftoverExpression field
+     */
     private void addToLeftover(Expression e) {
         if (leftoverExpression == null) {
             leftoverExpression = e;
@@ -96,6 +125,12 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         return this.leftoverExpression;
     }
 
+    /**
+     * Gets a BTree representing the tree index that can be used to scan
+     * this table, or null if no such tree exists.
+     * @return A BTree if this table can be optimized with an IndexScan,
+     *         otherwise null
+     */
     public BTree getIndexTree() {
         if (low == null && high == null) {
             // index cannot be used
@@ -105,10 +140,20 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         }
     }
 
+    /**
+     * Gets the value of low.
+     *
+     * @return the value of low
+     */
     public Integer getLow() {
         return low;
     }
 
+    /**
+     * Gets the value of high.
+     *
+     * @return the value of high
+     */
     public Integer getHigh() {
         return high;
     }

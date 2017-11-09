@@ -9,6 +9,10 @@ import db.datastore.tuple.binary.BinaryTupleReader;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
+/**
+ * An operator that uses an index on a table to scan through
+ * a specific range of tuples in that table.
+ */
 public class IndexScanOperator extends AbstractOperator{
 
     private final TableInfo tableInfo;
@@ -76,6 +80,11 @@ public class IndexScanOperator extends AbstractOperator{
         return tableInfo;
     }
 
+    /**
+     * Generates the next tuple when using a clustered index.
+     *
+     * @return the next tuple
+     */
     private Tuple generateNextTupleClustered() {
         int index = this.tableInfo.header.resolve(this.tableInfo.tableName, this.tableInfo.index.attributeName).get();
         if (highVal == null || this.reader.peek().fields.get(index) <= highVal) {
@@ -85,6 +94,11 @@ public class IndexScanOperator extends AbstractOperator{
         }
     }
 
+    /**
+     * Generates the next tuple when using an unclustered index.
+     *
+     * @return the next tuple
+     */
     private Tuple generateNextTupleUnclustered() {
         if (indexTreeIterator.hasNext()) {
             Rid r = indexTreeIterator.next();
@@ -95,6 +109,11 @@ public class IndexScanOperator extends AbstractOperator{
         }
     }
 
+    /**
+     * Resets this operator when using a clustered tree
+     *
+     * @return true in all cases
+     */
     private boolean resetClustered() {
         resetUnclustered();
         Rid r = indexTreeIterator.next();
@@ -102,6 +121,11 @@ public class IndexScanOperator extends AbstractOperator{
         return true;
     }
 
+    /**
+     * Resets this operator when using an unclustered tree
+     *
+     * @return true in all cases
+     */
     private boolean resetUnclustered() {
         close();
         this.reader = BinaryTupleReader.get(this.tableInfo.file);

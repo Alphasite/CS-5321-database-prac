@@ -21,6 +21,12 @@ public class IndexInfo {
         this.treeOrder = treeOrder;
     }
 
+    /**
+     * Creates an instance of an IndexInfo class from a string in the form of
+     * "{tableName} {attributeName} {isClustered} {treeOrder}"
+     * @param s The string to parse IndexInfo fields from
+     * @return A new IndexInfo instance
+     */
     public static IndexInfo parse(String s) {
         IndexInfo info = new IndexInfo();
 
