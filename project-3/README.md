@@ -1,6 +1,6 @@
 # CS-5321-database-prac
 
-## Project 3
+## Project 4
 
 The packages/classes of interest are:
  - Top level class: db.Project3
@@ -11,21 +11,31 @@ The packages/classes of interest are:
 Many parametrized tests are also provided in the test folder to verify the behavior of our 
 implementation.
  
-Logic for Partition Reset during SMJ:
-    Our SMJ operator resets back to a particular tuple by calling the
-    seek(index) method of the right child sort operator. Our external
-    sort operator seeks by using the seek method of its underlying
-    BinaryTupleReader class, which calculates the target page from
-    the index, and directly loads that page (and only that page) into
-    memory.
-    Since our SMJ and external sort operators are not saving any tuples
-    in memory for the purposes of resetting back to an index, SMJ does
-    not keep unbounded state.
+Logic for Index Scan Operator:
+- lowkey and highkey are set in the IndexScanOperator class (this interval is closed)
+- Different handling of clustered vs. unclustered indexes can be seen in IndexScanOperator
+  (which reads the tuples differently depending on type of index), BulkLoader (which
+  creates the indexes), and PhysicalPlanBuilder (which inserts IndexScanOperators into
+  the physical plan when appropriate).
 
-Logic for Handling DISTINCT:
-    Our distinct operator uses a sorting approach, so since our
-    external sort operator does not keep unbounded state, neither
-    does our distinct operator.
+
+Logic for separating out selection handled via the index:
+- Previous to project 4, we already created logic that pushed selection operators
+  down the tree. Thus, it is already certain that any logical selection operators
+  are directly above scan operators.
+- Going by this assumption, when our PhysicalPlanBuilder visits a
+  LogicalSelectOperator, we check if any of the selection expressions can be handled
+  by an index scan. If not, we proceed the same way as in project 3. If so, we
+  replace the base ScanOperator with an IndexScanOperator and add a physical
+  SelectionOperator on top of the IndexScanOperator to handle any leftover
+  expressions that cannot be handled by the IndexScan.
+- This detail was skimmed over in the previous bullet point, but we use a new
+  expression visitor called IndexScanEvaluator to decide whether selection
+  operator's expressions can be optimized by an IndexScan. This expression
+  visitor looks at every expression joined by an AndExpression and if it both
+  a) involves the indexed column and b) involves no other columns, it is an
+  expression that can be optimized by an IndexScan.
+
 
 No known bugs.
  
