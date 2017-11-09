@@ -65,6 +65,11 @@ public class IndexNode implements BTreeNode {
         return node;
     }
 
+    /**
+     * Write an index node to a buffer page, filling empty space with 0
+     *
+     * @param buffer Writable byte buffer large enough to serialize node
+     */
     @Override
     public void serialize(ByteBuffer buffer) {
         // Write flag

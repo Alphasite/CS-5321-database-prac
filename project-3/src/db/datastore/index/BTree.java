@@ -105,7 +105,7 @@ public class BTree {
             }
         }
 
-        return leafNode.get(key);
+        return leafNode.search(key);
     }
 
     /**

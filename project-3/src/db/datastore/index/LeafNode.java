@@ -22,13 +22,23 @@ public class LeafNode implements BTreeNode {
      * Retrieve data entry with specified key
      * @return The corresponding data entry, or null if not found
      */
-    public DataEntry get(int key) {
+    public DataEntry search(int key) {
         for (DataEntry entry : dataEntries) {
             if (entry.key == key) {
                 return entry;
             }
         }
         return null;
+    }
+
+    /**
+     * Retrieve the lowest search key in this Node, useful to build search indexes
+     *
+     * @return minimumu value of DataEntry key (ie. attribute value) in node
+     */
+    public int getLowestKey() {
+        // entries are sorted by key : just return first one
+        return dataEntries.get(0).key;
     }
 
     /**
@@ -62,6 +72,11 @@ public class LeafNode implements BTreeNode {
         return new LeafNode(entries);
     }
 
+    /**
+     * Write a leaf node to a buffer page, filling empty space with 0
+     *
+     * @param buffer Writable byte buffer large enough to serialize node
+     */
     @Override
     public void serialize(ByteBuffer buffer) {
         // Write flag

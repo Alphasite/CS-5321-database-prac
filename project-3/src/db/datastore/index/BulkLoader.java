@@ -20,6 +20,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 
+/**
+ * A processor class that applies the bulk loading specification to build a serialized index tree
+ * for a table on a specific attribute.
+ */
 public class BulkLoader {
 
     private TableInfo tableInfo;
@@ -29,40 +33,39 @@ public class BulkLoader {
     private int treeOrder;
     private boolean clustered;
 
-    private Path file;
     private FileChannel output;
 
-    private BulkLoader(TableInfo target, IndexInfo parameters, Path file) {
+    private BulkLoader(TableInfo target, IndexInfo parameters) {
         this.tableInfo = target;
         this.attributeName = parameters.attributeName;
 
+        /** Store the attribute index in header for quick lookup */
         this.attributeIndex = target.header.resolve(target.tableName, attributeName).get();
 
         this.treeOrder = parameters.treeOrder;
         this.clustered = parameters.isClustered;
 
-        this.file = file;
         this.output = null;
     }
 
     /**
      * Build a serialized B+ Tree index on a table in specified folder.
      *
-     * @param DB
-     * @param parameters
-     * @param folder
+     * @param DB Database to read table info from
+     * @param parameters Parameters for the index (table and attribute name, tree order, clustering)
+     * @param folder Index output folder
      * @return The file that was created to store the index tree
      */
     public static Path buildIndex(Database DB, IndexInfo parameters, Path folder) {
         Path outputFile = folder.resolve(parameters.tableName + "." + parameters.attributeName);
 
-        BulkLoader builder = new BulkLoader(DB.getTable(parameters.tableName), parameters, outputFile);
-        builder.build();
+        BulkLoader builder = new BulkLoader(DB.getTable(parameters.tableName), parameters);
+        builder.build(outputFile);
 
         return outputFile;
     }
 
-    public void build() {
+    public void build(Path outputFile) {
         if (clustered) {
             sortRelation();
         }
@@ -72,7 +75,7 @@ public class BulkLoader {
         input.close();
 
         try {
-            this.output = FileChannel.open(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
+            this.output = FileChannel.open(outputFile, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
 
             // We need to keep the nodes in memory to generate the index keys
@@ -164,6 +167,7 @@ public class BulkLoader {
      */
     private List<LeafNode> buildLeafNodes(List<DataEntry> entries) {
         int currentPage = 1;
+        // Index of the next data entry to add to a node
         int currentIndex = 0;
         int entriesRemaining = entries.size();
         int d = treeOrder;
@@ -209,6 +213,9 @@ public class BulkLoader {
     }
 
     /**
+     * Generate index nodes layers from leaf nodes to root and write them to disk, overwriting contents
+     * of pages after leaf nodes.
+     *
      * @param leafNodes
      * @return total number of nodes serialized to file (including leaves)
      */
@@ -217,16 +224,18 @@ public class BulkLoader {
         int nodesInPrevLayer = leafNodes.size();
         int d = treeOrder;
 
-        //
+        // lower/upper delimit the range of nodes that form the previous layer of the tree
         int lowerRange = 1;
         int upperRange = leafNodes.size();
+        // first node that is not yet referenced by an index node at this layer
         int current = lowerRange;
 
-        // Generate map associating each node to the minimal search key in corresponding subtree
+        // Generate map associating each node to the minimal entry key in corresponding subtree
+        // Map is indexed by node id ie. page number in file ([1..n] for n leaves)
         Map<Integer, Integer> keyMap = new HashMap<>();
-        // Since Data entries are sorted by key we can read first entry in each leaf
+        // Initialize with leaf node data
         for (int i = 0; i < leafNodes.size(); i++) {
-            keyMap.put(i + 1, leafNodes.get(i).getDataEntries().get(0).key);
+            keyMap.put(i + 1, leafNodes.get(i).getLowestKey());
         }
 
         ByteBuffer buf = ByteBuffer.allocateDirect(Database.PAGE_SIZE);
@@ -251,7 +260,9 @@ public class BulkLoader {
 
                 int[] children = range(current, current + nodesToWrite);
                 int[] keys = generateKeys(keyMap, children);
-                keyMap.put(currentPage, leafNodes.get(children[0] - 1).getDataEntries().get(0).key);
+
+                // Update mappings : read minimal entry key from leftmost child
+                keyMap.put(currentPage, keyMap.get(children[0]));
 
                 writeIndexNode(keys, children, buf, currentPage);
 
