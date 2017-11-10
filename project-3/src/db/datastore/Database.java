@@ -122,5 +122,4 @@ public class Database {
     public TableInfo getTable(String name) {
         return this.tables.get(name);
     }
-
 }

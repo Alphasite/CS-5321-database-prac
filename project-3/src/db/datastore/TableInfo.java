@@ -1,5 +1,8 @@
 package db.datastore;
 
+import db.datastore.stats.StatsGatherer;
+import db.datastore.stats.TableStats;
+
 import java.nio.file.Path;
 
 /**
@@ -29,5 +32,9 @@ public class TableInfo {
         this.tableName = file.getFileName().toString();
 
         this.index = null;
+    }
+
+    public TableStats getStats() {
+        return StatsGatherer.gatherStats(this);
     }
 }
