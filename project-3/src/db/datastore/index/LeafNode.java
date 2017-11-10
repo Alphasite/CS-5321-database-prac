@@ -48,7 +48,8 @@ public class LeafNode implements BTreeNode {
      */
     public static LeafNode deserialize(IntBuffer buffer) {
         // Check flag
-        assert buffer.get() == 0;
+        boolean isLeafNode = buffer.get() == 0;
+        assert isLeafNode;
 
         int nbEntries = buffer.get();
         List<DataEntry> entries = new ArrayList<>(nbEntries);
