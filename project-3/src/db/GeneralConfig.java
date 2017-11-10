@@ -20,6 +20,7 @@ public class GeneralConfig {
     public Path dbPath;
 
     public boolean buildIndexes;
+    public boolean gatherStats;
     public boolean evaluateQueries;
 
     public GeneralConfig(Path inputDir, Path outputDir, Path tempDir) {
@@ -30,6 +31,7 @@ public class GeneralConfig {
         this.dbPath = inputDir.resolve("db");
 
         this.buildIndexes = false;
+        this.gatherStats = true;
         this.evaluateQueries = true;
     }
 

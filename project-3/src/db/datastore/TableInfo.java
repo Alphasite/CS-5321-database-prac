@@ -15,6 +15,7 @@ public class TableInfo {
     public final TableHeader header;
     public final boolean binary;
     public IndexInfo index;
+    private TableStats stats;
 
     /**
      * Create a new table info reference.
@@ -35,6 +36,10 @@ public class TableInfo {
     }
 
     public TableStats getStats() {
-        return StatsGatherer.gatherStats(this);
+        if (this.stats == null) {
+            this.stats = StatsGatherer.gatherStats(this);
+        }
+
+        return this.stats;
     }
 }

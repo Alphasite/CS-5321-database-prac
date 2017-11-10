@@ -1,6 +1,8 @@
 package db;
 
 import db.datastore.Database;
+import db.datastore.stats.StatsGatherer;
+import db.datastore.stats.TableStats;
 import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.datastore.tuple.string.StringTupleWriter;
@@ -21,6 +23,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * Startup class for db.Project3
@@ -37,7 +40,7 @@ public class Project3 {
      * @param args If present : [configFile]
      */
     public static void main(String args[]) {
-        Path filePath = args.length >= 1 ? Paths.get(args[0]) : Paths.get("resources/samples-4/input/config.txt");
+        Path filePath = args.length >= 1 ? Paths.get(args[0]) : Paths.get("resources/samples-4/interpreter_config_file.txt").toAbsolutePath();
         GeneralConfig config = GeneralConfig.fromFile(filePath);
 
         Database DB = Database.loadDatabase(config.dbPath);
@@ -45,6 +48,10 @@ public class Project3 {
         if (config.buildIndexes) {
             DB.buildIndexes();
         }
+
+        List<TableStats> stats = StatsGatherer.gatherStats(DB);
+        String statsFile = StatsGatherer.buildStatsFile(stats);
+        StatsGatherer.writeStatsFile(config.inputDir, statsFile);
 
         if (config.evaluateQueries) {
             try {
