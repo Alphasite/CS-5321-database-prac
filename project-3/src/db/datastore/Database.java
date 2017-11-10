@@ -105,7 +105,7 @@ public class Database {
         try {
             Files.createDirectory(indexFolder);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
 
         for (IndexInfo config : indexInfo) {

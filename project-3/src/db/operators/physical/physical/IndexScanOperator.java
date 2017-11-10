@@ -116,8 +116,10 @@ public class IndexScanOperator extends AbstractOperator{
      */
     private boolean resetClustered() {
         resetUnclustered();
-        Rid r = indexTreeIterator.next();
-        this.reader.seek(r.pageid, r.tupleid);
+        if (indexTreeIterator.hasNext()) {
+            Rid r = indexTreeIterator.next();
+            this.reader.seek(r.pageid, r.tupleid);
+        }
         return true;
     }
 
