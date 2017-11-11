@@ -14,8 +14,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,6 +47,7 @@ public class IndexPerformanceTest {
     private Operator actualResult;
     private long elapsedTime;
     private int outputRows;
+    private List<String> filesToReplace;
 
     @Parameterized.Parameters(name = "{index}: <{3}> query={0}")
     public static Collection<Object[]> data() throws IOException {
@@ -70,7 +73,19 @@ public class IndexPerformanceTest {
     }
 
     public IndexPerformanceTest(String query, PhysicalPlanConfig testConfig, List<IndexInfo> indexConfigs, String indexType) {
+        filesToReplace = new ArrayList<>();
         for (IndexInfo indexConfig : indexConfigs) {
+            if (indexConfig.isClustered) {
+                Path original = inputDir.resolve("data").resolve(indexConfig.tableName);
+                Path tempCopy = inputDir.resolve("data").resolve(indexConfig.tableName + "_TEMP");
+                try {
+                    Files.copy(original, tempCopy, StandardCopyOption.REPLACE_EXISTING);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                filesToReplace.add(indexConfig.tableName);
+            }
+
             BulkLoader.buildIndex(database, indexConfig, TestUtils.NEW_DB_PATH.resolve("indexes"));
         }
         this.actualResult = TestUtils.getQueryPlan(inputDir, query, testConfig);
@@ -89,6 +104,18 @@ public class IndexPerformanceTest {
     @After
     public void tearDown() throws Exception {
         this.actualResult.close();
+
+        for (String file : filesToReplace) {
+            Path original = inputDir.resolve("data").resolve(file);
+            Path tempCopy = inputDir.resolve("data").resolve(file + "_TEMP");
+
+            try {
+                Files.copy(tempCopy, original, StandardCopyOption.REPLACE_EXISTING);
+                Files.deleteIfExists(tempCopy);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         System.out.println("Reads: " + DiskIOStatistics.reads);
         System.out.println("Write: " + DiskIOStatistics.writes);
