@@ -91,7 +91,7 @@ public class Database {
 
                 // add to tableInfo
                 TableInfo thisIndexTable = tables.get(info.tableName);
-                thisIndexTable.index = info;
+                thisIndexTable.indices.add(info);
             }
         } catch (IOException e) {
             // No index_info.txt found

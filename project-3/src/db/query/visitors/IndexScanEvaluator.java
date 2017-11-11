@@ -1,5 +1,6 @@
 package db.query.visitors;
 
+import db.datastore.IndexInfo;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
 import net.sf.jsqlparser.expression.*;
@@ -24,13 +25,14 @@ public class IndexScanEvaluator implements ExpressionVisitor{
     private Integer expressionVal;
     private Path indexesFolder;
     private boolean isIndexedCol;
+    private IndexInfo index;
 
     /**
      * Setup evaluator
      * @param tableInfo The tableInfo for the table we are doing an index scan on
      * @param indexesFolder The path to the folder containing our indexes
      */
-    public IndexScanEvaluator(TableInfo tableInfo, Path indexesFolder) {
+    public IndexScanEvaluator(TableInfo tableInfo, IndexInfo index, Path indexesFolder) {
         this.tableInfo = tableInfo;
         this.leftoverExpression = null;
         this.low = null;
@@ -38,6 +40,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         this.expressionVal = null;
         this.isIndexedCol = false;
         this.indexesFolder = indexesFolder;
+        this.index = index;
     }
 
     /**
@@ -136,7 +139,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
             // index cannot be used
             return null;
         } else {
-            return BTree.createTree(indexesFolder.resolve(tableInfo.index.tableName + "." + tableInfo.index.attributeName));
+            return BTree.createTree(indexesFolder.resolve(index.tableName + "." + index.attributeName));
         }
     }
 
@@ -166,7 +169,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(Column column) {
-        if (column.getColumnName().equals(tableInfo.index.attributeName)) {
+        if (column.getColumnName().equals(index.attributeName)) {
             isIndexedCol = true;
         }
     }

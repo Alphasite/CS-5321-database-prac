@@ -1,5 +1,6 @@
 package db.operators.physical.physical;
 
+import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
@@ -19,6 +20,7 @@ public class IndexScanOperator extends AbstractOperator{
     private final BTree indexTree;
     private final Integer lowVal;
     private final Integer highVal;
+    private final IndexInfo index;
 
     private BinaryTupleReader reader;
     private BTree.BTreeDataIterator indexTreeIterator;
@@ -29,19 +31,20 @@ public class IndexScanOperator extends AbstractOperator{
      * @param lowVal The minimum value (inclusive) tuples should contain for the key of indexTree
      * @param highVal The maximum value (inclusive) tuples should contain for the key of indexTree
      */
-    public IndexScanOperator(TableInfo tableInfo, BTree indexTree, Integer lowVal, Integer highVal) {
+    public IndexScanOperator(TableInfo tableInfo, IndexInfo index, BTree indexTree, Integer lowVal, Integer highVal) {
         this.tableInfo = tableInfo;
         this.indexTree = indexTree;
         this.lowVal = lowVal;
         this.highVal = highVal;
         this.indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
+        this.index = index;
 
         reset();
     }
 
     @Override
     protected Tuple generateNextTuple() {
-        if (this.tableInfo.index.isClustered) {
+        if (this.index.isClustered) {
             return generateNextTupleClustered();
         } else {
             return generateNextTupleUnclustered();
@@ -54,7 +57,7 @@ public class IndexScanOperator extends AbstractOperator{
 
     @Override
     public boolean reset() {
-        if (this.tableInfo.index.isClustered) {
+        if (this.index.isClustered) {
             return resetClustered();
         } else {
             return resetUnclustered();
@@ -86,7 +89,7 @@ public class IndexScanOperator extends AbstractOperator{
      * @return the next tuple
      */
     private Tuple generateNextTupleClustered() {
-        int index = this.tableInfo.header.resolve(this.tableInfo.tableName, this.tableInfo.index.attributeName).get();
+        int index = this.tableInfo.header.resolve(this.tableInfo.tableName, this.index.attributeName).get();
         if (highVal == null || this.reader.peek().fields.get(index) <= highVal) {
             return this.reader.next();
         } else {
