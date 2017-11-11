@@ -13,14 +13,24 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Static methods to generate useful statistics about a relation stored on disk :
+ * number of records, range of values for each attribute
+ */
 public class StatsGatherer {
 
+    /**
+     * Generate statistics for each Table tracked by a {@link Database}
+     */
     public static List<TableStats> gatherStats(Database database) {
         return database.getTables().stream()
                 .map(TableInfo::getStats)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Generate statistics for a Table. This operation keeps bounded state.
+     */
     public static TableStats gatherStats(TableInfo table) {
         ScanOperator operator = new ScanOperator(table);
 
@@ -42,15 +52,22 @@ public class StatsGatherer {
         return stats;
     }
 
-    public static String buildStatsFile(Collection<TableStats> stats) {
+    /**
+     * Format a collection of {@link TableStats} as a string.
+     *
+     * @param stats
+     * @return Line separated : tableName count [attribute.name,min,max]
+     */
+    public static String asString(Collection<TableStats> stats) {
         return stats.stream()
-                .map(Object::toString)
+                .map(TableStats::toString)
                 .collect(Collectors.joining("\n"));
     }
 
-    public static void writeStatsFile(Path directory, String file) {
+    public static void writeStatsFile(Path directory, String contents) {
         try {
-            Files.write(directory.resolve("stats.txt"), file.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            Files.write(directory.resolve("stats.txt"), contents.getBytes(), StandardOpenOption.CREATE,
+                    StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

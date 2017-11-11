@@ -50,7 +50,7 @@ public class Project3 {
         }
 
         List<TableStats> stats = StatsGatherer.gatherStats(DB);
-        String statsFile = StatsGatherer.buildStatsFile(stats);
+        String statsFile = StatsGatherer.asString(stats);
         StatsGatherer.writeStatsFile(config.inputDir, statsFile);
 
         if (config.evaluateQueries) {
