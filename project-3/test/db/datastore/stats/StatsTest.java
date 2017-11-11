@@ -25,7 +25,7 @@ public class StatsTest {
 
     @Test
     public void testStatsCollection() {
-        TableStats sailorsStats = StatsGatherer.gatherStats(sailors);
+        TableStats sailorsStats = sailors.getStats();
 
         assertEquals(10_000, sailorsStats.count);
         assertEquals(1, sailorsStats.minimums[0]);
