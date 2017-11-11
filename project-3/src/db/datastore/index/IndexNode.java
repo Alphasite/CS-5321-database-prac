@@ -48,7 +48,8 @@ public class IndexNode implements BTreeNode {
      */
     public static IndexNode deserialize(IntBuffer buffer) {
         // Check flag
-        assert buffer.get() == 1;
+        boolean isIndexNode = buffer.get() == 1;
+        assert isIndexNode;
 
         int nbKeys = buffer.get();
 
