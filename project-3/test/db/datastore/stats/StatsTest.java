@@ -35,7 +35,7 @@ public class StatsTest {
         assertEquals(10_000, sailorsStats.maximums[1]);
         assertEquals(9_998, sailorsStats.maximums[2]);
 
-        TableStats boatsStats = StatsGatherer.gatherStats(boats);
+        TableStats boatsStats = boats.getStats();
 
         assertEquals(10_000, boatsStats.count);
         assertEquals(1, boatsStats.minimums[0]);
