@@ -16,6 +16,11 @@ public class TableStats {
         this.count = 0;
         this.minimums = new int[numOfColumns];
         this.maximums = new int[numOfColumns];
+
+        for (int i = 0; i < numOfColumns; i++) {
+            this.minimums[i] = Integer.MAX_VALUE;
+            this.maximums[i] = Integer.MIN_VALUE;
+        }
     }
 
     @Override

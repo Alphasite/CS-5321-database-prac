@@ -2,4 +2,4 @@ resources/samples-4/input
 resources/samples-4/output
 resources/samples-4/tmp
 1
-0
+1
