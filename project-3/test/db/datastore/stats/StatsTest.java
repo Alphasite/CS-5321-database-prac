@@ -3,13 +3,8 @@ package db.datastore.stats;
 import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.TableInfo;
-import db.datastore.tuple.string.StringTupleWriter;
-import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,12 +26,6 @@ public class StatsTest {
     @Test
     public void testStatsCollection() {
         TableStats sailorsStats = StatsGatherer.gatherStats(sailors);
-
-        try {
-            new ScanOperator(sailors).dump(new StringTupleWriter(new FileOutputStream("tuples.csv")));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
 
         assertEquals(10_000, sailorsStats.count);
         assertEquals(1, sailorsStats.minimums[0]);
