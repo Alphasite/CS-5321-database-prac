@@ -1,6 +1,7 @@
 package db.query.visitors;
 
 import db.PhysicalPlanConfig;
+import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.index.BTree;
 import db.operators.logical.*;
@@ -139,17 +140,18 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         ScanOperator child = (ScanOperator) operators.pollLast();
 
         if (config.useIndices) {
-            IndexScanEvaluator scanEval = new IndexScanEvaluator(child.getTable(), indexesFolder);
+            IndexInfo indexInfo = child.getTable().indices.get(0);
+            IndexScanEvaluator scanEval = new IndexScanEvaluator(child.getTable(), indexInfo, indexesFolder);
             node.getPredicate().accept(scanEval);
 
             BTree treeIndex = scanEval.getIndexTree();
             Expression leftovers = scanEval.getLeftoverExpression();
             if (treeIndex != null && leftovers != null) {
-                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), treeIndex, scanEval.getLow(), scanEval.getHigh());
+                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
                 SelectionOperator select = new SelectionOperator(scanOp, leftovers);
                 operators.add(select);
             } else if (treeIndex != null && leftovers == null) {
-                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), treeIndex, scanEval.getLow(), scanEval.getHigh());
+                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
                 operators.add(scanOp);
             } else /* treeIndex == null, essentially just a regular scan and select */ {
                 Operator select = new SelectionOperator(child, node.getPredicate());

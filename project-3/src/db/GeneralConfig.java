@@ -45,8 +45,13 @@ public class GeneralConfig {
 
             GeneralConfig config = new GeneralConfig(inputDir, outputDir, tempDir);
 
-            config.buildIndexes = (Integer.parseInt(scanner.nextLine()) == 1);
-            config.evaluateQueries = (Integer.parseInt(scanner.nextLine()) == 1);
+            if (scanner.hasNextLine()) {
+                config.buildIndexes = (Integer.parseInt(scanner.nextLine()) == 1);
+                config.evaluateQueries = (Integer.parseInt(scanner.nextLine()) == 1);
+            } else {
+                config.buildIndexes = true;
+                config.evaluateQueries = true;
+            }
 
             return config;
         } catch (IOException e) {

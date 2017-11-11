@@ -2,6 +2,7 @@ package db.operators.physical.physical;
 
 import db.TestUtils;
 import db.datastore.Database;
+import db.datastore.IndexInfo;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
 import db.datastore.index.BulkLoader;
@@ -42,23 +43,27 @@ public class IndexScanOperatorTest {
 
     private int min = 42;
     private int max = 9994;
+    private IndexInfo boatIndex;
+    private IndexInfo sailorIndex;
 
     @Before
     public void setUp() throws Exception {
         Database database = Database.loadDatabase(inputDir);
         boatsTable = database.getTable("Boats");
         boatsIndexTree = BTree.createTree(boatsIndexFile);
-        boatsOperator = new IndexScanOperator(boatsTable, boatsIndexTree, min, max);
+        boatsOperator = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree, min, max);
         numberOfTuples = 10000 - 4 - 32;
 
-        Path boatsIndexFile2 = BulkLoader.buildIndex(database, database.getTable("Boats").index, indexesDir);
+        boatIndex = database.getTable("Boats").indices.get(0);
+        Path boatsIndexFile2 = BulkLoader.buildIndex(database, boatIndex, indexesDir);
         BTree boatsIndexTree2 = BTree.createTree((boatsIndexFile2));
-        boatsOperator2 = new IndexScanOperator(boatsTable, boatsIndexTree2, 9982, null);
+        boatsOperator2 = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree2, 9982, null);
 
-        Path sailorsIndexFile = BulkLoader.buildIndex(database, database.getTable("Sailors").index, indexesDir);
+        sailorIndex = database.getTable("Sailors").indices.get(0);
+        Path sailorsIndexFile = BulkLoader.buildIndex(database, sailorIndex, indexesDir);
         sailorsTable = database.getTable("Sailors");
         sailorsIndexTree = BTree.createTree(sailorsIndexFile);
-        sailorsOperator = new IndexScanOperator(sailorsTable, sailorsIndexTree, null, 13);
+        sailorsOperator = new IndexScanOperator(sailorsTable, sailorIndex, sailorsIndexTree, null, 13);
     }
 
     @After
@@ -70,7 +75,7 @@ public class IndexScanOperatorTest {
     @Test
     public void fullScan() throws Exception {
         boatsOperator.close();
-        boatsOperator = new IndexScanOperator(boatsTable, boatsIndexTree, 0, 10000);
+        boatsOperator = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree, 0, 10000);
 
         TestUtils.unorderedCompareTuples(new ScanOperator(boatsTable), boatsOperator);
 

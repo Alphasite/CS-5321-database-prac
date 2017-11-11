@@ -1,5 +1,6 @@
 package db;
 
+import db.PhysicalPlanConfig.JoinImplementation;
 import db.datastore.Database;
 import db.datastore.stats.StatsGatherer;
 import db.datastore.stats.TableStats;
@@ -24,6 +25,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import static db.PhysicalPlanConfig.*;
 
 /**
  * Startup class for db.Project3
@@ -68,7 +71,13 @@ public class Project3 {
         int i = 1;
 
         // Load plan config
-        PhysicalPlanConfig planConfig = PhysicalPlanConfig.fromFile(config.inputDir.resolve("plan_builder_config.txt"));
+        PhysicalPlanConfig planConfig = new PhysicalPlanConfig(
+                JoinImplementation.SMJ,
+                SortImplementation.EXTERNAL,
+                5,
+                5,
+                true
+        );
 
         // Create directories if needed
         try {

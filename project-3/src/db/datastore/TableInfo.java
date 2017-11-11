@@ -4,6 +4,8 @@ import db.datastore.stats.StatsGatherer;
 import db.datastore.stats.TableStats;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Encapsulates information about a table:
@@ -14,7 +16,7 @@ public class TableInfo {
     public final Path file;
     public final TableHeader header;
     public final boolean binary;
-    public IndexInfo index;
+    public List<IndexInfo> indices;
     private TableStats stats;
 
     /**
@@ -32,7 +34,7 @@ public class TableInfo {
         // Resolve table name from file name
         this.tableName = file.getFileName().toString();
 
-        this.index = null;
+        this.indices = new ArrayList<>();
     }
 
     public TableStats getStats() {
