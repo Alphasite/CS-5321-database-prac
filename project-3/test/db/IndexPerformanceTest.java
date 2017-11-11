@@ -8,6 +8,7 @@ import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class IndexPerformanceTest {
     private static final Path inputDir = Paths.get("resources/samples-4/input/db").toAbsolutePath();
