@@ -103,7 +103,9 @@ public class Database {
         Path indexFolder = dbPath.resolve("indexes");
 
         try {
-            Files.createDirectory(indexFolder);
+            if (!Files.exists(indexFolder)) {
+                Files.createDirectory(indexFolder);
+            }
         } catch (IOException e) {
 //            e.printStackTrace();
         }
@@ -123,4 +125,7 @@ public class Database {
         return this.tables.get(name);
     }
 
+    public List<TableInfo> getTables() {
+        return new ArrayList<>(tables.values());
+    }
 }
