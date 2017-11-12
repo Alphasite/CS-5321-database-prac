@@ -26,19 +26,25 @@ public class UnionFind {
     public void add(String table) {
         if (!parent.containsKey(table)) {
             this.parent.put(table, table);
-            this.maximum.put(table, Integer.MIN_VALUE);
-            this.minimum.put(table, Integer.MAX_VALUE);
         }
     }
 
     public void setMinimum(String table, int minimum) {
         table = this.getParent(table);
-        this.minimum.put(table, Math.min(this.minimum.getOrDefault(table, Integer.MAX_VALUE), minimum));
+        if (this.minimum.containsKey(table)) {
+            this.minimum.put(table, Math.max(this.minimum.get(table), minimum));
+        } else {
+            this.minimum.put(table, minimum);
+        }
     }
 
     public void setMaximum(String table, int maximum) {
         table = this.getParent(table);
-        this.maximum.put(table, Math.max(this.maximum.getOrDefault(table, Integer.MIN_VALUE), maximum));
+        if (this.maximum.containsKey(table)) {
+            this.maximum.put(table, Math.min(this.maximum.get(table), maximum));
+        } else {
+            this.maximum.put(table, maximum);
+        }
     }
 
     public void setEquals(String table, int value) {
@@ -47,12 +53,12 @@ public class UnionFind {
         this.setMaximum(table, value);
     }
 
-    public int getMinimum(String table) {
-        return this.minimum.get(this.getParent(table));
+    public Integer getMinimum(String table) {
+        return this.minimum.getOrDefault(this.getParent(table), null);
     }
 
-    public int getMaximum(String table) {
-        return this.maximum.get(this.getParent(table));
+    public Integer getMaximum(String table) {
+        return this.maximum.getOrDefault(this.getParent(table), null);
     }
 
     public Integer getEquals(String table) {
@@ -71,8 +77,14 @@ public class UnionFind {
         table2 = getParent(table2);
 
         this.parent.put(table2, table1);
-        this.setMinimum(table1, this.minimum.get(table2));
-        this.setMaximum(table1, this.maximum.get(table2));
+
+        if (this.minimum.containsKey(table2)) {
+            this.setMinimum(table1, this.minimum.get(table2));
+        }
+
+        if (this.maximum.containsKey(table2)) {
+            this.setMaximum(table1, this.maximum.get(table2));
+        }
     }
 
     public List<Set<String>> getSets() {

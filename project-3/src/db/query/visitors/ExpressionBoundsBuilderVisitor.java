@@ -29,6 +29,10 @@ public class ExpressionBoundsBuilderVisitor implements ExpressionVisitor {
     }
 
     private void tryGetValue(BinaryExpression expression) {
+        this.valueLeft = false;
+        this.valueRight = false;
+        this.value = null;
+
         expression.getLeftExpression().accept(this);
         if (this.value != null) {
             this.valueLeft = true;
@@ -113,7 +117,6 @@ public class ExpressionBoundsBuilderVisitor implements ExpressionVisitor {
         tryGetValue(minorThanEquals);
 
         if (value != null && column != null) {
-            unionFind.setMaximum(column, value);
             if (this.valueLeft) {
                 // 0 <= column
                 unionFind.setMinimum(column, value);
