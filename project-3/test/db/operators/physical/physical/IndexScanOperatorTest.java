@@ -57,7 +57,7 @@ public class IndexScanOperatorTest {
 
         Path boatsIndexFile2 = BulkLoader.buildIndex(database, boatIndex, indexesDir);
         BTree boatsIndexTree2 = BTree.createTree((boatsIndexFile2));
-        boatsOperator = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree2, 9982, null);
+        boatsOperator2 = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree2, 9982, null);
 
         sailorIndex = database.getTable("Sailors").indices.get(0);
         Path sailorsIndexFile = BulkLoader.buildIndex(database, sailorIndex, indexesDir);
