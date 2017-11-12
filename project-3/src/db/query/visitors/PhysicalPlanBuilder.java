@@ -137,6 +137,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     public void visit(LogicalSelectOperator node) {
         node.getChild().accept(this);
 
+        // Fails on plans with aliases and selection operator
         ScanOperator child = (ScanOperator) operators.pollLast();
 
         if (config.useIndices) {
