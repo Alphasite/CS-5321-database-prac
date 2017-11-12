@@ -2,6 +2,7 @@ package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.PhysicalPlanConfig.SortImplementation;
+import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableInfo;
@@ -41,7 +42,8 @@ public class SampleQueriesTest {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
         Database DB = Database.loadDatabase(TestUtils.DB_PATH);
-        QueryBuilder builder = new QueryBuilder(DB);
+        UnionFind unionFind = new UnionFind();
+        QueryBuilder builder = new QueryBuilder(DB, unionFind);
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(TestUtils.INPUT_PATH.resolve("queries.sql").toFile()));

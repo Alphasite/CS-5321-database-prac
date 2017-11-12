@@ -11,10 +11,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.ArrayDeque;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Another expression visitor, handles breaking the WHERE clause into multiple tokens and classify them based
@@ -23,6 +20,9 @@ import java.util.Queue;
 public class WhereDecomposer implements ExpressionVisitor {
     private Map<String, Expression> selectionExpressions;
     private Map<TablePair, Expression> joinExpressions;
+
+    private List<Expression> tableTableExpressions;
+    private List<Expression> tableValueExpressions;
 
     private Expression nakedExpression;
 
@@ -34,18 +34,21 @@ public class WhereDecomposer implements ExpressionVisitor {
         this.nakedExpression = null;
 
         this.referencedTables = new ArrayDeque<>();
+
+        this.tableTableExpressions = new ArrayList<>();
+        this.tableValueExpressions = new ArrayList<>();
     }
 
     public static WhereDecomposer decompose(Expression expression, UnionFind unionFind) {
         WhereDecomposer decomposer = new WhereDecomposer();
         expression.accept(decomposer);
 
-        for (Expression joinExpression : decomposer.joinExpressions.values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
+        for (Expression unionExpression : decomposer.tableTableExpressions) {
+            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, unionExpression);
         }
 
-        for (Expression selectionExpression : decomposer.selectionExpressions.values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
+        for (Expression boundExpression : decomposer.tableValueExpressions) {
+            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, boundExpression);
         }
 
         return decomposer;
@@ -130,13 +133,16 @@ public class WhereDecomposer implements ExpressionVisitor {
 
         if (tableRight == null) {
             addSelection(tableLeft, comparator);
+            tableValueExpressions.add(comparator);
             return;
         }
 
         if (tableLeft.equals(tableRight)) {
             addSelection(tableLeft, comparator);
+            tableTableExpressions.add(comparator);
         } else {
             addJoin(tableLeft, tableRight, comparator);
+            tableTableExpressions.add(comparator);
         }
     }
 

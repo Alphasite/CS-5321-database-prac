@@ -23,12 +23,15 @@ import java.util.*;
  */
 public class QueryBuilder {
     private Database db;
+    private UnionFind unionFind;
+
 
     /**
      * Initialize query builder using the provided database object as a source for Table schema information
      */
-    public QueryBuilder(Database db) {
+    public QueryBuilder(Database db, UnionFind unionFind) {
         this.db = db;
+        this.unionFind = unionFind;
     }
 
     /**
@@ -170,7 +173,6 @@ public class QueryBuilder {
         Map<TablePair, Expression> joinExpressions = new HashMap<>();
         Expression nakedExpression = null;
 
-        UnionFind unionFind = new UnionFind();
         for (LogicalOperator operator : joinableTableInstances.values()) {
             TableHeader header = operator.getHeader();
 
@@ -252,5 +254,9 @@ public class QueryBuilder {
         } else {
             return new LogicalRenameOperator(scan, table.getAlias());
         }
+    }
+
+    public UnionFind getUnionFind() {
+        return unionFind;
     }
 }

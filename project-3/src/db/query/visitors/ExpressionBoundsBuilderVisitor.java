@@ -108,7 +108,7 @@ public class ExpressionBoundsBuilderVisitor implements ExpressionVisitor {
                 unionFind.setMaximum(column, value - 1);
             }
         } else {
-            throw new RuntimeException("Expression has no value or no column.");
+            throw new RuntimeException("Expression has no value or no column: " + minorThan.getStringExpression());
         }
     }
 
