@@ -32,6 +32,7 @@ public class RandomDataTest {
             "SELECT * FROM Sailors, Reserves WHERE Sailors.A = Reserves.G;",
             "SELECT * FROM Sailors, Reserves, Boats WHERE Sailors.A = Reserves.G AND Reserves.H = Boats.D;",
             "SELECT * FROM Sailors, Reserves, Boats WHERE Sailors.A = Reserves.G AND Reserves.H = Boats.D AND Sailors.B < 150;",
+            "SELECT * FROM Sailors, Reserves, Boats WHERE Sailors.A = Reserves.G AND Reserves.H = Boats.D AND 150 < Sailors.B;",
             "SELECT DISTINCT * FROM Sailors;",
             "SELECT * FROM Sailors S1, Sailors S2 WHERE S1.A < S2.A;",
             "SELECT B.F, B.D FROM Boats B ORDER BY B.D, B.F;",

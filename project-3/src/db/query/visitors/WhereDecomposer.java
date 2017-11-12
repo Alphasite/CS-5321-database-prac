@@ -1,6 +1,7 @@
 package db.query.visitors;
 
-import db.query.TableCouple;
+import db.Utilities.UnionFind;
+import db.query.TablePair;
 import net.sf.jsqlparser.expression.*;
 import net.sf.jsqlparser.expression.operators.arithmetic.*;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -21,20 +22,33 @@ import java.util.Queue;
  */
 public class WhereDecomposer implements ExpressionVisitor {
     private Map<String, Expression> selectionExpressions;
-    private Map<TableCouple, Expression> joinExpressions;
+    private Map<TablePair, Expression> joinExpressions;
 
     private Expression nakedExpression;
 
     private Queue<String> referencedTables;
 
-    public WhereDecomposer(Expression expression) {
+    public WhereDecomposer() {
         this.selectionExpressions = new HashMap<>();
         this.joinExpressions = new HashMap<>();
         this.nakedExpression = null;
 
         this.referencedTables = new ArrayDeque<>();
+    }
 
-        expression.accept(this);
+    public static WhereDecomposer decompose(Expression expression, UnionFind unionFind) {
+        WhereDecomposer decomposer = new WhereDecomposer();
+        expression.accept(decomposer);
+
+        for (Expression joinExpression : decomposer.joinExpressions.values()) {
+            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
+        }
+
+        for (Expression selectionExpression : decomposer.selectionExpressions.values()) {
+            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
+        }
+
+        return decomposer;
     }
 
     /**
@@ -47,7 +61,7 @@ public class WhereDecomposer implements ExpressionVisitor {
     /**
      * @return the join conditions
      */
-    public Map<TableCouple, Expression> getJoinExpressions() {
+    public Map<TablePair, Expression> getJoinExpressions() {
         return joinExpressions;
     }
 
@@ -81,7 +95,7 @@ public class WhereDecomposer implements ExpressionVisitor {
      * @param comparison the join expression
      */
     private void addJoin(String leftId, String rightId, Expression comparison) {
-        TableCouple key = new TableCouple(leftId, rightId);
+        TablePair key = new TablePair(leftId, rightId);
 
         if (joinExpressions.containsKey(key)) {
             // If a condition already exists for this key, compose it with an AND

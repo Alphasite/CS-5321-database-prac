@@ -51,13 +51,13 @@ public class IndexScanOperatorTest {
         Database database = Database.loadDatabase(inputDir);
         boatsTable = database.getTable("Boats");
         boatsIndexTree = BTree.createTree(boatsIndexFile);
+        boatIndex = database.getTable("Boats").indices.get(0);
         boatsOperator = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree, min, max);
         numberOfTuples = 10000 - 4 - 32;
 
-        boatIndex = database.getTable("Boats").indices.get(0);
         Path boatsIndexFile2 = BulkLoader.buildIndex(database, boatIndex, indexesDir);
         BTree boatsIndexTree2 = BTree.createTree((boatsIndexFile2));
-        boatsOperator2 = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree2, 9982, null);
+        boatsOperator = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree2, 9982, null);
 
         sailorIndex = database.getTable("Sailors").indices.get(0);
         Path sailorsIndexFile = BulkLoader.buildIndex(database, sailorIndex, indexesDir);

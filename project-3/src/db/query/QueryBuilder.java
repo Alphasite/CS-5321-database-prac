@@ -1,6 +1,7 @@
 package db.query;
 
-import db.Utilities;
+import db.Utilities.UnionFind;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
@@ -166,11 +167,21 @@ public class QueryBuilder {
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.
         Map<String, Expression> selectionExpressions = new HashMap<>();
-        Map<TableCouple, Expression> joinExpressions = new HashMap<>();
+        Map<TablePair, Expression> joinExpressions = new HashMap<>();
         Expression nakedExpression = null;
 
+        UnionFind unionFind = new UnionFind();
+        for (LogicalOperator operator : joinableTableInstances.values()) {
+            TableHeader header = operator.getHeader();
+
+            for (int i = 0; i < header.size(); i++) {
+                unionFind.add(header.columnAliases.get(i) + "." + header.columnHeaders.get(i));
+            }
+        }
+
         if (rootExpression != null) {
-            WhereDecomposer bwb = new WhereDecomposer(rootExpression);
+            WhereDecomposer bwb = WhereDecomposer.decompose(rootExpression, unionFind);
+
             selectionExpressions.putAll(bwb.getSelectionExpressions());
             joinExpressions.putAll(bwb.getJoinExpressions());
             nakedExpression = bwb.getNakedExpression();
@@ -196,7 +207,7 @@ public class QueryBuilder {
         // Add all of the joined tables
         // Add any join expressions to the join operator
         // Add any other expressions below the join.
-        for (TableCouple tc : joinExpressions.keySet()) {
+        for (TablePair tc : joinExpressions.keySet()) {
             String table1 = tc.getTable1();
             String table2 = tc.getTable2();
 

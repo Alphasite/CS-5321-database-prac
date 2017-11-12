@@ -1,7 +1,7 @@
 package db.operators.physical.bag;
 
 import db.TestUtils;
-import db.Utilities;
+import db.Utilities.Utilities;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;

@@ -1,4 +1,4 @@
-package db;
+package db.Utilities;
 
 import db.datastore.tuple.Tuple;
 import net.sf.jsqlparser.schema.Table;

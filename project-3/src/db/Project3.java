@@ -1,6 +1,7 @@
 package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.stats.StatsGatherer;
 import db.datastore.stats.TableStats;

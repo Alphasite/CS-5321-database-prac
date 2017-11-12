@@ -2,6 +2,7 @@ package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.PhysicalPlanConfig.SortImplementation;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.operators.logical.LogicalOperator;
