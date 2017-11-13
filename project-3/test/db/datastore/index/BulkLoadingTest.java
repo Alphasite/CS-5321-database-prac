@@ -4,6 +4,7 @@ import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.IndexInfo;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
@@ -37,6 +38,7 @@ public class BulkLoadingTest {
         assertEquals(true, compareBinary(referenceFile.toFile(), indexFile.toFile()));
     }
 
+    @Ignore
     @Test
     public void testClusteredBulkLoading() {
         config.tableName = "Sailors";
