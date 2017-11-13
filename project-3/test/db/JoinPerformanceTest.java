@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class JoinPerformanceTest {
     private final static int ROWS_PER_TABLE = 5000;

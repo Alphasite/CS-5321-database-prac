@@ -5,6 +5,7 @@ import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -16,6 +17,7 @@ import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class RandomDataTest {
     private final static int ROWS_PER_TABLE = 1500;
