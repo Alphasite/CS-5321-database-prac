@@ -1,6 +1,8 @@
-package db;
+package db.query;
 
+import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.IndexInfo;
 import db.datastore.index.BulkLoader;
@@ -16,7 +18,6 @@ import org.junit.runners.Parameterized;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +26,7 @@ import java.util.List;
 @Ignore
 @RunWith(Parameterized.class)
 public class IndexPerformanceTest {
-    private static final Path inputDir = Paths.get("resources/samples-4/input/db").toAbsolutePath();
+    private static final Path inputDir = TestUtils.NEW_DB_PATH.toAbsolutePath();
     private static Database database;
 
     private static String[] testQueries = new String[]{
@@ -38,7 +39,10 @@ public class IndexPerformanceTest {
             // 1 indexed specific & 1 indexed general
             "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A AND Boats.E = 100 AND Sailors.A > 100 AND Sailors.A < 1000",
             // No indexed
-            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A"
+            "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A",
+            // 2 indexed
+            "SELECT S.A, S.C, B.D, B.F FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D AND S.A = 10 AND B.E > 100"
+
     };
 
     private static PhysicalPlanConfig testConfigIndex = new PhysicalPlanConfig(JoinImplementation.BNLJ, PhysicalPlanConfig.SortImplementation.EXTERNAL, 5, 5, true);

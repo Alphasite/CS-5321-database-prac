@@ -1,5 +1,6 @@
-package db;
+package db.query;
 
+import db.TestUtils;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
@@ -10,7 +11,6 @@ import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
-import db.query.QueryBuilder;
 import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.Before;

@@ -1,6 +1,8 @@
-package db;
+package db.query;
 
+import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.TestUtils;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;

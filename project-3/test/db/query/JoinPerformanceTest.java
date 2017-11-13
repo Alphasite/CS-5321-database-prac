@@ -1,6 +1,8 @@
-package db;
+package db.query;
 
+import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.TestUtils;
 import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
 import org.junit.After;
