@@ -1,5 +1,6 @@
-package db;
+package db.query;
 
+import db.TestUtils;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.query.visitors.ExpressionEvaluator;
