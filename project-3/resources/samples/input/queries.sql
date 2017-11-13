@@ -14,3 +14,4 @@ SELECT B.F, B.D FROM Boats B ORDER BY B.D;
 SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C;
 SELECT DISTINCT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C;
 SELECT S.A, S.B FROM Sailors S WHERE S.A < 100;
+SELECT S.A, S.C, B.D, B.F FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D AND S.C = 10 AND B.F = 158;
