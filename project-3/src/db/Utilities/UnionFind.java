@@ -14,13 +14,11 @@ public class UnionFind {
     }
 
     private String getParent(String table) {
-        String parent = table;
-
-        while (!Objects.equals(parent, this.parent.get(parent))) {
-            parent = this.parent.get(parent);
+        while (!Objects.equals(table, this.parent.get(table))) {
+            table = this.parent.get(table);
         }
 
-        return parent;
+        return table;
     }
 
     public void add(String table) {
