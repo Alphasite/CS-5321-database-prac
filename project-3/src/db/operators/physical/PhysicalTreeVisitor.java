@@ -1,6 +1,8 @@
 package db.operators.physical;
 
-import db.operators.physical.bag.*;
+import db.operators.physical.bag.JoinOperator;
+import db.operators.physical.bag.ProjectionOperator;
+import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
@@ -20,7 +22,6 @@ public interface PhysicalTreeVisitor {
      * @param node the selection node to visit.
      */
     void visit(SelectionOperator node);
-
 
     /**
      * @param node the projection node to visit.

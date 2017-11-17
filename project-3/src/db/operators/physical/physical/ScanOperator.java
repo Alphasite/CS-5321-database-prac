@@ -22,11 +22,11 @@ public class ScanOperator extends AbstractOperator {
 
     /**
      * @param table     the table's info
-     * @param tableName the renamed name of the table.
+     * @param tableAlias the renamed name of the table.
      */
-    public ScanOperator(TableInfo table, String tableName) {
+    public ScanOperator(TableInfo table, String tableAlias) {
         this.table = table;
-        this.header = LogicalScanOperator.computeHeader(table.header, tableName);
+        this.header = LogicalScanOperator.computeHeader(table.header, tableAlias);
         this.reset();
     }
 
@@ -34,7 +34,9 @@ public class ScanOperator extends AbstractOperator {
      * @param tableInfo the table which is to be scanned
      */
     public ScanOperator(TableInfo tableInfo) {
-        this(tableInfo, tableInfo.tableName);
+        this.table = tableInfo;
+        this.header = tableInfo.header;
+        this.reset();
     }
 
     /**

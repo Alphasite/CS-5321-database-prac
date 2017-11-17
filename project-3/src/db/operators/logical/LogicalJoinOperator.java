@@ -9,6 +9,7 @@ import net.sf.jsqlparser.expression.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Logical operator for join handling : keeps track of left and right tuple sources and optional join condition.
@@ -27,11 +28,8 @@ public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalSca
         if (this.children.size() == 0) {
             this.outputSchema = new TableHeader();
         } else {
-            this.outputSchema = this.children.get(0).getHeader();
-
-            for (int i = 1; i < this.children.size(); i++) {
-                this.outputSchema = computeHeader(this.outputSchema, this.children.get(i).getHeader());
-            }
+            List<TableHeader> headers = children.stream().map(LogicalOperator::getHeader).collect(Collectors.toList());
+            this.outputSchema = computeHeader(headers);
         }
     }
 
@@ -55,6 +53,25 @@ public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalSca
         aliases.addAll(right.columnAliases);
 
         return new TableHeader(aliases, headings);
+    }
+
+    /**
+     * Compute the result header for a N-way join.
+     *
+     * @param sourceHeaders List of ordered headers from source operators
+     * @return The resulting left-to-right join header.
+     */
+    public static TableHeader computeHeader(List<TableHeader> sourceHeaders) {
+        List<String> tableIdentifiers = sourceHeaders.stream()
+                .map(h -> h.columnAliases)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+        List<String> columnNames = sourceHeaders.stream()
+                .map(h -> h.columnHeaders)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        return new TableHeader(tableIdentifiers, columnNames);
     }
 
     /**

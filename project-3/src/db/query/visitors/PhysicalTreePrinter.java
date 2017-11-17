@@ -2,7 +2,9 @@ package db.query.visitors;
 
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
-import db.operators.physical.bag.*;
+import db.operators.physical.bag.JoinOperator;
+import db.operators.physical.bag.ProjectionOperator;
+import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
