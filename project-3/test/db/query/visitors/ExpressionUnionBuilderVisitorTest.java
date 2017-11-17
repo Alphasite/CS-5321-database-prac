@@ -1,7 +1,6 @@
 package db.query.visitors;
 
 import db.TestUtils;
-import db.Utilities.UnionFind;
 import db.datastore.Database;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -32,15 +31,7 @@ public class ExpressionUnionBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        List<Set<String>> sets = unionFind.getSets();
+        List<Set<String>> sets = decomposer.getUnionFind().getSets();
 
         assertThat(sets.size(), equalTo(1));
         assertThat(sets.get(0), hasItems("Boats.D", "Sailors.A"));
@@ -55,16 +46,7 @@ public class ExpressionUnionBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        List<Set<String>> sets = unionFind.getSets();
+        List<Set<String>> sets = decomposer.getUnionFind().getSets();
 
         assertThat(sets.size(), equalTo(1));
         assertThat(sets.get(0), hasItems("Boats.D", "Sailors.A", "Boats.E"));
@@ -79,18 +61,7 @@ public class ExpressionUnionBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Boats.F");
-        unionFind.add("Sailors.A");
-        unionFind.add("Sailors.B");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        List<Set<String>> sets = unionFind.getSets();
+        List<Set<String>> sets = decomposer.getUnionFind().getSets();
 
         assertThat(sets.size(), equalTo(2));
 

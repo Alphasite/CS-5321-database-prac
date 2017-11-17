@@ -72,18 +72,6 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
      * @inheritDoc
      */
     @Override
-    public void visit(RenameOperator node) {
-        lines.add(pad("Rename " + node.getNewTableName()));
-
-        this.depth += 1;
-        node.getChild().accept(this);
-        this.depth -= 1;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
     public void visit(ScanOperator node) {
         lines.add(pad("Scan " + node.getTable().file.getFileName()));
     }

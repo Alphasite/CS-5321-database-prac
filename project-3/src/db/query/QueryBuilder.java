@@ -5,7 +5,7 @@ import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
-import db.query.visitors.WhereDecomposer2;
+import db.query.visitors.WhereDecomposer;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -172,7 +172,7 @@ public class QueryBuilder {
         }
 
         if (rootExpression != null) {
-            WhereDecomposer2 bwb = new WhereDecomposer2(unionFind);
+            WhereDecomposer bwb = new WhereDecomposer(unionFind);
             rootExpression.accept(bwb);
 
             rootNode = new LogicalJoinOperator(tables, bwb.getUnionFind(), bwb.getUnusableExpressions());

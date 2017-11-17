@@ -134,6 +134,7 @@ public class ExpressionBoundsBuilderVisitor implements ExpressionVisitor {
     @Override
     public void visit(Column column) {
         this.column = column.getWholeColumnName();
+        this.unionFind.add(this.column);
     }
 
     @Override

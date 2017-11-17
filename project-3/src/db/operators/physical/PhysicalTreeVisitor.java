@@ -17,11 +17,6 @@ public interface PhysicalTreeVisitor {
     void visit(JoinOperator node);
 
     /**
-     * @param node the rename node to visit.
-     */
-    void visit(RenameOperator node);
-
-    /**
      * @param node the selection node to visit.
      */
     void visit(SelectionOperator node);

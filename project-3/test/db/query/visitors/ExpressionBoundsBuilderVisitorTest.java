@@ -24,18 +24,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -57,18 +46,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -90,18 +68,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -124,18 +91,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -157,20 +113,8 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
-
         assertThat(sets.size(), equalTo(1));
         assertThat(sets.get(0), hasItems("Boats.D", "Sailors.A"));
         assertThat(unionFind.getMaximum("Boats.D"), nullValue());
@@ -190,18 +134,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -223,18 +156,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -256,19 +178,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -294,19 +204,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -332,19 +230,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Sailors.A");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(1));
@@ -370,21 +256,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Boats.F");
-        unionFind.add("Sailors.A");
-        unionFind.add("Sailors.B");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(2));
@@ -429,21 +301,7 @@ public class ExpressionBoundsBuilderVisitorTest {
 
         expression.accept(decomposer);
 
-        UnionFind unionFind = new UnionFind();
-        unionFind.add("Boats.D");
-        unionFind.add("Boats.E");
-        unionFind.add("Boats.F");
-        unionFind.add("Sailors.A");
-        unionFind.add("Sailors.B");
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
-
+        UnionFind unionFind = decomposer.getUnionFind();
         List<Set<String>> sets = unionFind.getSets();
 
         assertThat(sets.size(), equalTo(2));
