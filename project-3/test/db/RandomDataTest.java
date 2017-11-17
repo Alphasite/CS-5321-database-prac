@@ -49,7 +49,7 @@ public class RandomDataTest {
 
     @Parameterized.Parameters(name = "{index}: join={3} sort={4} block={5} query={2}")
     public static Collection<Object[]> data() throws IOException {
-        ArrayList<Object[]> testCases = new ArrayList<>();
+        List<Object[]> testCases = new ArrayList<>();
 
         Path dir = Files.createTempDirectory("RandomTest");
 

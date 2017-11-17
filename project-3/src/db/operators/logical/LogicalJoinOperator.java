@@ -1,7 +1,10 @@
 package db.operators.logical;
 
+import db.Utilities.Pair;
+import db.Utilities.UnionFind;
 import db.datastore.TableHeader;
-import db.operators.BinaryNode;
+import db.operators.NaryNode;
+import db.query.TablePair;
 import net.sf.jsqlparser.expression.Expression;
 
 import java.util.ArrayList;
@@ -10,17 +13,26 @@ import java.util.List;
 /**
  * Logical operator for join handling : keeps track of left and right tuple sources and optional join condition.
  */
-public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalOperator> {
-    private final LogicalOperator left;
-    private final LogicalOperator right;
-    private final Expression joinCondition;
-    private final TableHeader outputSchema;
+public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalScanOperator> {
+    private final List<LogicalScanOperator> children;
+    private UnionFind unionFind;
+    private List<Pair<TablePair, Expression>> unusedExpressions;
+    private TableHeader outputSchema;
 
-    public LogicalJoinOperator(LogicalOperator left, LogicalOperator right, Expression joinCondition) {
-        this.left = left;
-        this.right = right;
-        this.joinCondition = joinCondition;
-        this.outputSchema = computeHeader(left.getHeader(), right.getHeader());
+    public LogicalJoinOperator(List<LogicalScanOperator> children, UnionFind unionFind, List<Pair<TablePair, Expression>> unusedExpressions) {
+        this.children = children;
+        this.unionFind = unionFind;
+        this.unusedExpressions = unusedExpressions;
+
+        if (this.children.size() == 0) {
+            this.outputSchema = new TableHeader();
+        } else {
+            this.outputSchema = this.children.get(0).getHeader();
+
+            for (int i = 1; i < this.children.size(); i++) {
+                this.outputSchema = computeHeader(this.outputSchema, this.children.get(i).getHeader());
+            }
+        }
     }
 
     /**
@@ -46,12 +58,17 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
     }
 
     /**
-     * Return an optional expression which describes whether or not a tuple should be joned
-     *
-     * @return The nullable expression.
+     * @return the union find with all of the expressions
      */
-    public Expression getJoinCondition() {
-        return joinCondition;
+    public UnionFind getUnionFind() {
+        return unionFind;
+    }
+
+    /**
+     * @return the list of unused expressions
+     */
+    public List<Pair<TablePair, Expression>> getUnusedExpressions() {
+        return unusedExpressions;
     }
 
     /**
@@ -74,15 +91,7 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
      * @inheritDoc
      */
     @Override
-    public LogicalOperator getLeft() {
-        return left;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public LogicalOperator getRight() {
-        return right;
+    public List<LogicalScanOperator> getChildren() {
+        return this.children;
     }
 }

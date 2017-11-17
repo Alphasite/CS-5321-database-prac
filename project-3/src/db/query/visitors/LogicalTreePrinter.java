@@ -37,28 +37,12 @@ public class LogicalTreePrinter implements LogicalTreeVisitor {
 
         line.append("Join");
 
-        if (node.getJoinCondition() != null) {
-            line.append(" on ");
-            line.append(node.getJoinCondition());
-        }
-
         this.lines.add(pad(line.toString()));
 
         this.depth += 1;
-        node.getRight().accept(this);
-        node.getLeft().accept(this);
-        this.depth -= 1;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void visit(LogicalRenameOperator node) {
-        lines.add(pad("Reaname " + node.getNewTableName()));
-
-        this.depth += 1;
-        node.getChild().accept(this);
+        for (LogicalScanOperator operator : node.getChildren()) {
+            operator.accept(this);
+        }
         this.depth -= 1;
     }
 

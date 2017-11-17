@@ -10,11 +10,6 @@ public interface LogicalTreeVisitor {
     void visit(LogicalJoinOperator node);
 
     /**
-     * @param node the rename operator to visit.
-     */
-    void visit(LogicalRenameOperator node);
-
-    /**
      * @param node the scan operator to visit.
      */
     void visit(LogicalScanOperator node);

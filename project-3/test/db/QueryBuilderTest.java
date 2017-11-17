@@ -12,11 +12,7 @@ import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
 import db.query.QueryBuilder;
-import db.query.visitors.ExpressionBoundsBuilderVisitor;
-import db.query.visitors.ExpressionUnionBuilderVisitor;
 import db.query.visitors.PhysicalPlanBuilder;
-import db.query.visitors.WhereDecomposer;
-import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -78,7 +74,7 @@ public class QueryBuilderTest {
         assertTrue(root instanceof ProjectionOperator);
         assertTrue(((ProjectionOperator) root).getChild() instanceof SelectionOperator);
         SelectionOperator select = (SelectionOperator) ((ProjectionOperator) root).getChild();
-        assertEquals(tokens.getWhere(), select.getPredicate());
+        assertThat(select.getPredicate().toString(), is("Boats.D >= 4 AND Boats.D <= 4"));
 
         root.close();
     }
@@ -109,7 +105,6 @@ public class QueryBuilderTest {
         assertTrue(((ProjectionOperator) root).getChild() instanceof TupleNestedJoinOperator);
         JoinOperator operator = (JoinOperator) ((ProjectionOperator) root).getChild();
         assertEquals("Sailors.A | Sailors.B | Sailors.C | Reserves.G | Reserves.H", operator.getHeader().toString());
-        assertEquals(tokens.getWhere(), operator.getPredicate());
 
         assertEquals("64 | 113 | 139 | 64 | 156", root.getNextTuple().toString());
         assertEquals("64 | 113 | 139 | 64 | 70", root.getNextTuple().toString());
@@ -209,7 +204,6 @@ public class QueryBuilderTest {
     @Test
     public void testUnionFind() throws Exception {
         PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Boats WHERE Boats.D < 4 AND Boats.D = Sailors.A AND Sailors.A = Boats.E And Sailors.B = Boats.F And Boats.F > 6 AND Boats.F <= 95;");
-        WhereDecomposer decomposer = new WhereDecomposer();
 
         LogicalOperator logRoot = logicalBuilder.buildQuery(tokens);
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
@@ -217,14 +211,6 @@ public class QueryBuilderTest {
         assertTrue(root instanceof ProjectionOperator);
 
         UnionFind unionFind = logicalBuilder.getUnionFind();
-
-        for (Expression joinExpression : decomposer.getJoinExpressions().values()) {
-            ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, joinExpression);
-        }
-
-        for (Expression selectionExpression : decomposer.getSelectionExpressions().values()) {
-            ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, selectionExpression);
-        }
 
         List<Set<String>> sets = unionFind.getSets();
 

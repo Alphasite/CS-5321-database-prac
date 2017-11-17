@@ -1,6 +1,9 @@
 package db.query.visitors;
 
 import db.PhysicalPlanConfig;
+import db.Utilities.Pair;
+import db.Utilities.UnionFind;
+import db.Utilities.Utilities;
 import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.index.BTree;
@@ -13,14 +16,15 @@ import db.operators.physical.extended.InMemorySortOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
+import db.query.TablePair;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation.IN_MEMORY;
+import static db.Utilities.Utilities.*;
 
 /**
  * Physical query plan builder, implemented as a Logical operator tree visitor
@@ -36,6 +40,8 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     private Deque<Operator> operators;
 
+    private UnionFind unionFind;
+
     private Path temporaryFolder;
     private Path indexesFolder;
 
@@ -50,6 +56,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         this.config = config;
         this.temporaryFolder = temporaryFolder;
         this.indexesFolder = indexesFolder;
+        this.unionFind = new UnionFind();
     }
 
     public Operator buildFromLogicalTree(LogicalOperator root) {
@@ -63,71 +70,154 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     @Override
     public void visit(LogicalJoinOperator node) {
-        node.getLeft().accept(this);
-        node.getRight().accept(this);
+        this.unionFind = node.getUnionFind();
 
-        Operator rightOp = operators.pollLast();
-        Operator leftOp = operators.pollLast();
+        Map<String, Set<String>> columnToEqualitySetMapping = new HashMap<>();
+        Map<Set<String>, Set<String>> equalitySetToUsedSetMap = new HashMap<>();
 
-        Operator join;
+        for (Set<String> equalitySet : this.unionFind.getSets()) {
+            for (String column : equalitySet) {
+                columnToEqualitySetMapping.put(column, equalitySet);
+            }
 
-        switch (config.joinImplementation) {
-            case TNLJ:
-                join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
-                break;
-            case BNLJ:
-                join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
-                break;
-            case SMJ:
-                SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(leftOp.getHeader(), rightOp.getHeader());
-                node.getJoinCondition().accept(smjEval);
-
-                TableHeader leftSortHeader = smjEval.getLeftSortHeader();
-                TableHeader rightSortHeader = smjEval.getRightSortHeader();
-                Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
-
-                if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
-                    SortOperator leftOpSorted, rightOpSorted;
-
-                    if (config.sortImplementation == IN_MEMORY) {
-                        leftOpSorted = new InMemorySortOperator(leftOp, leftSortHeader);
-                        rightOpSorted = new InMemorySortOperator(rightOp, rightSortHeader);
-                    } else /* EXTERNAL */ {
-                        leftOpSorted = new ExternalSortOperator(leftOp, leftSortHeader, config.sortParameter, temporaryFolder);
-                        rightOpSorted = new ExternalSortOperator(rightOp, rightSortHeader, config.sortParameter, temporaryFolder);
-                    }
-
-                    join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
-                } else {
-                    // when no equijoins, just use BNLJ
-                    join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
-                }
-                break;
-            default:
-                throw new NotImplementedException();
+            equalitySetToUsedSetMap.put(equalitySet, new HashSet<>());
         }
 
-        operators.add(join);
+        List<LogicalScanOperator> children = node.getChildren();
+
+        for (LogicalScanOperator scan : children) {
+            scan.accept(this);
+        }
+
+        Operator join = operators.poll();
+
+
+        for (int i = 1; i < children.size(); i++) {
+            Expression condition = null;
+            Operator joined = operators.poll();
+
+            TableHeader header = LogicalJoinOperator.computeHeader(join.getHeader(), joined.getHeader());
+            for (int j = 0; j < header.size(); j++) {
+                String column = header.columnAliases.get(j) + "." + header.columnHeaders.get(j);
+                Set<String> equalitySet = columnToEqualitySetMapping.get(column);
+                Set<String> usedEqualitySet = equalitySetToUsedSetMap.get(equalitySet);
+
+                if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(column)) {
+                    String equalColumn = usedEqualitySet.stream()
+                            .findAny()
+                            .get();
+
+                    condition = Utilities.joinExpression(condition, Utilities.equalPairToExpression(column, equalColumn));
+                }
+
+                usedEqualitySet.add(column);
+            }
+
+            // TODO expand unused expressions here
+
+            switch (config.joinImplementation) {
+                case TNLJ:
+                    join = new TupleNestedJoinOperator(join, joined, condition);
+                    break;
+                case BNLJ:
+                    join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
+                    break;
+                case SMJ:
+                    SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(join.getHeader(), joined.getHeader());
+                    if (condition != null) {
+                        condition.accept(smjEval);
+
+                        TableHeader leftSortHeader = smjEval.getLeftSortHeader();
+                        TableHeader rightSortHeader = smjEval.getRightSortHeader();
+                        Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
+
+                        if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
+                            SortOperator leftOpSorted, rightOpSorted;
+
+                            if (config.sortImplementation == IN_MEMORY) {
+                                leftOpSorted = new InMemorySortOperator(join, leftSortHeader);
+                                rightOpSorted = new InMemorySortOperator(joined, rightSortHeader);
+                            } else /* EXTERNAL */ {
+                                leftOpSorted = new ExternalSortOperator(join, leftSortHeader, config.sortParameter, temporaryFolder);
+                                rightOpSorted = new ExternalSortOperator(joined, rightSortHeader, config.sortParameter, temporaryFolder);
+                            }
+
+                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
+                        } else {
+                            // when no equijoins, just use BNLJ
+                            join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
+                        }
+                    } else {
+                        join = new BlockNestedJoinOperator(join, joined, null, config.joinParameter);
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        operators.push(join);
+
+        Expression unusedExpression = null;
+        for (Pair<TablePair, Expression> tablePairExpressionPair : node.getUnusedExpressions()) {
+            unusedExpression = joinExpression(unusedExpression, tablePairExpressionPair.getRight());
+        }
+
+        if (unusedExpression != null) {
+            operators.push(new SelectionOperator(operators.poll(), unusedExpression));
+        }
     }
 
     /**
      * @inheritDoc
      */
     @Override
-    public void visit(LogicalRenameOperator node) {
-        node.getChild().accept(this);
+    public void visit(LogicalScanOperator scan) {
+        TableHeader header = scan.getHeader();
 
-        Operator rename = new RenameOperator(operators.pollLast(), node.getNewTableName());
-        operators.add(rename);
-    }
+        ScanOperator scanOperator = new ScanOperator(scan.getTable(), scan.getTableName());
 
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void visit(LogicalScanOperator node) {
-        Operator scan = new ScanOperator(node.getTable());
-        operators.add(scan);
+        Expression expression = null;
+
+        for (int i = 0; i < header.size(); i++) {
+            String path = header.columnAliases.get(i) + "." + header.columnHeaders.get(i);
+
+            if (unionFind.getMinimum(path) != null) {
+                expression = joinExpression(expression, greaterThanColumn(path, unionFind.getMinimum(path)));
+            }
+
+            if (unionFind.getMaximum(path) != null) {
+                expression = joinExpression(expression, lessThanColumn(path, unionFind.getMaximum(path)));
+            }
+
+            for (Set<String> equalitySet : unionFind.getSets()) {
+                List<String> equalHeaders = new ArrayList<>();
+
+                for (String column : equalitySet) {
+                    Pair<String, String> splitColumn = splitLongFormColumn(column);
+                    if (splitColumn.getLeft().equals(scan.getTableName())) {
+                        equalHeaders.add(splitColumn.getRight());
+                    }
+                }
+
+                if (equalHeaders.size() > 1) {
+                    for (int j = 1; j < equalHeaders.size(); j++) {
+                        Expression equalityExpression = Utilities.equalPairToExpression(
+                                scan.getTableName() + "." + equalHeaders.get(j - 1),
+                                scan.getTableName() + "." + equalHeaders.get(j)
+                        );
+
+                        expression = joinExpression(expression, equalityExpression);
+                    }
+                }
+            }
+        }
+
+        if (expression != null) {
+            operators.add(new SelectionOperator(scanOperator, expression));
+        } else {
+            operators.add(scanOperator);
+        }
     }
 
     /**

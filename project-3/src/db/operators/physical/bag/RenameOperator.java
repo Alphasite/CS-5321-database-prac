@@ -3,7 +3,7 @@ package db.operators.physical.bag;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.UnaryNode;
-import db.operators.logical.LogicalRenameOperator;
+import db.operators.logical.LogicalScanOperator;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
@@ -32,7 +32,7 @@ public class RenameOperator extends AbstractOperator implements UnaryNode<Operat
         this.child = child;
         this.newTableName = newTableName;
 
-        this.header = LogicalRenameOperator.computeHeader(child.getHeader(), newTableName);
+        this.header = LogicalScanOperator.computeHeader(child.getHeader(), newTableName);
     }
 
     /**

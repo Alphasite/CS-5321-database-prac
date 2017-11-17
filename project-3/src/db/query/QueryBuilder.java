@@ -5,13 +5,14 @@ import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
-import db.query.visitors.WhereDecomposer;
+import db.query.visitors.WhereDecomposer2;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Query plan generator
@@ -152,28 +153,17 @@ public class QueryBuilder {
         // Then find which other tables exist.
         // then store them in a list of tables which haven't yet been joined.
 
-        Map<String, LogicalOperator> joinableTableInstances = new HashMap<>();
-
-        Set<String> joinedTables = new HashSet<>();
-        Set<String> unjoinedTables = new HashSet<>();
-
-        // Since the root table is a special case, handle that.
-        unjoinedTables.add(Utilities.getIdentifier(joinRootTable));
-        joinableTableInstances.put(Utilities.getIdentifier(joinRootTable), this.getScanAndMaybeRename(joinRootTable));
+        List<LogicalScanOperator> tables = new ArrayList<>();
+        tables.add(this.getScanAndMaybeRename(joinRootTable));
 
         for (Join join : rightJoinExpressions) {
             Table table = (Table) join.getRightItem();
-            String identifier = Utilities.getIdentifier(table);
-            joinableTableInstances.put(identifier, this.getScanAndMaybeRename(table));
-            unjoinedTables.add(identifier);
+            tables.add(this.getScanAndMaybeRename(table));
         }
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.
-        Map<String, Expression> selectionExpressions = new HashMap<>();
-        Map<TablePair, Expression> joinExpressions = new HashMap<>();
-        Expression nakedExpression = null;
 
-        for (LogicalOperator operator : joinableTableInstances.values()) {
+        for (LogicalScanOperator operator : tables) {
             TableHeader header = operator.getHeader();
 
             for (int i = 0; i < header.size(); i++) {
@@ -182,59 +172,16 @@ public class QueryBuilder {
         }
 
         if (rootExpression != null) {
-            WhereDecomposer bwb = WhereDecomposer.decompose(rootExpression, unionFind);
+            WhereDecomposer2 bwb = new WhereDecomposer2(unionFind);
+            rootExpression.accept(bwb);
 
-            selectionExpressions.putAll(bwb.getSelectionExpressions());
-            joinExpressions.putAll(bwb.getJoinExpressions());
-            nakedExpression = bwb.getNakedExpression();
-        }
+            rootNode = new LogicalJoinOperator(tables, bwb.getUnionFind(), bwb.getUnusableExpressions());
 
-        TriFunction<LogicalOperator, String, Expression, LogicalOperator> joinTable = (root, tableName, expression) -> {
-            LogicalOperator rightOp = joinableTableInstances.get(tableName);
-
-            if (selectionExpressions.containsKey(tableName)) {
-                rightOp = new LogicalSelectOperator(rightOp, selectionExpressions.get(tableName));
+            if (bwb.getNakedExpression() != null) {
+                rootNode = new LogicalSelectOperator(rootNode, bwb.getNakedExpression());
             }
-
-            joinedTables.add(tableName);
-            unjoinedTables.remove(tableName);
-
-            if (root != null) {
-                return new LogicalJoinOperator(root, rightOp, expression);
-            } else {
-                return rightOp;
-            }
-        };
-
-        // Add all of the joined tables
-        // Add any join expressions to the join operator
-        // Add any other expressions below the join.
-        for (TablePair tc : joinExpressions.keySet()) {
-            String table1 = tc.getTable1();
-            String table2 = tc.getTable2();
-
-            Expression expression = joinExpressions.get(tc);
-
-            if (!joinedTables.contains(table1) && !joinedTables.contains(table2)) {
-                rootNode = joinTable.apply(rootNode, table1, null);
-                rootNode = joinTable.apply(rootNode, table2, expression);
-            } else if (!joinedTables.contains(table1)) {
-                rootNode = joinTable.apply(rootNode, table1, expression);
-            } else if (!joinedTables.contains(table2)) {
-                rootNode = joinTable.apply(rootNode, table2, expression);
-            } else {
-                rootNode = new LogicalSelectOperator(rootNode, expression);
-            }
-        }
-
-        for (String table : unjoinedTables) {
-            rootNode = joinTable.apply(rootNode, table, null);
-        }
-
-        // Add naked expression as root selection
-        // TODO: evaluate condition at build time and act accordingly
-        if (nakedExpression != null) {
-            rootNode = new LogicalSelectOperator(rootNode, nakedExpression);
+        } else {
+            rootNode = new LogicalJoinOperator(tables, new UnionFind(), new ArrayList<>());
         }
 
         return rootNode;
@@ -246,14 +193,8 @@ public class QueryBuilder {
      * @param table The table token extracted from the SQL FROM clause to be read/renamed.
      * @return scan operator with an optional rename to handle aliases
      */
-    private LogicalOperator getScanAndMaybeRename(Table table) {
-        LogicalScanOperator scan = new LogicalScanOperator(db.getTable(table.getName()));
-
-        if (table.getAlias() == null) {
-            return scan;
-        } else {
-            return new LogicalRenameOperator(scan, table.getAlias());
-        }
+    private LogicalScanOperator getScanAndMaybeRename(Table table) {
+        return new LogicalScanOperator(db.getTable(table.getName()), Utilities.getIdentifier(table));
     }
 
     public UnionFind getUnionFind() {
