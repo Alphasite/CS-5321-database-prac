@@ -114,9 +114,9 @@ public class QueryBuilder {
 
             for (String alias : this.tableIdentifiers) {
                 for (int i = 0; i < header.size(); i++) {
-                    if (header.columnAliases.get(i).equals(alias)) {
+                    if (header.tableIdentifiers.get(i).equals(alias)) {
                         aliases.add(alias);
-                        columns.add(header.columnHeaders.get(i));
+                        columns.add(header.columnNames.get(i));
                     }
                 }
             }

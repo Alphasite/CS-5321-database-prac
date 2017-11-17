@@ -117,7 +117,7 @@ public class BinaryTupleWriter implements TupleWriter {
         }
 
         this.tuples_written = 0;
-        this.bb.asIntBuffer().put(0, this.header.columnAliases.size());
+        this.bb.asIntBuffer().put(0, this.header.tableIdentifiers.size());
         this.bb.asIntBuffer().put(1, 0);
     }
 

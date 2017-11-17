@@ -33,16 +33,16 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
     public static TableHeader computeHeader(TableHeader left, TableHeader right) {
         int tableWidth = left.size() + right.size();
 
-        List<String> headings = new ArrayList<>(tableWidth);
-        List<String> aliases = new ArrayList<>(tableWidth);
+        List<String> tableIdentifiers = new ArrayList<>(tableWidth);
+        List<String> columnNames = new ArrayList<>(tableWidth);
 
-        headings.addAll(left.columnHeaders);
-        headings.addAll(right.columnHeaders);
+        columnNames.addAll(left.columnNames);
+        columnNames.addAll(right.columnNames);
 
-        aliases.addAll(left.columnAliases);
-        aliases.addAll(right.columnAliases);
+        tableIdentifiers.addAll(left.tableIdentifiers);
+        tableIdentifiers.addAll(right.tableIdentifiers);
 
-        return new TableHeader(aliases, headings);
+        return new TableHeader(tableIdentifiers, columnNames);
     }
 
     /**

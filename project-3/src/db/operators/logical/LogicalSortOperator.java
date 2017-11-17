@@ -34,9 +34,9 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
         List<String> aliases = new ArrayList<>();
         List<String> columns = new ArrayList<>();
 
-        for (int i = 0; i < sortHeader.columnAliases.size(); i++) {
-            String alias = sortHeader.columnAliases.get(i);
-            String column = sortHeader.columnHeaders.get(i);
+        for (int i = 0; i < sortHeader.tableIdentifiers.size(); i++) {
+            String alias = sortHeader.tableIdentifiers.get(i);
+            String column = sortHeader.columnNames.get(i);
             String fullName = alias + "." + column;
 
             if (!alreadySortedColumns.contains(fullName)) {
@@ -46,9 +46,9 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
             }
         }
 
-        for (int i = 0; i < tupleLayout.columnAliases.size(); i++) {
-            String alias = tupleLayout.columnAliases.get(i);
-            String column = tupleLayout.columnHeaders.get(i);
+        for (int i = 0; i < tupleLayout.tableIdentifiers.size(); i++) {
+            String alias = tupleLayout.tableIdentifiers.get(i);
+            String column = tupleLayout.columnNames.get(i);
             String fullName = alias + "." + column;
 
             // Append non specified columns so that they are used to break ties

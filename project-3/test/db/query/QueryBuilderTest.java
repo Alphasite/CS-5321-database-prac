@@ -79,8 +79,8 @@ public class QueryBuilderTest {
 
         assertTrue(root instanceof ProjectionOperator);
         assertEquals(1, root.getHeader().size());
-        assertEquals("Sailors", root.getHeader().columnAliases.get(0));
-        assertEquals("A", root.getHeader().columnHeaders.get(0));
+        assertEquals("Sailors", root.getHeader().tableIdentifiers.get(0));
+        assertEquals("A", root.getHeader().columnNames.get(0));
 
         root.close();
     }
@@ -141,8 +141,8 @@ public class QueryBuilderTest {
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
         assertTrue(root instanceof ProjectionOperator);
-        assertEquals("S", root.getHeader().columnAliases.get(0));
-        assertEquals("C", root.getHeader().columnHeaders.get(0));
+        assertEquals("S", root.getHeader().tableIdentifiers.get(0));
+        assertEquals("C", root.getHeader().columnNames.get(0));
 
         assertEquals("139", root.getNextTuple().toString());
         assertEquals("129", root.getNextTuple().toString());

@@ -31,9 +31,9 @@ public class TableStats {
         builder.append(' ');
         builder.append(count);
 
-        for (int i = 0; i < this.table.header.columnHeaders.size(); i++) {
+        for (int i = 0; i < this.table.header.columnNames.size(); i++) {
             builder.append(' ');
-            builder.append(this.table.header.columnHeaders.get(i));
+            builder.append(this.table.header.columnNames.get(i));
             builder.append(',');
             builder.append(this.minimums[i]);
             builder.append(',');

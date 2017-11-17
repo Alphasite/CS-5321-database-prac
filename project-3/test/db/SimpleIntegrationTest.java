@@ -47,12 +47,12 @@ public class SimpleIntegrationTest {
                 new ArrayList<>()
         );
 
-        tableHeader.columnAliases.add("Boats");
-        tableHeader.columnHeaders.add("D");
-        tableHeader.columnAliases.add("");
-        tableHeader.columnHeaders.add("E");
-        tableHeader.columnAliases.add("Reserves");
-        tableHeader.columnHeaders.add("G");
+        tableHeader.tableIdentifiers.add("Boats");
+        tableHeader.columnNames.add("D");
+        tableHeader.tableIdentifiers.add("");
+        tableHeader.columnNames.add("E");
+        tableHeader.tableIdentifiers.add("Reserves");
+        tableHeader.columnNames.add("G");
 
         JoinOperator join = new TupleNestedJoinOperator(boatsScan, reservesScan);
         ProjectionOperator projection = new ProjectionOperator(join, tableHeader);

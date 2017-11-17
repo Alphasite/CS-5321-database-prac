@@ -31,11 +31,11 @@ public class TupleComparator implements Comparator<Tuple> {
 
         // Build the internal comparison key list
         for (int i = 0; i < sortHeader1.size(); i++) {
-            String alias1 = sortHeader1.columnAliases.get(i);
-            String header1 = sortHeader1.columnHeaders.get(i);
+            String alias1 = sortHeader1.tableIdentifiers.get(i);
+            String header1 = sortHeader1.columnNames.get(i);
 
-            String alias2 = sortHeader2.columnAliases.get(i);
-            String header2 = sortHeader2.columnHeaders.get(i);
+            String alias2 = sortHeader2.tableIdentifiers.get(i);
+            String header2 = sortHeader2.columnNames.get(i);
 
             Optional<Integer> index1 = tupleHeader1.resolve(alias1, header1);
             Optional<Integer> index2 = tupleHeader2.resolve(alias2, header2);

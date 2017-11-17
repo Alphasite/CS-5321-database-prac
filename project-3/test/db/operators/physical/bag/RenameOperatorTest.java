@@ -40,8 +40,8 @@ public class RenameOperatorTest {
         Operator op = new RenameOperator(opA, "BANANAS");
         TableHeader result = op.getHeader();
 
-        assertEquals(expectedTables, result.columnAliases);
-        assertEquals(expectedColumns, result.columnHeaders);
+        assertEquals(expectedTables, result.tableIdentifiers);
+        assertEquals(expectedColumns, result.columnNames);
     }
 
     @Test

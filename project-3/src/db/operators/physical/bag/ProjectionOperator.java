@@ -40,16 +40,16 @@ public class ProjectionOperator extends AbstractOperator implements UnaryNode<Op
         this.newToOldColumnMapping = new ArrayList<>();
 
         for (int i = 0; i < newHeader.size(); i++) {
-            String alias = newHeader.columnAliases.get(i);
-            String header = newHeader.columnHeaders.get(i);
+            String alias = newHeader.tableIdentifiers.get(i);
+            String header = newHeader.columnNames.get(i);
 
             Optional<Integer> index = this.source.getHeader().resolve(alias, header);
 
-            List<String> sourceAliases = this.source.getHeader().columnAliases;
+            List<String> sourceAliases = this.source.getHeader().tableIdentifiers;
 
             if (index.isPresent()) {
                 this.newToOldColumnMapping.add(index.get());
-                this.newHeader.columnAliases.set(i, sourceAliases.get(index.get()));
+                this.newHeader.tableIdentifiers.set(i, sourceAliases.get(index.get()));
             } else {
                 throw new RuntimeException("Projection mappings are incorrect. " + alias + "." + header + " has no match.");
             }

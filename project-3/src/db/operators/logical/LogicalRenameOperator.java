@@ -38,7 +38,7 @@ public class LogicalRenameOperator implements LogicalOperator, UnaryNode<Logical
             newAliases.add(newTableName);
         }
 
-        return new TableHeader(newAliases, sourceHeader.columnHeaders);
+        return new TableHeader(newAliases, sourceHeader.columnNames);
     }
 
     /**
