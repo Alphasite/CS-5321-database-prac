@@ -1,7 +1,6 @@
 package db.query;
 
 import db.TestUtils;
-import db.TestUtils;
 import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
@@ -23,9 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static com.sun.org.apache.xerces.internal.util.PropertyState.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -77,7 +73,7 @@ public class QueryBuilderTest {
         assertTrue(root instanceof ProjectionOperator);
         assertTrue(((ProjectionOperator) root).getChild() instanceof SelectionOperator);
         SelectionOperator select = (SelectionOperator) ((ProjectionOperator) root).getChild();
-        assertThat(select.getPredicate().toString(), is("Boats.D >= 4 AND Boats.D <= 4"));
+        assertEquals("Boats.D >= 4 AND Boats.D <= 4", select.getPredicate().toString());
 
         root.close();
     }
@@ -217,7 +213,7 @@ public class QueryBuilderTest {
 
         List<Set<String>> sets = unionFind.getSets();
 
-        assertThat(sets.size(), equalTo(3));
+        assertEquals(3, sets.size());
 
         Set<String> set1 = sets.stream()
                 .filter(set -> set.size() == 1)

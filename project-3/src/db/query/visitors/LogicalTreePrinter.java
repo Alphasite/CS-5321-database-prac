@@ -40,7 +40,7 @@ public class LogicalTreePrinter implements LogicalTreeVisitor {
         this.lines.add(pad(line.toString()));
 
         this.depth += 1;
-        for (LogicalScanOperator operator : node.getChildren()) {
+        for (LogicalOperator operator : node.getChildren()) {
             operator.accept(this);
         }
         this.depth -= 1;

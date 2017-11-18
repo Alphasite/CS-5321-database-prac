@@ -68,6 +68,6 @@ public class LogicalScanOperator implements LogicalOperator {
             newAliases.add(newTableName);
         }
 
-        return new TableHeader(newAliases, sourceHeader.columnHeaders);
+        return new TableHeader(newAliases, sourceHeader.columnNames);
     }
 }

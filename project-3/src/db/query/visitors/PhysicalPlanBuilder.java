@@ -18,7 +18,6 @@ import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
 import db.query.TablePair;
-import db.query.TablePair;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -48,11 +47,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     private TableInfo currentTable;
 
-    /**
-     * Alias used when referencing current source table, or null if none present.
-     */
-    private String currentTableAlias;
-
     private UnionFind unionFind;
 
     private Path temporaryFolder;
@@ -71,7 +65,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         this.operators = new ArrayDeque<>();
         this.currentTable = null;
-        this.currentTableAlias = null;
         this.unionFind = new UnionFind();
     }
 
@@ -90,10 +83,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         // We are no longer on a single path, remove references to leaf node
         this.currentTable = null;
-        this.currentTableAlias = null;
 
-        Operator rightOp = operators.pollLast();
-        Operator leftOp = operators.pollLast();
         Map<String, Set<String>> columnToEqualitySetMapping = new HashMap<>();
         Map<Set<String>, Set<String>> equalitySetToUsedSetMap = new HashMap<>();
 
@@ -105,34 +95,33 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             equalitySetToUsedSetMap.put(equalitySet, new HashSet<>());
         }
 
-        List<LogicalScanOperator> children = node.getChildren();
+        List<LogicalOperator> children = node.getChildren();
 
-        for (LogicalScanOperator scan : children) {
-            scan.accept(this);
+        for (LogicalOperator op : children) {
+            op.accept(this);
         }
 
         Operator join = operators.poll();
-
 
         for (int i = 1; i < children.size(); i++) {
             Expression condition = null;
             Operator joined = operators.poll();
 
             TableHeader header = LogicalJoinOperator.computeHeader(join.getHeader(), joined.getHeader());
-            for (int j = 0; j < header.size(); j++) {
-                String column = header.columnAliases.get(j) + "." + header.columnHeaders.get(j);
-                Set<String> equalitySet = columnToEqualitySetMapping.get(column);
+
+            for (String attribute : header.getQualifiedAttributeNames()) {
+                Set<String> equalitySet = columnToEqualitySetMapping.get(attribute);
                 Set<String> usedEqualitySet = equalitySetToUsedSetMap.get(equalitySet);
 
-                if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(column)) {
+                if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(attribute)) {
                     String equalColumn = usedEqualitySet.stream()
                             .findAny()
                             .get();
 
-                    condition = Utilities.joinExpression(condition, Utilities.equalPairToExpression(column, equalColumn));
+                    condition = Utilities.joinExpression(condition, Utilities.equalPairToExpression(attribute, equalColumn));
                 }
 
-                usedEqualitySet.add(column);
+                usedEqualitySet.add(attribute);
             }
 
             // TODO expand unused expressions here
@@ -194,22 +183,20 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      * @inheritDoc
      */
     @Override
-    public void visit(LogicalScanOperator scan) {
-        TableHeader header = scan.getHeader();
+    public void visit(LogicalScanOperator node) {
+        TableHeader header = node.getHeader();
 
-        ScanOperator scanOperator = new ScanOperator(scan.getTable(), scan.getTableName());
+        ScanOperator scanOperator = new ScanOperator(node.getTable(), node.getTableName());
 
         Expression expression = null;
 
-        for (int i = 0; i < header.size(); i++) {
-            String path = header.tableIdentifiers.get(i) + "." + header.columnNames.get(i);
-
-            if (unionFind.getMinimum(path) != null) {
-                expression = joinExpression(expression, greaterThanColumn(path, unionFind.getMinimum(path)));
+        for (String attribute : header.getQualifiedAttributeNames()) {
+            if (unionFind.getMinimum(attribute) != null) {
+                expression = joinExpression(expression, greaterThanColumn(attribute, unionFind.getMinimum(attribute)));
             }
 
-            if (unionFind.getMaximum(path) != null) {
-                expression = joinExpression(expression, lessThanColumn(path, unionFind.getMaximum(path)));
+            if (unionFind.getMaximum(attribute) != null) {
+                expression = joinExpression(expression, lessThanColumn(attribute, unionFind.getMaximum(attribute)));
             }
 
             for (Set<String> equalitySet : unionFind.getSets()) {
@@ -217,7 +204,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
                 for (String column : equalitySet) {
                     Pair<String, String> splitColumn = splitLongFormColumn(column);
-                    if (splitColumn.getLeft().equals(scan.getTableName())) {
+                    if (splitColumn.getLeft().equals(node.getTableName())) {
                         equalHeaders.add(splitColumn.getRight());
                     }
                 }
@@ -225,8 +212,8 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                 if (equalHeaders.size() > 1) {
                     for (int j = 1; j < equalHeaders.size(); j++) {
                         Expression equalityExpression = Utilities.equalPairToExpression(
-                                scan.getTableName() + "." + equalHeaders.get(j - 1),
-                                scan.getTableName() + "." + equalHeaders.get(j)
+                                node.getTableName() + "." + equalHeaders.get(j - 1),
+                                node.getTableName() + "." + equalHeaders.get(j)
                         );
 
                         expression = joinExpression(expression, equalityExpression);
@@ -253,7 +240,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         node.getChild().accept(this);
 
         LogicalOperator source = node.getChild();
-        boolean singleSource = (source instanceof LogicalScanOperator || source instanceof LogicalRenameOperator);
+        boolean singleSource = (source instanceof LogicalScanOperator);
 
         // If we don't or can't use indices just add a selection operator
         if (!config.useIndices || !singleSource) {
@@ -281,9 +268,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         } else {
             // Replace scan with indexed scan, add rename if needed
             Operator op = new IndexScanOperator(this.currentTable, indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
-            if (this.currentTableAlias != null) {
-                op = new RenameOperator(op, this.currentTableAlias);
-            }
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers
@@ -327,7 +311,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         Operator project = new ProjectionOperator(operators.pollLast(), node.getHeader());
         operators.add(project);
-
     }
 
     /**

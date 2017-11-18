@@ -14,13 +14,13 @@ import java.util.stream.Collectors;
 /**
  * Logical operator for join handling : keeps track of left and right tuple sources and optional join condition.
  */
-public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalScanOperator> {
-    private final List<LogicalScanOperator> children;
+public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalOperator> {
+    private final List<LogicalOperator> children;
     private UnionFind unionFind;
     private List<Pair<TablePair, Expression>> unusedExpressions;
     private TableHeader outputSchema;
 
-    public LogicalJoinOperator(List<LogicalScanOperator> children, UnionFind unionFind, List<Pair<TablePair, Expression>> unusedExpressions) {
+    public LogicalJoinOperator(List<LogicalOperator> children, UnionFind unionFind, List<Pair<TablePair, Expression>> unusedExpressions) {
         this.children = children;
         this.unionFind = unionFind;
         this.unusedExpressions = unusedExpressions;
@@ -63,11 +63,11 @@ public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalSca
      */
     public static TableHeader computeHeader(List<TableHeader> sourceHeaders) {
         List<String> tableIdentifiers = sourceHeaders.stream()
-                .map(h -> h.columnAliases)
+                .map(h -> h.tableIdentifiers)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
         List<String> columnNames = sourceHeaders.stream()
-                .map(h -> h.columnHeaders)
+                .map(h -> h.columnNames)
                 .flatMap(List::stream)
                 .collect(Collectors.toList());
 
@@ -108,7 +108,7 @@ public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalSca
      * @inheritDoc
      */
     @Override
-    public List<LogicalScanOperator> getChildren() {
+    public List<LogicalOperator> getChildren() {
         return this.children;
     }
 }

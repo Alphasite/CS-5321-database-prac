@@ -85,6 +85,21 @@ public class TableHeader {
     }
 
     /**
+     * Return the fully qualified attribute names of this relation, formatted as 'tableAlias'.'columnName'
+     *
+     * @return Ordered list of attribute string identifiers
+     */
+    public List<String> getQualifiedAttributeNames() {
+        List<String> result = new ArrayList<>();
+
+        for (int i = 0; i < size(); i++) {
+            result.add(tableIdentifiers.get(i) + "." + columnNames.get(i));
+        }
+
+        return result;
+    }
+
+    /**
      * @inheritDoc
      */
     @Override
