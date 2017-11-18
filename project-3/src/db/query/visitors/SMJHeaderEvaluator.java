@@ -64,18 +64,18 @@ public class SMJHeaderEvaluator implements ExpressionVisitor {
         String columnAlias = column.getTable().getName();
         String columnName = column.getColumnName();
 
-        for (int i = 0; i < leftHeader.columnHeaders.size(); i++) {
-            if (leftHeader.columnAliases.get(i).equals(columnAlias) && leftHeader.columnHeaders.get(i).equals(columnName)) {
-                this.leftSortHeader.columnAliases.add(columnAlias);
-                this.leftSortHeader.columnHeaders.add(columnName);
+        for (int i = 0; i < leftHeader.columnNames.size(); i++) {
+            if (leftHeader.tableIdentifiers.get(i).equals(columnAlias) && leftHeader.columnNames.get(i).equals(columnName)) {
+                this.leftSortHeader.tableIdentifiers.add(columnAlias);
+                this.leftSortHeader.columnNames.add(columnName);
                 return;
             }
         }
 
-        for (int i = 0; i < rightHeader.columnHeaders.size(); i++) {
-            if (rightHeader.columnAliases.get(i).equals(columnAlias) && rightHeader.columnHeaders.get(i).equals(columnName)) {
-                this.rightSortHeader.columnAliases.add(columnAlias);
-                this.rightSortHeader.columnHeaders.add(columnName);
+        for (int i = 0; i < rightHeader.columnNames.size(); i++) {
+            if (rightHeader.tableIdentifiers.get(i).equals(columnAlias) && rightHeader.columnNames.get(i).equals(columnName)) {
+                this.rightSortHeader.tableIdentifiers.add(columnAlias);
+                this.rightSortHeader.columnNames.add(columnName);
                 return;
             }
         }

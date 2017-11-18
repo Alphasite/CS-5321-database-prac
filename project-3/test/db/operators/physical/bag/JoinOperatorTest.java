@@ -94,8 +94,8 @@ public class JoinOperatorTest {
         JoinOperator join = this.joinFactory.apply(opA, opB, null);
         TableHeader result = join.getHeader();
 
-        assertEquals(expectedTables, result.columnAliases);
-        assertEquals(expectedColumns, result.columnHeaders);
+        assertEquals(expectedTables, result.tableIdentifiers);
+        assertEquals(expectedColumns, result.columnNames);
     }
 
     @Test

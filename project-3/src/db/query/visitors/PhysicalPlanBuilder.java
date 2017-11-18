@@ -1,6 +1,9 @@
 package db.query.visitors;
 
 import db.PhysicalPlanConfig;
+import db.Utilities.Pair;
+import db.Utilities.UnionFind;
+import db.Utilities.Utilities;
 import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
@@ -14,14 +17,15 @@ import db.operators.physical.extended.InMemorySortOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
+import db.query.TablePair;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation.IN_MEMORY;
+import static db.Utilities.Utilities.*;
 
 /**
  * Physical query plan builder, implemented as a Logical operator tree visitor
@@ -43,10 +47,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     private TableInfo currentTable;
 
-    /**
-     * Alias used when referencing current source table, or null if none present.
-     */
-    private String currentTableAlias;
+    private UnionFind unionFind;
 
     private Path temporaryFolder;
     private Path indexesFolder;
@@ -64,7 +65,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         this.operators = new ArrayDeque<>();
         this.currentTable = null;
-        this.currentTableAlias = null;
+        this.unionFind = new UnionFind();
     }
 
     public Operator buildFromLogicalTree(LogicalOperator root) {
@@ -78,68 +79,104 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     @Override
     public void visit(LogicalJoinOperator node) {
-        node.getLeft().accept(this);
-        node.getRight().accept(this);
+        this.unionFind = node.getUnionFind();
 
         // We are no longer on a single path, remove references to leaf node
         this.currentTable = null;
-        this.currentTableAlias = null;
 
-        Operator rightOp = operators.pollLast();
-        Operator leftOp = operators.pollLast();
+        Map<String, Set<String>> columnToEqualitySetMapping = new HashMap<>();
+        Map<Set<String>, Set<String>> equalitySetToUsedSetMap = new HashMap<>();
 
-        Operator join;
+        for (Set<String> equalitySet : this.unionFind.getSets()) {
+            for (String column : equalitySet) {
+                columnToEqualitySetMapping.put(column, equalitySet);
+            }
 
-        switch (config.joinImplementation) {
-            case TNLJ:
-                join = new TupleNestedJoinOperator(leftOp, rightOp, node.getJoinCondition());
-                break;
-            case BNLJ:
-                join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
-                break;
-            case SMJ:
-                SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(leftOp.getHeader(), rightOp.getHeader());
-                node.getJoinCondition().accept(smjEval);
-
-                TableHeader leftSortHeader = smjEval.getLeftSortHeader();
-                TableHeader rightSortHeader = smjEval.getRightSortHeader();
-                Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
-
-                if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
-                    SortOperator leftOpSorted, rightOpSorted;
-
-                    if (config.sortImplementation == IN_MEMORY) {
-                        leftOpSorted = new InMemorySortOperator(leftOp, leftSortHeader);
-                        rightOpSorted = new InMemorySortOperator(rightOp, rightSortHeader);
-                    } else /* EXTERNAL */ {
-                        leftOpSorted = new ExternalSortOperator(leftOp, leftSortHeader, config.sortParameter, temporaryFolder);
-                        rightOpSorted = new ExternalSortOperator(rightOp, rightSortHeader, config.sortParameter, temporaryFolder);
-                    }
-
-                    join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
-                } else {
-                    // when no equijoins, just use BNLJ
-                    join = new BlockNestedJoinOperator(leftOp, rightOp, node.getJoinCondition(), config.joinParameter);
-                }
-                break;
-            default:
-                throw new NotImplementedException();
+            equalitySetToUsedSetMap.put(equalitySet, new HashSet<>());
         }
 
-        operators.add(join);
-    }
+        List<LogicalOperator> children = node.getChildren();
 
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void visit(LogicalRenameOperator node) {
-        node.getChild().accept(this);
+        for (LogicalOperator op : children) {
+            op.accept(this);
+        }
 
-        Operator rename = new RenameOperator(operators.pollLast(), node.getNewTableName());
-        operators.add(rename);
+        Operator join = operators.poll();
 
-        this.currentTableAlias = node.getNewTableName();
+        for (int i = 1; i < children.size(); i++) {
+            Expression condition = null;
+            Operator joined = operators.poll();
+
+            TableHeader header = LogicalJoinOperator.computeHeader(join.getHeader(), joined.getHeader());
+
+            for (String attribute : header.getQualifiedAttributeNames()) {
+                Set<String> equalitySet = columnToEqualitySetMapping.get(attribute);
+                Set<String> usedEqualitySet = equalitySetToUsedSetMap.get(equalitySet);
+
+                if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(attribute)) {
+                    String equalColumn = usedEqualitySet.stream()
+                            .findAny()
+                            .get();
+
+                    condition = Utilities.joinExpression(condition, Utilities.equalPairToExpression(attribute, equalColumn));
+                }
+
+                usedEqualitySet.add(attribute);
+            }
+
+            // TODO expand unused expressions here
+
+            switch (config.joinImplementation) {
+                case TNLJ:
+                    join = new TupleNestedJoinOperator(join, joined, condition);
+                    break;
+                case BNLJ:
+                    join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
+                    break;
+                case SMJ:
+                    SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(join.getHeader(), joined.getHeader());
+                    if (condition != null) {
+                        condition.accept(smjEval);
+
+                        TableHeader leftSortHeader = smjEval.getLeftSortHeader();
+                        TableHeader rightSortHeader = smjEval.getRightSortHeader();
+                        Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
+
+                        if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
+                            SortOperator leftOpSorted, rightOpSorted;
+
+                            if (config.sortImplementation == IN_MEMORY) {
+                                leftOpSorted = new InMemorySortOperator(join, leftSortHeader);
+                                rightOpSorted = new InMemorySortOperator(joined, rightSortHeader);
+                            } else /* EXTERNAL */ {
+                                leftOpSorted = new ExternalSortOperator(join, leftSortHeader, config.sortParameter, temporaryFolder);
+                                rightOpSorted = new ExternalSortOperator(joined, rightSortHeader, config.sortParameter, temporaryFolder);
+                            }
+
+                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
+                        } else {
+                            // when no equijoins, just use BNLJ
+                            join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
+                        }
+                    } else {
+                        join = new BlockNestedJoinOperator(join, joined, null, config.joinParameter);
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        operators.push(join);
+
+        Expression unusedExpression = null;
+        for (Pair<TablePair, Expression> tablePairExpressionPair : node.getUnusedExpressions()) {
+            unusedExpression = joinExpression(unusedExpression, tablePairExpressionPair.getRight());
+        }
+
+        if (unusedExpression != null) {
+            operators.push(new SelectionOperator(operators.poll(), unusedExpression));
+        }
     }
 
     /**
@@ -147,8 +184,49 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     @Override
     public void visit(LogicalScanOperator node) {
-        Operator scan = new ScanOperator(node.getTable());
-        operators.add(scan);
+        TableHeader header = node.getHeader();
+
+        ScanOperator scanOperator = new ScanOperator(node.getTable(), node.getTableName());
+
+        Expression expression = null;
+
+        for (String attribute : header.getQualifiedAttributeNames()) {
+            if (unionFind.getMinimum(attribute) != null) {
+                expression = joinExpression(expression, greaterThanColumn(attribute, unionFind.getMinimum(attribute)));
+            }
+
+            if (unionFind.getMaximum(attribute) != null) {
+                expression = joinExpression(expression, lessThanColumn(attribute, unionFind.getMaximum(attribute)));
+            }
+
+            for (Set<String> equalitySet : unionFind.getSets()) {
+                List<String> equalHeaders = new ArrayList<>();
+
+                for (String column : equalitySet) {
+                    Pair<String, String> splitColumn = splitLongFormColumn(column);
+                    if (splitColumn.getLeft().equals(node.getTableName())) {
+                        equalHeaders.add(splitColumn.getRight());
+                    }
+                }
+
+                if (equalHeaders.size() > 1) {
+                    for (int j = 1; j < equalHeaders.size(); j++) {
+                        Expression equalityExpression = Utilities.equalPairToExpression(
+                                node.getTableName() + "." + equalHeaders.get(j - 1),
+                                node.getTableName() + "." + equalHeaders.get(j)
+                        );
+
+                        expression = joinExpression(expression, equalityExpression);
+                    }
+                }
+            }
+        }
+
+        if (expression != null) {
+            operators.add(new SelectionOperator(scanOperator, expression));
+        } else {
+            operators.add(scanOperator);
+        }
 
         // Update leaf node info for future uses
         this.currentTable = node.getTable();
@@ -162,7 +240,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         node.getChild().accept(this);
 
         LogicalOperator source = node.getChild();
-        boolean singleSource = (source instanceof LogicalScanOperator || source instanceof LogicalRenameOperator);
+        boolean singleSource = (source instanceof LogicalScanOperator);
 
         // If we don't or can't use indices just add a selection operator
         if (!config.useIndices || !singleSource) {
@@ -190,9 +268,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         } else {
             // Replace scan with indexed scan, add rename if needed
             Operator op = new IndexScanOperator(this.currentTable, indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
-            if (this.currentTableAlias != null) {
-                op = new RenameOperator(op, this.currentTableAlias);
-            }
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers
@@ -236,7 +311,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         Operator project = new ProjectionOperator(operators.pollLast(), node.getHeader());
         operators.add(project);
-
     }
 
     /**

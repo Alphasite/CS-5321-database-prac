@@ -1,6 +1,6 @@
 package db.operators.physical.extended;
 
-import db.Utilities;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;

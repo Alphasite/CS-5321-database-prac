@@ -2,6 +2,8 @@ package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.PhysicalPlanConfig.SortImplementation;
+import db.Utilities.UnionFind;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableInfo;
 import db.operators.logical.LogicalOperator;
@@ -40,7 +42,6 @@ public class SampleQueriesTest {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
         Database DB = Database.loadDatabase(TestUtils.DB_PATH);
-        QueryBuilder builder = new QueryBuilder(DB);
 
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(TestUtils.INPUT_PATH.resolve("queries.sql").toFile()));
@@ -48,6 +49,9 @@ public class SampleQueriesTest {
             int i = 1;
 
             while ((statement = parser.Statement()) != null) {
+                UnionFind unionFind = new UnionFind();
+                QueryBuilder builder = new QueryBuilder(DB, unionFind);
+
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
                 Path expectedFile = TestUtils.EXPECTED_PATH.resolve("query" + i++);

@@ -1,26 +1,36 @@
 package db.operators.logical;
 
+import db.Utilities.Pair;
+import db.Utilities.UnionFind;
 import db.datastore.TableHeader;
-import db.operators.BinaryNode;
+import db.operators.NaryNode;
+import db.query.TablePair;
 import net.sf.jsqlparser.expression.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Logical operator for join handling : keeps track of left and right tuple sources and optional join condition.
  */
-public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalOperator> {
-    private final LogicalOperator left;
-    private final LogicalOperator right;
-    private final Expression joinCondition;
-    private final TableHeader outputSchema;
+public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalOperator> {
+    private final List<LogicalOperator> children;
+    private UnionFind unionFind;
+    private List<Pair<TablePair, Expression>> unusedExpressions;
+    private TableHeader outputSchema;
 
-    public LogicalJoinOperator(LogicalOperator left, LogicalOperator right, Expression joinCondition) {
-        this.left = left;
-        this.right = right;
-        this.joinCondition = joinCondition;
-        this.outputSchema = computeHeader(left.getHeader(), right.getHeader());
+    public LogicalJoinOperator(List<LogicalOperator> children, UnionFind unionFind, List<Pair<TablePair, Expression>> unusedExpressions) {
+        this.children = children;
+        this.unionFind = unionFind;
+        this.unusedExpressions = unusedExpressions;
+
+        if (this.children.size() == 0) {
+            this.outputSchema = new TableHeader();
+        } else {
+            List<TableHeader> headers = children.stream().map(LogicalOperator::getHeader).collect(Collectors.toList());
+            this.outputSchema = computeHeader(headers);
+        }
     }
 
     /**
@@ -33,25 +43,49 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
     public static TableHeader computeHeader(TableHeader left, TableHeader right) {
         int tableWidth = left.size() + right.size();
 
-        List<String> headings = new ArrayList<>(tableWidth);
-        List<String> aliases = new ArrayList<>(tableWidth);
+        List<String> tableIdentifiers = new ArrayList<>(tableWidth);
+        List<String> columnNames = new ArrayList<>(tableWidth);
 
-        headings.addAll(left.columnHeaders);
-        headings.addAll(right.columnHeaders);
+        columnNames.addAll(left.columnNames);
+        columnNames.addAll(right.columnNames);
 
-        aliases.addAll(left.columnAliases);
-        aliases.addAll(right.columnAliases);
+        tableIdentifiers.addAll(left.tableIdentifiers);
+        tableIdentifiers.addAll(right.tableIdentifiers);
 
-        return new TableHeader(aliases, headings);
+        return new TableHeader(tableIdentifiers, columnNames);
     }
 
     /**
-     * Return an optional expression which describes whether or not a tuple should be joned
+     * Compute the result header for a N-way join.
      *
-     * @return The nullable expression.
+     * @param sourceHeaders List of ordered headers from source operators
+     * @return The resulting left-to-right join header.
      */
-    public Expression getJoinCondition() {
-        return joinCondition;
+    public static TableHeader computeHeader(List<TableHeader> sourceHeaders) {
+        List<String> tableIdentifiers = sourceHeaders.stream()
+                .map(h -> h.tableIdentifiers)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+        List<String> columnNames = sourceHeaders.stream()
+                .map(h -> h.columnNames)
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+
+        return new TableHeader(tableIdentifiers, columnNames);
+    }
+
+    /**
+     * @return the union find with all of the expressions
+     */
+    public UnionFind getUnionFind() {
+        return unionFind;
+    }
+
+    /**
+     * @return the list of unused expressions
+     */
+    public List<Pair<TablePair, Expression>> getUnusedExpressions() {
+        return unusedExpressions;
     }
 
     /**
@@ -74,15 +108,7 @@ public class LogicalJoinOperator implements LogicalOperator, BinaryNode<LogicalO
      * @inheritDoc
      */
     @Override
-    public LogicalOperator getLeft() {
-        return left;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public LogicalOperator getRight() {
-        return right;
+    public List<LogicalOperator> getChildren() {
+        return this.children;
     }
 }

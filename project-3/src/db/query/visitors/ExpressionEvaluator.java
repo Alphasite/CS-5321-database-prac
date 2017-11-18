@@ -67,8 +67,8 @@ public class ExpressionEvaluator implements ExpressionVisitor {
     public void visit(Column column) {
         // TODO: move this computation to object construction
 
-        for (int i = 0; i < schema.columnHeaders.size(); i++) {
-            if (schema.columnAliases.get(i).equals(column.getTable().getName()) && schema.columnHeaders.get(i).equals(column.getColumnName())) {
+        for (int i = 0; i < schema.columnNames.size(); i++) {
+            if (schema.tableIdentifiers.get(i).equals(column.getTable().getName()) && schema.columnNames.get(i).equals(column.getColumnName())) {
                 this.value = tuple.fields.get(i);
                 return;
             }

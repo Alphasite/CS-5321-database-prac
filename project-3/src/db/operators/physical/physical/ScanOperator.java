@@ -6,6 +6,7 @@ import db.datastore.tuple.Tuple;
 import db.datastore.tuple.TupleReader;
 import db.datastore.tuple.binary.BinaryTupleReader;
 import db.datastore.tuple.string.StringTupleReader;
+import db.operators.logical.LogicalScanOperator;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -16,22 +17,26 @@ import db.operators.physical.PhysicalTreeVisitor;
  */
 public class ScanOperator extends AbstractOperator {
     private final TableInfo table;
+    private final TableHeader header;
     private TupleReader reader;
+
+    /**
+     * @param table     the table's info
+     * @param tableAlias the renamed name of the table.
+     */
+    public ScanOperator(TableInfo table, String tableAlias) {
+        this.table = table;
+        this.header = LogicalScanOperator.computeHeader(table.header, tableAlias);
+        this.reset();
+    }
 
     /**
      * @param tableInfo the table which is to be scanned
      */
     public ScanOperator(TableInfo tableInfo) {
         this.table = tableInfo;
+        this.header = tableInfo.header;
         this.reset();
-    }
-
-    /**
-     * @param reader the reader for the scan
-     */
-    public ScanOperator(TupleReader reader) {
-        this.table = null;
-        this.reader = reader;
     }
 
     /**
@@ -50,7 +55,7 @@ public class ScanOperator extends AbstractOperator {
      */
     @Override
     public TableHeader getHeader() {
-        return this.table.header;
+        return this.header;
     }
 
     /**

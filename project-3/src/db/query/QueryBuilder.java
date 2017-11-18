@@ -1,6 +1,7 @@
 package db.query;
 
-import db.Utilities;
+import db.Utilities.UnionFind;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.operators.logical.*;
@@ -10,7 +11,8 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Query plan generator
@@ -22,6 +24,7 @@ import java.util.*;
  */
 public class QueryBuilder {
     private Database db;
+    private UnionFind unionFind;
 
     /**
      * List of identifying table names (either original name or alias defined in FROM clause).
@@ -30,18 +33,19 @@ public class QueryBuilder {
     private List<String> tableIdentifiers;
 
     /**
-     * Map every table <em>identifier</em> to the corresponding logical operator used to access its tuples
+     * List of logical operators used to access table tuples, in the order specified in the FROM token
      * (ie. Scan or Scan + Rename).
      */
-    private Map<String, LogicalOperator> tableOperators;
+    private List<LogicalOperator> tableOperators;
 
     /**
      * Initialize query builder using the provided database object as a source for Table schema information
      */
-    public QueryBuilder(Database db) {
+    public QueryBuilder(Database db, UnionFind unionFind) {
         this.db = db;
+        this.unionFind = unionFind;
         this.tableIdentifiers = new ArrayList<>();
-        this.tableOperators = new HashMap<>();
+        this.tableOperators = new ArrayList<>();
     }
 
     /**
@@ -56,13 +60,13 @@ public class QueryBuilder {
         tableOperators.clear();
 
         tableIdentifiers.add(Utilities.getIdentifier(fromTable));
-        tableOperators.put(Utilities.getIdentifier(fromTable), getScanAndMaybeRename(fromTable));
+        tableOperators.add(getScanAndMaybeRename(fromTable));
 
         if (joins != null) {
             for (Join join : joins) {
                 Table joinTable = (Table) join.getRightItem();
                 tableIdentifiers.add(Utilities.getIdentifier(joinTable));
-                tableOperators.put(Utilities.getIdentifier(joinTable), getScanAndMaybeRename(joinTable));
+                tableOperators.add(getScanAndMaybeRename(joinTable));
             }
         }
     }
@@ -114,9 +118,9 @@ public class QueryBuilder {
 
             for (String alias : this.tableIdentifiers) {
                 for (int i = 0; i < header.size(); i++) {
-                    if (header.columnAliases.get(i).equals(alias)) {
+                    if (header.tableIdentifiers.get(i).equals(alias)) {
                         aliases.add(alias);
-                        columns.add(header.columnHeaders.get(i));
+                        columns.add(header.columnNames.get(i));
                     }
                 }
             }
@@ -164,70 +168,29 @@ public class QueryBuilder {
      * @return The root node of the sql tree formed from the where and from conditions
      */
     private LogicalOperator processWhereClause(Expression rootExpression) {
-        // No root node.
-        LogicalOperator rootNode = null;
-
-        Set<String> tablesToJoin = new HashSet<>(this.tableIdentifiers);
-        Set<String> joinedTables = new HashSet<>();
+        LogicalOperator rootNode;
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.
-        Map<String, Expression> selectionExpressions = new HashMap<>();
-        Map<TableCouple, Expression> joinExpressions = new HashMap<>();
-        Expression nakedExpression = null;
+
+        for (LogicalOperator operator : this.tableOperators) {
+            TableHeader header = operator.getHeader();
+
+            for (String attribute : header.getQualifiedAttributeNames()) {
+                unionFind.add(attribute);
+            }
+        }
 
         if (rootExpression != null) {
-            WhereDecomposer bwb = new WhereDecomposer(rootExpression);
-            selectionExpressions.putAll(bwb.getSelectionExpressions());
-            joinExpressions.putAll(bwb.getJoinExpressions());
-            nakedExpression = bwb.getNakedExpression();
-        }
+            WhereDecomposer bwb = new WhereDecomposer(unionFind);
+            rootExpression.accept(bwb);
 
-        TriFunction<LogicalOperator, String, Expression, LogicalOperator> joinTable = (root, tableName, expression) -> {
-            LogicalOperator rightOp = this.tableOperators.get(tableName);
+            rootNode = new LogicalJoinOperator(this.tableOperators, bwb.getUnionFind(), bwb.getUnusableExpressions());
 
-            if (selectionExpressions.containsKey(tableName)) {
-                rightOp = new LogicalSelectOperator(rightOp, selectionExpressions.get(tableName));
+            if (bwb.getNakedExpression() != null) {
+                rootNode = new LogicalSelectOperator(rootNode, bwb.getNakedExpression());
             }
-
-            joinedTables.add(tableName);
-            tablesToJoin.remove(tableName);
-
-            if (root != null) {
-                return new LogicalJoinOperator(root, rightOp, expression);
-            } else {
-                return rightOp;
-            }
-        };
-
-        // Add all of the joined tables
-        // Add any join expressions to the join operator
-        // Add any other expressions below the join.
-        for (TableCouple tc : joinExpressions.keySet()) {
-            String table1 = tc.getTable1();
-            String table2 = tc.getTable2();
-
-            Expression expression = joinExpressions.get(tc);
-
-            if (!joinedTables.contains(table1) && !joinedTables.contains(table2)) {
-                rootNode = joinTable.apply(rootNode, table1, null);
-                rootNode = joinTable.apply(rootNode, table2, expression);
-            } else if (!joinedTables.contains(table1)) {
-                rootNode = joinTable.apply(rootNode, table1, expression);
-            } else if (!joinedTables.contains(table2)) {
-                rootNode = joinTable.apply(rootNode, table2, expression);
-            } else {
-                rootNode = new LogicalSelectOperator(rootNode, expression);
-            }
-        }
-
-        for (String table : tablesToJoin) {
-            rootNode = joinTable.apply(rootNode, table, null);
-        }
-
-        // Add naked expression as root selection
-        // TODO: evaluate condition at build time and act accordingly
-        if (nakedExpression != null) {
-            rootNode = new LogicalSelectOperator(rootNode, nakedExpression);
+        } else {
+            rootNode = new LogicalJoinOperator(this.tableOperators, new UnionFind(), new ArrayList<>());
         }
 
         return rootNode;
@@ -239,13 +202,11 @@ public class QueryBuilder {
      * @param table The table token extracted from the SQL FROM clause to be read/renamed.
      * @return scan operator with an optional rename to handle aliases
      */
-    private LogicalOperator getScanAndMaybeRename(Table table) {
-        LogicalScanOperator scan = new LogicalScanOperator(db.getTable(table.getName()));
+    private LogicalScanOperator getScanAndMaybeRename(Table table) {
+        return new LogicalScanOperator(db.getTable(table.getName()), Utilities.getIdentifier(table));
+    }
 
-        if (table.getAlias() == null) {
-            return scan;
-        } else {
-            return new LogicalRenameOperator(scan, table.getAlias());
-        }
+    public UnionFind getUnionFind() {
+        return unionFind;
     }
 }

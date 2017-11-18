@@ -1,6 +1,14 @@
-package db;
+package db.Utilities;
 
+import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
+import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 
 import java.io.File;
@@ -10,6 +18,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A collection of unrelated utility methods.
@@ -121,6 +130,58 @@ public class Utilities {
             Files.walk(directory).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static Pair<String, String> splitLongFormColumn(String longForm) {
+        String[] segments = longForm.split("\\.");
+        return new Pair<>(segments[0], segments[1]);
+    }
+
+    public static boolean checkCondition(TableHeader header, Tuple tuple, List<Pair<String, String>> equalColumns) {
+        for (Pair<String, String> equalColumn : equalColumns) {
+            Pair<String, String> left = splitLongFormColumn(equalColumn.getLeft());
+            Pair<String, String> right = splitLongFormColumn(equalColumn.getRight());
+
+            Optional<Integer> leftIndex = header.resolve(left.getLeft(), left.getRight());
+            Optional<Integer> rightIndex = header.resolve(right.getLeft(), right.getRight());
+
+            assert leftIndex.isPresent();
+            assert rightIndex.isPresent();
+
+            if (!tuple.fields.get(leftIndex.get()).equals(tuple.fields.get(rightIndex.get()))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static Column stringToColumn(String column) {
+        Pair<String, String> splitLongFormColumn = splitLongFormColumn(column);
+        return new Column(
+                new Table(null, splitLongFormColumn.getLeft()),
+                splitLongFormColumn.getRight()
+        );
+    }
+
+    public static Expression equalPairToExpression(String left, String right) {
+        return new EqualsTo(stringToColumn(left), stringToColumn(right));
+    }
+
+    public static Expression lessThanColumn(String column, Integer value) {
+        return new MinorThanEquals(stringToColumn(column), new LongValue(value));
+    }
+
+    public static Expression greaterThanColumn(String column, Integer value) {
+        return new GreaterThanEquals(stringToColumn(column), new LongValue(value));
+    }
+
+    public static Expression joinExpression(Expression left, Expression right) {
+        if (left == null) {
+            return right;
+        } else {
+            return new AndExpression(left, right);
         }
     }
 }

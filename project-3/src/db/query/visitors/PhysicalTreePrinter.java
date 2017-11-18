@@ -4,7 +4,6 @@ import db.operators.physical.Operator;
 import db.operators.physical.PhysicalTreeVisitor;
 import db.operators.physical.bag.JoinOperator;
 import db.operators.physical.bag.ProjectionOperator;
-import db.operators.physical.bag.RenameOperator;
 import db.operators.physical.bag.SelectionOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
@@ -65,18 +64,6 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     public void visit(SortOperator node) {
         String operatorClass = node.getClass().getSimpleName();
         lines.add(pad(operatorClass + " on " + node.getSortHeader()));
-
-        this.depth += 1;
-        node.getChild().accept(this);
-        this.depth -= 1;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    @Override
-    public void visit(RenameOperator node) {
-        lines.add(pad("Rename " + node.getNewTableName()));
 
         this.depth += 1;
         node.getChild().accept(this);

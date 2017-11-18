@@ -1,6 +1,8 @@
 package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.Utilities.UnionFind;
+import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.stats.StatsGatherer;
 import db.datastore.stats.TableStats;
@@ -117,7 +119,8 @@ public class Project3 {
     }
 
     public static void runQuery(PlainSelect selectQuery, Path outputFile, Path tempDir, Path indexesDir, Database DB, PhysicalPlanConfig config) {
-        QueryBuilder builder = new QueryBuilder(DB);
+        UnionFind unionFind = new UnionFind();
+        QueryBuilder builder = new QueryBuilder(DB, unionFind);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, tempDir, indexesDir);
 
         // Build logical query plan

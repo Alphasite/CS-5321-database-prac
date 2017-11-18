@@ -1,6 +1,7 @@
 package db.query;
 
 import db.TestUtils;
+import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
@@ -17,6 +18,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.List;
+import java.util.Set;
+
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -30,6 +36,7 @@ public class QueryBuilderTest {
 
     private QueryBuilder logicalBuilder;
     private PhysicalPlanBuilder physicalBuilder;
+    private UnionFind unionFind;
 
     @BeforeClass
     public static void loadData() {
@@ -38,7 +45,8 @@ public class QueryBuilderTest {
 
     @Before
     public void init() {
-        this.logicalBuilder = new QueryBuilder(DB);
+        this.unionFind = new UnionFind();
+        this.logicalBuilder = new QueryBuilder(DB, unionFind);
         this.physicalBuilder = new PhysicalPlanBuilder(TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
     }
 
@@ -65,7 +73,7 @@ public class QueryBuilderTest {
         assertTrue(root instanceof ProjectionOperator);
         assertTrue(((ProjectionOperator) root).getChild() instanceof SelectionOperator);
         SelectionOperator select = (SelectionOperator) ((ProjectionOperator) root).getChild();
-        assertEquals(tokens.getWhere(), select.getPredicate());
+        assertEquals("Boats.D >= 4 AND Boats.D <= 4", select.getPredicate().toString());
 
         root.close();
     }
@@ -79,8 +87,8 @@ public class QueryBuilderTest {
 
         assertTrue(root instanceof ProjectionOperator);
         assertEquals(1, root.getHeader().size());
-        assertEquals("Sailors", root.getHeader().columnAliases.get(0));
-        assertEquals("A", root.getHeader().columnHeaders.get(0));
+        assertEquals("Sailors", root.getHeader().tableIdentifiers.get(0));
+        assertEquals("A", root.getHeader().columnNames.get(0));
 
         root.close();
     }
@@ -96,7 +104,6 @@ public class QueryBuilderTest {
         assertTrue(((ProjectionOperator) root).getChild() instanceof TupleNestedJoinOperator);
         JoinOperator operator = (JoinOperator) ((ProjectionOperator) root).getChild();
         assertEquals("Sailors.A | Sailors.B | Sailors.C | Reserves.G | Reserves.H", operator.getHeader().toString());
-        assertEquals(tokens.getWhere(), operator.getPredicate());
 
         assertEquals("64 | 113 | 139 | 64 | 156", root.getNextTuple().toString());
         assertEquals("64 | 113 | 139 | 64 | 70", root.getNextTuple().toString());
@@ -141,8 +148,8 @@ public class QueryBuilderTest {
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
         assertTrue(root instanceof ProjectionOperator);
-        assertEquals("S", root.getHeader().columnAliases.get(0));
-        assertEquals("C", root.getHeader().columnHeaders.get(0));
+        assertEquals("S", root.getHeader().tableIdentifiers.get(0));
+        assertEquals("C", root.getHeader().columnNames.get(0));
 
         assertEquals("139", root.getNextTuple().toString());
         assertEquals("129", root.getNextTuple().toString());
@@ -191,5 +198,61 @@ public class QueryBuilderTest {
         assertEquals("2", root.getNextTuple().toString());
 
         root.close();
+    }
+
+    @Test
+    public void testUnionFind() throws Exception {
+        PlainSelect tokens = TestUtils.parseQuery("SELECT * FROM Sailors, Boats WHERE Boats.D < 4 AND Boats.D = Sailors.A AND Sailors.A = Boats.E And Sailors.B = Boats.F And Boats.F > 6 AND Boats.F <= 95;");
+
+        LogicalOperator logRoot = logicalBuilder.buildQuery(tokens);
+        Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
+
+        assertTrue(root instanceof ProjectionOperator);
+
+        UnionFind unionFind = logicalBuilder.getUnionFind();
+
+        List<Set<String>> sets = unionFind.getSets();
+
+        assertEquals(3, sets.size());
+
+        Set<String> set1 = sets.stream()
+                .filter(set -> set.size() == 1)
+                .findAny()
+                .get();
+
+        Set<String> set2 = sets.stream()
+                .filter(set -> set.size() == 2)
+                .findAny()
+                .get();
+
+        Set<String> set3 = sets.stream()
+                .filter(set -> set.size() == 3)
+                .findAny()
+                .get();
+
+        assertThat(set1, hasItems("Sailors.C"));
+        assertThat(set2, hasItems("Boats.F", "Sailors.B"));
+        assertThat(set3, hasItems("Boats.D", "Sailors.A", "Boats.E"));
+
+        assertThat(unionFind.getMaximum("Sailors.C"), nullValue());
+        assertThat(unionFind.getMinimum("Sailors.C"), nullValue());
+        assertThat(unionFind.getEquals("Sailors.C"), nullValue());
+
+        assertThat(unionFind.getMaximum("Boats.D"), is(3));
+        assertThat(unionFind.getMaximum("Boats.E"), is(3));
+        assertThat(unionFind.getMaximum("Sailors.A"), is(3));
+        assertThat(unionFind.getMinimum("Boats.D"), nullValue());
+        assertThat(unionFind.getMinimum("Boats.E"), nullValue());
+        assertThat(unionFind.getMinimum("Sailors.A"), nullValue());
+        assertThat(unionFind.getEquals("Boats.D"), nullValue());
+        assertThat(unionFind.getEquals("Boats.E"), nullValue());
+        assertThat(unionFind.getEquals("Sailors.A"), nullValue());
+
+        assertThat(unionFind.getMaximum("Boats.F"), is(95));
+        assertThat(unionFind.getMaximum("Sailors.B"), is(95));
+        assertThat(unionFind.getMinimum("Boats.F"), is(7));
+        assertThat(unionFind.getMinimum("Sailors.B"), is(7));
+        assertThat(unionFind.getEquals("Boats.F"), nullValue());
+        assertThat(unionFind.getEquals("Sailors.B"), nullValue());
     }
 }

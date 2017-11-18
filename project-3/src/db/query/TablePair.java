@@ -5,7 +5,7 @@ package db.query;
  * <p>
  * Implements {@link #equals(Object)} and {@link #hashCode()} to allow use as a key in hash tables.
  */
-public class TableCouple {
+public class TablePair {
     private String table1;
     private String table2;
 
@@ -16,7 +16,7 @@ public class TableCouple {
      * @param table1 The first table
      * @param table2 The second table
      */
-    public TableCouple(String table1, String table2) {
+    public TablePair(String table1, String table2) {
         this.table1 = table1;
         this.table2 = table2;
 
@@ -54,9 +54,9 @@ public class TableCouple {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TableCouple)) return false;
+        if (!(o instanceof TablePair)) return false;
 
-        TableCouple that = (TableCouple) o;
+        TablePair that = (TablePair) o;
 
         return table1.equals(that.table1) && table2.equals(that.table2);
     }
