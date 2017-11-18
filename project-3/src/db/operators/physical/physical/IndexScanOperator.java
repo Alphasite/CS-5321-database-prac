@@ -14,7 +14,7 @@ import db.operators.physical.PhysicalTreeVisitor;
  * An operator that uses an index on a table to scan through
  * a specific range of tuples in that table.
  */
-public class IndexScanOperator extends AbstractOperator{
+public class IndexScanOperator extends AbstractOperator {
 
     private final TableInfo tableInfo;
     private final BTree indexTree;

@@ -2,9 +2,6 @@ package db.datastore;
 
 import db.datastore.index.BulkLoader;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,7 +43,7 @@ public class Database {
         Path schema = inputPath.resolve("schema.txt");
         Path data = inputPath.resolve("data");
 
-        try (Scanner s = new Scanner(new BufferedInputStream(new FileInputStream(schema.toFile())))) {
+        try (Scanner s = new Scanner(schema)) {
             while (s.hasNextLine()) {
                 String line = s.nextLine();
                 String[] words = line.split(" ");
@@ -64,8 +61,8 @@ public class Database {
                 TableInfo tableInfo = new TableInfo(header, data.resolve(tableName), true);
                 tables.put(tableName, tableInfo);
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         Database database = new Database(inputPath, tables);
@@ -74,6 +71,11 @@ public class Database {
         return database;
     }
 
+    /**
+     * If present, read index catalog info from file. Does not deserialize indexes.
+     *
+     * @param indexConfigFile
+     */
     private void loadIndexInfo(Path indexConfigFile) {
         // Prevent crashes when running old tests
         if (!Files.exists(indexConfigFile)) {
@@ -107,7 +109,7 @@ public class Database {
                 Files.createDirectory(indexFolder);
             }
         } catch (IOException e) {
-//            e.printStackTrace();
+            e.printStackTrace();
         }
 
         for (IndexInfo config : indexInfo) {

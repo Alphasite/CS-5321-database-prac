@@ -13,7 +13,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,8 +26,8 @@ import static org.hamcrest.core.IsNull.notNullValue;
 
 @SuppressWarnings("Duplicates")
 public class IndexScanOperatorTest {
-    private final Path boatsIndexFile = Paths.get("resources/samples-4/expected_indexes/Boats.E").toAbsolutePath();
-    private final Path inputDir = Paths.get("resources/samples-4/input/db").toAbsolutePath();
+    private final Path expectedIndexes = TestUtils.EXPECTED_INDEXES.resolve("Boats.E");
+    private final Path inputDir = TestUtils.NEW_DB_PATH;
     private final Path indexesDir = inputDir.resolve("indexes");
 
     private BTree boatsIndexTree;
@@ -50,8 +49,8 @@ public class IndexScanOperatorTest {
     public void setUp() throws Exception {
         Database database = Database.loadDatabase(inputDir);
         boatsTable = database.getTable("Boats");
-        boatsIndexTree = BTree.createTree(boatsIndexFile);
-        boatIndex = database.getTable("Boats").indices.get(0);
+        boatIndex = boatsTable.indices.get(0);
+        boatsIndexTree = BTree.createTree(expectedIndexes);
         boatsOperator = new IndexScanOperator(boatsTable, boatIndex, boatsIndexTree, min, max);
         numberOfTuples = 10000 - 4 - 32;
 

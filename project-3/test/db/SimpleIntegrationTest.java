@@ -10,8 +10,6 @@ import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import static org.hamcrest.core.Is.is;
@@ -24,9 +22,7 @@ public class SimpleIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        Path inputDir = Paths.get("resources/samples/input/db");
-        inputDir = inputDir.toAbsolutePath();
-        Database database = Database.loadDatabase(inputDir);
+        Database database = Database.loadDatabase(TestUtils.DB_PATH);
         this.boats = database.getTable("Boats");
         this.reserves = database.getTable("Reserves");
         this.sailors = database.getTable("Sailors");
@@ -51,12 +47,12 @@ public class SimpleIntegrationTest {
                 new ArrayList<>()
         );
 
-        tableHeader.columnAliases.add("Boats");
-        tableHeader.columnHeaders.add("D");
-        tableHeader.columnAliases.add("");
-        tableHeader.columnHeaders.add("E");
-        tableHeader.columnAliases.add("Reserves");
-        tableHeader.columnHeaders.add("G");
+        tableHeader.tableIdentifiers.add("Boats");
+        tableHeader.columnNames.add("D");
+        tableHeader.tableIdentifiers.add("");
+        tableHeader.columnNames.add("E");
+        tableHeader.tableIdentifiers.add("Reserves");
+        tableHeader.columnNames.add("G");
 
         JoinOperator join = new TupleNestedJoinOperator(boatsScan, reservesScan);
         ProjectionOperator projection = new ProjectionOperator(join, tableHeader);

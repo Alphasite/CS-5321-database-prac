@@ -99,7 +99,7 @@ public class StringTupleReader implements TupleReader {
      */
     private Tuple getNextTuple() {
         if (this.tableFile.hasNextLine()) {
-            int cellNumber = this.header.columnHeaders.size();
+            int cellNumber = this.header.columnNames.size();
             ArrayList<Integer> row = new ArrayList<>();
 
             for (int i = 0; i < cellNumber; i++) {

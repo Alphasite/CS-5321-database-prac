@@ -1,5 +1,7 @@
-package db;
+package db.query;
 
+import db.TestUtils;
+import db.TestUtils;
 import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
@@ -11,7 +13,6 @@ import db.operators.physical.bag.TupleNestedJoinOperator;
 import db.operators.physical.extended.DistinctOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.ScanOperator;
-import db.query.QueryBuilder;
 import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.Before;
@@ -24,6 +25,8 @@ import java.util.Set;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static com.sun.org.apache.xerces.internal.util.PropertyState.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -88,8 +91,8 @@ public class QueryBuilderTest {
 
         assertTrue(root instanceof ProjectionOperator);
         assertEquals(1, root.getHeader().size());
-        assertEquals("Sailors", root.getHeader().columnAliases.get(0));
-        assertEquals("A", root.getHeader().columnHeaders.get(0));
+        assertEquals("Sailors", root.getHeader().tableIdentifiers.get(0));
+        assertEquals("A", root.getHeader().columnNames.get(0));
 
         root.close();
     }
@@ -149,8 +152,8 @@ public class QueryBuilderTest {
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
         assertTrue(root instanceof ProjectionOperator);
-        assertEquals("S", root.getHeader().columnAliases.get(0));
-        assertEquals("C", root.getHeader().columnHeaders.get(0));
+        assertEquals("S", root.getHeader().tableIdentifiers.get(0));
+        assertEquals("C", root.getHeader().columnNames.get(0));
 
         assertEquals("139", root.getNextTuple().toString());
         assertEquals("129", root.getNextTuple().toString());

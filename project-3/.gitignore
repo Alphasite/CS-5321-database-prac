@@ -2,7 +2,7 @@
 /out/
 /build/
 
-/resources/samples/output/
-/resources/samples/tmp/
+output/
+tmp/
 
 .settings/

@@ -6,6 +6,7 @@ import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
+import db.datastore.TableInfo;
 import db.datastore.index.BTree;
 import db.operators.logical.*;
 import db.operators.physical.Operator;
@@ -16,6 +17,7 @@ import db.operators.physical.extended.InMemorySortOperator;
 import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
+import db.query.TablePair;
 import db.query.TablePair;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
@@ -40,6 +42,17 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     private Deque<Operator> operators;
 
+    /**
+     * Last table referenced by a leaf node (ie. all operators on current path reference this table).
+     * Set to null when encountering a join.
+     */
+    private TableInfo currentTable;
+
+    /**
+     * Alias used when referencing current source table, or null if none present.
+     */
+    private String currentTableAlias;
+
     private UnionFind unionFind;
 
     private Path temporaryFolder;
@@ -52,10 +65,13 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     }
 
     public PhysicalPlanBuilder(PhysicalPlanConfig config, Path temporaryFolder, Path indexesFolder) {
-        this.operators = new ArrayDeque<>();
         this.config = config;
         this.temporaryFolder = temporaryFolder;
         this.indexesFolder = indexesFolder;
+
+        this.operators = new ArrayDeque<>();
+        this.currentTable = null;
+        this.currentTableAlias = null;
         this.unionFind = new UnionFind();
     }
 
@@ -72,6 +88,12 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     public void visit(LogicalJoinOperator node) {
         this.unionFind = node.getUnionFind();
 
+        // We are no longer on a single path, remove references to leaf node
+        this.currentTable = null;
+        this.currentTableAlias = null;
+
+        Operator rightOp = operators.pollLast();
+        Operator leftOp = operators.pollLast();
         Map<String, Set<String>> columnToEqualitySetMapping = new HashMap<>();
         Map<Set<String>, Set<String>> equalitySetToUsedSetMap = new HashMap<>();
 
@@ -180,7 +202,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         Expression expression = null;
 
         for (int i = 0; i < header.size(); i++) {
-            String path = header.columnAliases.get(i) + "." + header.columnHeaders.get(i);
+            String path = header.tableIdentifiers.get(i) + "." + header.columnNames.get(i);
 
             if (unionFind.getMinimum(path) != null) {
                 expression = joinExpression(expression, greaterThanColumn(path, unionFind.getMinimum(path)));
@@ -218,6 +240,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         } else {
             operators.add(scanOperator);
         }
+
+        // Update leaf node info for future uses
+        this.currentTable = node.getTable();
     }
 
     /**
@@ -227,29 +252,45 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     public void visit(LogicalSelectOperator node) {
         node.getChild().accept(this);
 
-        ScanOperator child = (ScanOperator) operators.pollLast();
+        LogicalOperator source = node.getChild();
+        boolean singleSource = (source instanceof LogicalScanOperator || source instanceof LogicalRenameOperator);
 
-        if (config.useIndices) {
-            IndexInfo indexInfo = child.getTable().indices.get(0);
-            IndexScanEvaluator scanEval = new IndexScanEvaluator(child.getTable(), indexInfo, indexesFolder);
-            node.getPredicate().accept(scanEval);
-
-            BTree treeIndex = scanEval.getIndexTree();
-            Expression leftovers = scanEval.getLeftoverExpression();
-            if (treeIndex != null && leftovers != null) {
-                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
-                SelectionOperator select = new SelectionOperator(scanOp, leftovers);
-                operators.add(select);
-            } else if (treeIndex != null && leftovers == null) {
-                IndexScanOperator scanOp = new IndexScanOperator(child.getTable(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
-                operators.add(scanOp);
-            } else /* treeIndex == null, essentially just a regular scan and select */ {
-                Operator select = new SelectionOperator(child, node.getPredicate());
-                operators.add(select);
-            }
-        } else {
-            Operator select = new SelectionOperator(child, node.getPredicate());
+        // If we don't or can't use indices just add a selection operator
+        if (!config.useIndices || !singleSource) {
+            Operator select = new SelectionOperator(operators.pollLast(), node.getPredicate());
             operators.add(select);
+            return;
+        }
+
+        // Handle index scan and renaming
+        // Preconditions : source is either Scan or Scan + Rename, anything else is likely to break
+
+        IndexInfo indexInfo = this.currentTable.indices.get(0);
+        IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexInfo, indexesFolder);
+        node.getPredicate().accept(scanEval);
+
+        BTree treeIndex = scanEval.getIndexTree();
+        Expression leftovers = scanEval.getLeftoverExpression();
+
+        Operator currentOp = operators.pollLast();
+
+        if (treeIndex == null) {
+            // Regular scan -> (rename) -> select
+            Operator select = new SelectionOperator(currentOp, node.getPredicate());
+            operators.add(select);
+        } else {
+            // Replace scan with indexed scan, add rename if needed
+            Operator op = new IndexScanOperator(this.currentTable, indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
+            if (this.currentTableAlias != null) {
+                op = new RenameOperator(op, this.currentTableAlias);
+            }
+
+            if (leftovers != null) {
+                // Add a selection operator to handle leftovers
+                op = new SelectionOperator(op, leftovers);
+            }
+
+            operators.add(op);
         }
     }
 

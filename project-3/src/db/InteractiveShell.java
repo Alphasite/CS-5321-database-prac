@@ -3,6 +3,7 @@ package db;
 import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.datastore.tuple.TupleWriter;
+import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
@@ -16,6 +17,7 @@ import net.sf.jsqlparser.statement.select.Select;
 
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
@@ -26,6 +28,9 @@ public class InteractiveShell {
 
     public static String OUTPUT_PATH = "resources/samples/output";
     public static String TEMP_PATH = "resources/samples/tmp";
+
+    public static final boolean WRITE_OUTPUT_TO_FILE = true;
+    public static final boolean BINARY_OUTPUT = true;
 
     /**
      * @param args If present : [inputFolder] [outputFolder]
@@ -42,6 +47,7 @@ public class InteractiveShell {
 
         Scanner scanner = new Scanner(System.in);
 
+        int counter = 1;
         while (true) {
             System.out.print("> ");
             String input = scanner.nextLine();
@@ -71,9 +77,29 @@ public class InteractiveShell {
 
                 TupleWriter writer = new StringTupleWriter(System.out);
                 queryPlanRoot.dump(writer);
+
+                if (WRITE_OUTPUT_TO_FILE) {
+                    Path outputFile = Paths.get(OUTPUT_PATH).resolve("interactive" + counter);
+                    TupleWriter fileWriter;
+
+                    if (BINARY_OUTPUT) {
+                        fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
+                    } else {
+                        fileWriter = StringTupleWriter.get(outputFile);
+                    }
+
+                    queryPlanRoot.reset();
+                    queryPlanRoot.dump(fileWriter);
+
+                    fileWriter.close();
+                }
+
+                queryPlanRoot.close();
             } catch (ParseException e) {
                 e.printStackTrace();
             }
+
+            counter++;
         }
     }
 }

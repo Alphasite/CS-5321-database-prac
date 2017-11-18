@@ -1,6 +1,8 @@
-package db;
+package db.query;
 
+import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.TestUtils;
 import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
 import org.junit.After;
@@ -17,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
+@Ignore
 @RunWith(Parameterized.class)
 public class JoinPerformanceTest {
     private final static int ROWS_PER_TABLE = 5000;

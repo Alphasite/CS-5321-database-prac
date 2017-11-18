@@ -39,7 +39,7 @@ public class BulkLoader {
         this.tableInfo = target;
         this.attributeName = parameters.attributeName;
 
-        /** Store the attribute index in header for quick lookup */
+        // Store the attribute index in header for quick lookup
         this.attributeIndex = target.header.resolve(target.tableName, attributeName).get();
 
         this.treeOrder = parameters.treeOrder;

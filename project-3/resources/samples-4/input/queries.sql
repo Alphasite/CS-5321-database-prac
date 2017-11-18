@@ -1,1 +1,2 @@
 SELECT * FROM Boats WHERE Boats.E > 9900;
+SELECT S.A, S.C FROM Sailors S WHERE S.A < 1000;
