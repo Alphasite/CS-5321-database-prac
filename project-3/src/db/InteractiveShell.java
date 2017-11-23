@@ -29,8 +29,8 @@ public class InteractiveShell {
     public static String OUTPUT_PATH = "resources/samples/output";
     public static String TEMP_PATH = "resources/samples/tmp";
 
-    public static final boolean WRITE_OUTPUT_TO_FILE = true;
-    public static final boolean BINARY_OUTPUT = true;
+    public static final boolean WRITE_OUTPUT_TO_FILE = false;
+    public static final boolean BINARY_OUTPUT = false;
 
     /**
      * @param args If present : [inputFolder] [outputFolder]
