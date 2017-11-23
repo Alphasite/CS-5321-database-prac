@@ -1,7 +1,6 @@
 package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
-import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.stats.StatsGatherer;
@@ -28,7 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-import static db.PhysicalPlanConfig.*;
+import static db.PhysicalPlanConfig.SortImplementation;
 
 /**
  * Startup class for db.Project3
@@ -119,8 +118,7 @@ public class Project3 {
     }
 
     public static void runQuery(PlainSelect selectQuery, Path outputFile, Path tempDir, Path indexesDir, Database DB, PhysicalPlanConfig config) {
-        UnionFind unionFind = new UnionFind();
-        QueryBuilder builder = new QueryBuilder(DB, unionFind);
+        QueryBuilder builder = new QueryBuilder(DB);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, tempDir, indexesDir);
 
         // Build logical query plan

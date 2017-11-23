@@ -2,7 +2,6 @@ package db;
 
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.PhysicalPlanConfig.SortImplementation;
-import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.TableInfo;
@@ -49,8 +48,7 @@ public class SampleQueriesTest {
             int i = 1;
 
             while ((statement = parser.Statement()) != null) {
-                UnionFind unionFind = new UnionFind();
-                QueryBuilder builder = new QueryBuilder(DB, unionFind);
+                QueryBuilder builder = new QueryBuilder(DB);
 
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);

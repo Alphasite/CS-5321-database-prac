@@ -36,7 +36,6 @@ public class QueryBuilderTest {
 
     private QueryBuilder logicalBuilder;
     private PhysicalPlanBuilder physicalBuilder;
-    private UnionFind unionFind;
 
     @BeforeClass
     public static void loadData() {
@@ -45,8 +44,7 @@ public class QueryBuilderTest {
 
     @Before
     public void init() {
-        this.unionFind = new UnionFind();
-        this.logicalBuilder = new QueryBuilder(DB, unionFind);
+        this.logicalBuilder = new QueryBuilder(DB);
         this.physicalBuilder = new PhysicalPlanBuilder(TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
     }
 

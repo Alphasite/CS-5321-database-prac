@@ -45,9 +45,9 @@ public class QueryBuilder {
     /**
      * Initialize query builder using the provided database object as a source for Table schema information
      */
-    public QueryBuilder(Database db, UnionFind unionFind) {
+    public QueryBuilder(Database db) {
         this.db = db;
-        this.unionFind = unionFind;
+        this.unionFind = new UnionFind();
         this.tableIdentifiers = new ArrayList<>();
         this.tableOperators = new ArrayList<>();
     }
