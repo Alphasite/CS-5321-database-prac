@@ -4,7 +4,6 @@ import db.PhysicalPlanConfig;
 import db.Utilities.Pair;
 import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
-import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
@@ -212,9 +211,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         LogicalScanOperator sourceScan = (LogicalScanOperator) source;
 
-        IndexInfo indexInfo = this.currentTable.indices.get(0);
-        IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexInfo, indexesFolder);
+        IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexesFolder);
         node.getPredicate().accept(scanEval);
+
 
         BTree treeIndex = scanEval.getIndexTree();
         Expression leftovers = scanEval.getLeftoverExpression();

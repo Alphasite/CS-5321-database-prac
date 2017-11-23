@@ -13,6 +13,7 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 
 /**
  * Expression visitor used to collect the selection expressions that may be
@@ -21,26 +22,30 @@ import java.nio.file.Path;
 public class IndexScanEvaluator implements ExpressionVisitor{
     private TableInfo tableInfo;
     private Expression leftoverExpression;
-    private Integer low, high;
     private Integer expressionVal;
     private Path indexesFolder;
-    private boolean isIndexedCol;
-    private IndexInfo index;
+    private String indexedColName;
+    private HashMap<String, Integer> indicesLow;
+    private HashMap<String, Integer> indicesHigh;
 
     /**
      * Setup evaluator
      * @param tableInfo The tableInfo for the table we are doing an index scan on
      * @param indexesFolder The path to the folder containing our indexes
      */
-    public IndexScanEvaluator(TableInfo tableInfo, IndexInfo index, Path indexesFolder) {
+    public IndexScanEvaluator(TableInfo tableInfo, Path indexesFolder) {
         this.tableInfo = tableInfo;
         this.leftoverExpression = null;
-        this.low = null;
-        this.high = null;
         this.expressionVal = null;
-        this.isIndexedCol = false;
+        this.indexedColName = null;
         this.indexesFolder = indexesFolder;
-        this.index = index;
+
+        // initialize indicesLow and indicesHigh with index attribute name mapped to null low and null high
+//        for (IndexInfo info : tableInfo.indices) {
+//            this.indicesLow.put(info.attributeName, null);
+//            this.indicesHigh.put(info.attributeName, null);
+//        }
+
     }
 
     /**
@@ -80,13 +85,16 @@ public class IndexScanEvaluator implements ExpressionVisitor{
     }
 
     /**
-     * Visits this BinaryExpression's children and only returns true if
-     * one of the children is the indexed column of this table AND the other
-     * child is a numeric (Long) value.
+     * Visits this BinaryExpression's children and if
+     * one of the children is an indexed column of this table AND the other
+     * child is a numeric (Long) value, return the name of that column,
+     * otherwise null.
+     * Side effect: Sets indexColName to null
+     *
      * @param binop The BinaryExpression we are currently looking at
      * @return true if the conditions above hold, false otherwise
      */
-    private boolean usesIndexedCol(BinaryExpression binop) {
+    private String getIndexedColName(BinaryExpression binop) {
         Expression left = binop.getLeftExpression();
         Expression right = binop.getRightExpression();
 
@@ -96,11 +104,11 @@ public class IndexScanEvaluator implements ExpressionVisitor{
             binop.getLeftExpression().accept(this);
             binop.getRightExpression().accept(this);
 
-            boolean temp = isIndexedCol;
-            isIndexedCol = false;
+            String temp = indexedColName;
+            indexedColName = null;
             return temp;
         } else {
-            return false;
+            return null;
         }
     }
 
@@ -166,11 +174,10 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         expressionVal = (int) longValue.getValue();
     }
 
-
     @Override
     public void visit(Column column) {
-        if (column.getColumnName().equals(index.attributeName)) {
-            isIndexedCol = true;
+        if (indicesLow.containsKey(column.getColumnName())) {
+            indexedColName = column.getColumnName();
         }
     }
 
@@ -187,9 +194,11 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(EqualsTo equalsTo) {
-        if (usesIndexedCol(equalsTo)) {
-            low = expressionVal;
-            high = expressionVal;
+        String childIndexedCol = getIndexedColName(equalsTo);
+
+        if (childIndexedCol != null) {
+            indicesLow.put(childIndexedCol, expressionVal);
+            indicesHigh.put(childIndexedCol, expressionVal);
         } else {
             addToLeftover(equalsTo);
         }
@@ -197,11 +206,15 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(GreaterThan greaterThan) {
-        if (usesIndexedCol(greaterThan)) {
+        String childIndexedCol = getIndexedColName(greaterThan);
+
+        if (childIndexedCol != null) {
             if (greaterThan.getLeftExpression() instanceof LongValue) {
-                high = minNullCheck(high, expressionVal - 1);
+                Integer oldHigh = indicesHigh.getOrDefault(childIndexedCol, null);
+                indicesHigh.put(childIndexedCol, minNullCheck(oldHigh, expressionVal - 1));
             } else {
-                low = maxNullCheck(low, expressionVal + 1);
+                Integer oldLow = indicesLow.getOrDefault(childIndexedCol, null);
+                indicesLow.put(childIndexedCol, maxNullCheck(oldLow, expressionVal + 1));
             }
         } else {
             addToLeftover(greaterThan);
@@ -210,11 +223,15 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(GreaterThanEquals greaterThanEquals) {
-        if (usesIndexedCol(greaterThanEquals)) {
+        String childIndexedCol = getIndexedColName(greaterThanEquals);
+
+        if (childIndexedCol != null) {
             if (greaterThanEquals.getLeftExpression() instanceof LongValue) {
-                high = minNullCheck(high, expressionVal);
+                Integer oldHigh = indicesHigh.getOrDefault(childIndexedCol, null);
+                indicesHigh.put(childIndexedCol, minNullCheck(oldHigh, expressionVal));
             } else {
-                low = maxNullCheck(low, expressionVal);
+                Integer oldLow = indicesLow.getOrDefault(childIndexedCol, null);
+                indicesLow.put(childIndexedCol, maxNullCheck(oldLow, expressionVal));
             }
         } else {
             addToLeftover(greaterThanEquals);
@@ -223,11 +240,15 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(MinorThan minorThan) {
-        if (usesIndexedCol(minorThan)) {
+        String childIndexedCol = getIndexedColName(minorThan);
+
+        if (childIndexedCol != null) {
             if (minorThan.getLeftExpression() instanceof LongValue) {
-                low = maxNullCheck(low, expressionVal + 1);
+                Integer oldLow = indicesLow.getOrDefault(childIndexedCol, null);
+                indicesLow.put(childIndexedCol, maxNullCheck(oldLow, expressionVal + 1));
             } else {
-                high = minNullCheck(high, expressionVal - 1);
+                Integer oldHigh = indicesHigh.getOrDefault(childIndexedCol, null);
+                indicesHigh.put(childIndexedCol, minNullCheck(oldHigh, expressionVal - 1));
             }
         } else {
             addToLeftover(minorThan);
@@ -236,11 +257,15 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(MinorThanEquals minorThanEquals) {
-        if (usesIndexedCol(minorThanEquals)) {
+        String childIndexedCol = getIndexedColName(minorThanEquals);
+
+        if (childIndexedCol != null) {
             if (minorThanEquals.getLeftExpression() instanceof LongValue) {
-                low = maxNullCheck(low, expressionVal);
+                Integer oldLow = indicesLow.getOrDefault(childIndexedCol, null);
+                indicesLow.put(childIndexedCol, maxNullCheck(oldLow, expressionVal));
             } else {
-                high = minNullCheck(high, expressionVal);
+                Integer oldHigh = indicesHigh.getOrDefault(childIndexedCol, null);
+                indicesHigh.put(childIndexedCol, minNullCheck(oldHigh, expressionVal));
             }
         } else {
             addToLeftover(minorThanEquals);
