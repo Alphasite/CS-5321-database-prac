@@ -7,7 +7,6 @@ import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
 import db.operators.physical.Operator;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -19,7 +18,6 @@ import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation;
 
-@Ignore
 @RunWith(Parameterized.class)
 public class RandomDataTest {
     private final static int ROWS_PER_TABLE = 1500;
@@ -63,6 +61,10 @@ public class RandomDataTest {
             for (JoinImplementation joinType : JoinImplementation.values()) {
                 for (SortImplementation sortType : SortImplementation.values()) {
                     for (int blockSize : blockSizes) {
+                        if (joinType.equals(JoinImplementation.TNLJ) || blockSize != 100) {
+                            continue;
+                        }
+
                         testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize, false), results.get(query), query, joinType, sortType, blockSize, dir});
                     }
                 }

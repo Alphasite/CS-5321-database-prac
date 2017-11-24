@@ -58,6 +58,10 @@ public class SampleQueriesTest {
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
+                        if (joinType.equals(JoinImplementation.TNLJ)) {
+                            continue;
+                        }
+
                         testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
