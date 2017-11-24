@@ -1,5 +1,6 @@
 package db.query;
 
+import db.Utilities.Pair;
 import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.Database;
@@ -13,6 +14,9 @@ import net.sf.jsqlparser.statement.select.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static db.Utilities.Utilities.*;
 
 /**
  * Query plan generator
@@ -36,7 +40,7 @@ public class QueryBuilder {
      * List of logical operators used to access table tuples, in the order specified in the FROM token
      * (ie. Scan or Scan + Rename).
      */
-    private List<LogicalOperator> tableOperators;
+    private List<LogicalScanOperator> tableOperators;
 
     /**
      * Initialize query builder using the provided database object as a source for Table schema information
@@ -184,13 +188,58 @@ public class QueryBuilder {
             WhereDecomposer bwb = new WhereDecomposer(unionFind);
             rootExpression.accept(bwb);
 
-            rootNode = new LogicalJoinOperator(this.tableOperators, bwb.getUnionFind(), bwb.getUnusableExpressions());
+            List<LogicalOperator> scansOrSelects = new ArrayList<>();
+            for (LogicalScanOperator scan : this.tableOperators) {
+                TableHeader header = scan.getHeader();
+
+                Expression expression = null;
+
+                for (String attribute : header.getQualifiedAttributeNames()) {
+                    if (unionFind.getMinimum(attribute) != null) {
+                        expression = joinExpression(expression, greaterThanColumn(attribute, unionFind.getMinimum(attribute)));
+                    }
+
+                    if (unionFind.getMaximum(attribute) != null) {
+                        expression = joinExpression(expression, lessThanColumn(attribute, unionFind.getMaximum(attribute)));
+                    }
+
+                    for (Set<String> equalitySet : unionFind.getSets()) {
+                        List<String> equalHeaders = new ArrayList<>();
+
+                        for (String column : equalitySet) {
+                            Pair<String, String> splitColumn = splitLongFormColumn(column);
+                            if (splitColumn.getLeft().equals(scan.getTableName())) {
+                                equalHeaders.add(splitColumn.getRight());
+                            }
+                        }
+
+                        if (equalHeaders.size() > 1) {
+                            for (int j = 1; j < equalHeaders.size(); j++) {
+                                Expression equalityExpression = Utilities.equalPairToExpression(
+                                        scan.getTableName() + "." + equalHeaders.get(j - 1),
+                                        scan.getTableName() + "." + equalHeaders.get(j)
+                                );
+
+                                expression = joinExpression(expression, equalityExpression);
+                            }
+                        }
+                    }
+                }
+
+                if (expression == null) {
+                    scansOrSelects.add(scan);
+                } else {
+                    scansOrSelects.add(new LogicalSelectOperator(scan, expression));
+                }
+            }
+
+            rootNode = new LogicalJoinOperator(scansOrSelects, bwb.getUnionFind(), bwb.getUnusableExpressions());
 
             if (bwb.getNakedExpression() != null) {
                 rootNode = new LogicalSelectOperator(rootNode, bwb.getNakedExpression());
             }
         } else {
-            rootNode = new LogicalJoinOperator(this.tableOperators, new UnionFind(), new ArrayList<>());
+            rootNode = new LogicalJoinOperator(new ArrayList<>(this.tableOperators), new UnionFind(), new ArrayList<>());
         }
 
         return rootNode;

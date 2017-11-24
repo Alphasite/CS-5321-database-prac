@@ -184,52 +184,10 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     @Override
     public void visit(LogicalScanOperator node) {
-        TableHeader header = node.getHeader();
-
-        ScanOperator scanOperator = new ScanOperator(node.getTable(), node.getTableName());
-
-        Expression expression = null;
-
-        for (String attribute : header.getQualifiedAttributeNames()) {
-            if (unionFind.getMinimum(attribute) != null) {
-                expression = joinExpression(expression, greaterThanColumn(attribute, unionFind.getMinimum(attribute)));
-            }
-
-            if (unionFind.getMaximum(attribute) != null) {
-                expression = joinExpression(expression, lessThanColumn(attribute, unionFind.getMaximum(attribute)));
-            }
-
-            for (Set<String> equalitySet : unionFind.getSets()) {
-                List<String> equalHeaders = new ArrayList<>();
-
-                for (String column : equalitySet) {
-                    Pair<String, String> splitColumn = splitLongFormColumn(column);
-                    if (splitColumn.getLeft().equals(node.getTableName())) {
-                        equalHeaders.add(splitColumn.getRight());
-                    }
-                }
-
-                if (equalHeaders.size() > 1) {
-                    for (int j = 1; j < equalHeaders.size(); j++) {
-                        Expression equalityExpression = Utilities.equalPairToExpression(
-                                node.getTableName() + "." + equalHeaders.get(j - 1),
-                                node.getTableName() + "." + equalHeaders.get(j)
-                        );
-
-                        expression = joinExpression(expression, equalityExpression);
-                    }
-                }
-            }
-        }
-
-        if (expression != null) {
-            operators.add(new SelectionOperator(scanOperator, expression));
-        } else {
-            operators.add(scanOperator);
-        }
-
         // Update leaf node info for future uses
         this.currentTable = node.getTable();
+
+        operators.add(new ScanOperator(node.getTable(), node.getTableName()));
     }
 
     /**
