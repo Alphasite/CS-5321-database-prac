@@ -42,11 +42,11 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         StringBuilder line = new StringBuilder();
 
         line.append(node.getJoinType());
-
+        line.append("[");
         if (node.getPredicate() != null) {
-            line.append(" on ");
             line.append(node.getPredicate());
         }
+        line.append("]");
 
         this.lines.add(pad(line.toString()));
 
