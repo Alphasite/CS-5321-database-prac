@@ -41,8 +41,7 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     public void visit(JoinOperator node) {
         StringBuilder line = new StringBuilder();
 
-        String operatorClass = node.getClass().getSimpleName();
-        line.append(operatorClass);
+        line.append(node.getJoinType());
 
         if (node.getPredicate() != null) {
             line.append(" on ");
