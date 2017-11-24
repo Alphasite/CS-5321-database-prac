@@ -138,4 +138,15 @@ public class IndexScanOperator extends AbstractOperator {
         return true;
     }
 
+    public Integer getLowVal() {
+        return lowVal;
+    }
+
+    public Integer getHighVal() {
+        return highVal;
+    }
+
+    public IndexInfo getIndex() {
+        return index;
+    }
 }

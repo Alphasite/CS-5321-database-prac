@@ -141,6 +141,14 @@ public class TupleNestedJoinOperator extends AbstractOperator implements JoinOpe
      * @inheritDoc
      */
     @Override
+    public String getJoinType() {
+        return "TNLJ";
+    }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
     public Operator getLeft() {
         return left;
     }

@@ -276,4 +276,13 @@ public class ExternalSortOperator extends AbstractOperator implements SortOperat
         this.next = null;
         this.tupleIndex = index-1;
     }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public String getSortType() {
+        return "ExternalSort";
+    }
+
 }

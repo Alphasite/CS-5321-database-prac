@@ -163,4 +163,12 @@ public class SortMergeJoinOperator extends AbstractOperator implements JoinOpera
         left.close();
         right.close();
     }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public String getJoinType() {
+        return "SMJ";
+    }
 }

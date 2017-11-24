@@ -102,6 +102,14 @@ public class InMemorySortOperator extends AbstractOperator implements SortOperat
     }
 
     /**
+     * @inheritDoc
+     */
+    @Override
+    public String getSortType() {
+        return "InMemorySort";
+    }
+
+    /**
      * Read all the tuples from the child operator then sort them using the provided sort headers.
      */
     private void buffer() {

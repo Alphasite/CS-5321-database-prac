@@ -158,4 +158,12 @@ public class BlockNestedJoinOperator extends AbstractOperator implements JoinOpe
     public Operator getRight() {
         return right;
     }
+
+    /**
+     * @inheritDoc
+     */
+    @Override
+    public String getJoinType() {
+        return "BNLJ";
+    }
 }

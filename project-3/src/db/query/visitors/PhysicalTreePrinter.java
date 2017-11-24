@@ -62,8 +62,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
      */
     @Override
     public void visit(SortOperator node) {
-        String operatorClass = node.getClass().getSimpleName();
-        lines.add(pad(operatorClass + " on " + node.getSortHeader()));
+        List<String> columns = node.getSortHeader().getQualifiedAttributeNames();
+
+        lines.add(pad(node.getSortType() + "[" + String.join(", ", columns) + "]"));
 
         this.depth += 1;
         node.getChild().accept(this);
@@ -75,7 +76,7 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
      */
     @Override
     public void visit(ScanOperator node) {
-        lines.add(pad("Scan " + node.getTable().file.getFileName()));
+        lines.add(pad("TableScan[" + node.getTable().file.getFileName() + "]"));
     }
 
     /**
@@ -83,7 +84,7 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
      */
     @Override
     public void visit(SelectionOperator node) {
-        lines.add(pad("Select on " + node.getPredicate()));
+        lines.add(pad("Select[" + node.getPredicate() + "]"));
 
         this.depth += 1;
         node.getChild().accept(this);
@@ -100,7 +101,14 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
 
     @Override
     public void visit(IndexScanOperator node) {
-        lines.add(pad("Index Scan " + node.getTable().file.getFileName()));
+        lines.add(pad(
+                "IndexScan[" +
+                        node.getTable().file.getFileName() + ", " +
+                        node.getIndex() + ", " +
+                        node.getLowVal() + ", " +
+                        node.getHighVal() + ", " +
+                        "]"
+        ));
     }
 
     /**
@@ -108,7 +116,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
      */
     @Override
     public void visit(ProjectionOperator node) {
-        lines.add(pad("Project to " + node.getHeader()));
+        List<String> columns = node.getHeader().getQualifiedAttributeNames();
+
+        lines.add(pad("Project[" + String.join(", ", columns) + "]"));
 
         this.depth += 1;
         node.getChild().accept(this);
@@ -120,7 +130,7 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
      */
     @Override
     public void visit(DistinctOperator node) {
-        lines.add(pad("Distinct"));
+        lines.add(pad("DupElim"));
 
         this.depth += 1;
         node.getChild().accept(this);
@@ -137,7 +147,7 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         StringBuilder line = new StringBuilder();
 
         for (int i = 0; i < this.depth; i++) {
-            line.append("  ");
+            line.append("-");
         }
 
         line.append(lineBody);
