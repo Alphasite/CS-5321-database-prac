@@ -153,7 +153,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                                 rightOpSorted = new ExternalSortOperator(joined, rightSortHeader, config.sortParameter, temporaryFolder);
                             }
 
-                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
+                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, condition);
                         } else {
                             // when no equijoins, just use BNLJ
                             join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);

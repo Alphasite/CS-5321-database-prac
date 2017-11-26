@@ -11,6 +11,7 @@ import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
 import db.query.visitors.LogicalTreePrinter;
 import db.query.visitors.PhysicalTreePrinter;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -83,7 +84,10 @@ public class RandomDataTest {
         return testCases;
     }
 
-    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, Path tempDir) {
+    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, Path tempDir) throws IOException {
+        Path path = Files.createTempDirectory("db-tempdir");
+        FileUtils.copyDirectory(path.toFile(), tempDir.toFile());
+
         Database DB = Database.loadDatabase(tempDir);
         QueryBuilder builder = new QueryBuilder(DB, new UnionFind());
 

@@ -31,6 +31,7 @@ import java.util.Collection;
 @RunWith(Parameterized.class)
 public class SampleQueriesTest {
 
+    private final DatabaseStructure path;
     private LogicalOperator logicalOperator;
     private Operator queryPlanRoot;
     private ScanOperator sampleTuples;
@@ -41,20 +42,21 @@ public class SampleQueriesTest {
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
-        Database DB = Database.loadDatabase(TestUtils.DB_PATH);
-
         try {
             CCJSqlParser parser = new CCJSqlParser(new FileReader(TestUtils.INPUT_PATH.resolve("queries.sql").toFile()));
             Statement statement;
             int i = 1;
 
             while ((statement = parser.Statement()) != null) {
+                DatabaseStructure path = new DatabaseStructure(TestUtils.SAMPLES_PATH);
+                Database DB = Database.loadDatabase(path.db);
+
                 UnionFind unionFind = new UnionFind();
                 QueryBuilder builder = new QueryBuilder(DB, unionFind);
 
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
                 LogicalOperator logicalPlan = builder.buildQuery(select);
-                Path expectedFile = TestUtils.EXPECTED_PATH.resolve("query" + i++);
+                Path expectedFile = path.expected.resolve("query" + i++);
 
                 for (JoinImplementation joinType : JoinImplementation.values()) {
                     for (SortImplementation sortType : SortImplementation.values()) {
@@ -62,7 +64,7 @@ public class SampleQueriesTest {
                             continue;
                         }
 
-                        testCases.add(new Object[]{logicalPlan, expectedFile, statement.toString(), joinType, sortType});
+                        testCases.add(new Object[]{logicalPlan, path, expectedFile, statement.toString(), joinType, sortType});
                     }
                 }
             }
@@ -73,15 +75,21 @@ public class SampleQueriesTest {
         return testCases;
     }
 
-    public SampleQueriesTest(LogicalOperator logicalOperator, Path expectedFile, String query,
-                             JoinImplementation joinType, SortImplementation sortType) {
+    public SampleQueriesTest(LogicalOperator logicalOperator,
+                             DatabaseStructure path,
+                             Path expectedFile,
+                             String query,
+                             JoinImplementation joinType,
+                             SortImplementation sortType) {
+
+        this.path = path;
         this.logicalOperator = logicalOperator;
         this.query = query;
 
         this.isOrdered = query.contains("ORDER BY") || query.contains("DISTINCT");
 
         PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16, false);
-        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
+        PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, path.tmp, path.indices);
 
         this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
 
