@@ -7,6 +7,7 @@ import db.datastore.index.BTree;
 import db.datastore.index.Rid;
 import db.datastore.tuple.Tuple;
 import db.datastore.tuple.binary.BinaryTupleReader;
+import db.operators.logical.LogicalScanOperator;
 import db.operators.physical.AbstractOperator;
 import db.operators.physical.PhysicalTreeVisitor;
 
@@ -21,6 +22,7 @@ public class IndexScanOperator extends AbstractOperator {
     private final Integer lowVal;
     private final Integer highVal;
     private final IndexInfo index;
+    private final TableHeader header;
 
     private BinaryTupleReader reader;
     private BTree.BTreeDataIterator indexTreeIterator;
@@ -31,13 +33,14 @@ public class IndexScanOperator extends AbstractOperator {
      * @param lowVal The minimum value (inclusive) tuples should contain for the key of indexTree
      * @param highVal The maximum value (inclusive) tuples should contain for the key of indexTree
      */
-    public IndexScanOperator(TableInfo tableInfo, IndexInfo index, BTree indexTree, Integer lowVal, Integer highVal) {
+    public IndexScanOperator(TableInfo tableInfo, String tableAlias, IndexInfo index, BTree indexTree, Integer lowVal, Integer highVal) {
         this.tableInfo = tableInfo;
         this.indexTree = indexTree;
         this.lowVal = lowVal;
         this.highVal = highVal;
         this.indexTreeIterator = indexTree.iteratorForRange(lowVal, highVal);
         this.index = index;
+        this.header = LogicalScanOperator.computeHeader(tableInfo.header, tableAlias);
 
         reset();
     }
@@ -50,9 +53,10 @@ public class IndexScanOperator extends AbstractOperator {
             return generateNextTupleUnclustered();
         }
     }
+
     @Override
     public TableHeader getHeader() {
-        return tableInfo.header;
+        return this.header;
     }
 
     @Override

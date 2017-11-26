@@ -208,7 +208,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         }
 
         // Handle index scan and renaming
-        // Preconditions : source is either Scan or Scan + Rename, anything else is likely to break
+        // Preconditions : source is either Scan, anything else is likely to break
+
+        LogicalScanOperator sourceScan = (LogicalScanOperator) source;
 
         IndexInfo indexInfo = this.currentTable.indices.get(0);
         IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexInfo, indexesFolder);
@@ -225,7 +227,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             operators.add(select);
         } else {
             // Replace scan with indexed scan, add rename if needed
-            Operator op = new IndexScanOperator(this.currentTable, indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
+            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableName(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers

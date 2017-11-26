@@ -39,7 +39,7 @@ public class IndexPerformanceTest {
             // No indexed
             "SELECT * FROM Sailors, Boats WHERE Boats.E = Sailors.A",
             // 2 indexed
-            "SELECT S.A, S.C, B.D, B.F FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D AND S.A = 10 AND B.E > 100"
+            "SELECT S1.A, S2.C, B.D, B.F FROM Sailors S1, Sailors S2, Boats B WHERE S1.A = S2.A AND S2.B = B.D AND S.A = 10 AND B.E > 100"
 
     };
 
