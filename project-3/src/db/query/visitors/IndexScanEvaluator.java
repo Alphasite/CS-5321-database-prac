@@ -39,13 +39,8 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         this.expressionVal = null;
         this.indexedColName = null;
         this.indexesFolder = indexesFolder;
-
-        // initialize indicesLow and indicesHigh with index attribute name mapped to null low and null high
-//        for (IndexInfo info : tableInfo.indices) {
-//            this.indicesLow.put(info.attributeName, null);
-//            this.indicesHigh.put(info.attributeName, null);
-//        }
-
+        this.indicesLow = new HashMap<>();
+        this.indicesHigh = new HashMap<>();
     }
 
     /**
@@ -142,31 +137,31 @@ public class IndexScanEvaluator implements ExpressionVisitor{
      * @return A BTree if this table can be optimized with an IndexScan,
      *         otherwise null
      */
-    public BTree getIndexTree() {
-        if (low == null && high == null) {
-            // index cannot be used
-            return null;
-        } else {
-            return BTree.createTree(indexesFolder.resolve(index.tableName + "." + index.attributeName));
-        }
+//    public BTree getIndexTree() {
+//        if (low == null && high == null) {
+//            // index cannot be used
+//            return null;
+//        } else {
+//            return BTree.createTree(indexesFolder.resolve(index.tableName + "." + index.attributeName));
+//        }
+//    }
+
+    /**
+     * Gets the value of indicesLow.
+     *
+     * @return the value of indicesLow
+     */
+    public HashMap<String, Integer> getIndicesLow() {
+        return indicesLow;
     }
 
     /**
-     * Gets the value of low.
+     * Gets the value of indicesHigh.
      *
-     * @return the value of low
+     * @return the value of indicesHigh
      */
-    public Integer getLow() {
-        return low;
-    }
-
-    /**
-     * Gets the value of high.
-     *
-     * @return the value of high
-     */
-    public Integer getHigh() {
-        return high;
+    public HashMap<String, Integer> getIndicesHigh() {
+        return indicesHigh;
     }
 
     @Override
