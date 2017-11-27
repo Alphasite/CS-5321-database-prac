@@ -1,8 +1,8 @@
 package db.query.optimizer;
 
 import db.Utilities.UnionFind;
+import db.datastore.TableHeader;
 import db.datastore.stats.TableStats;
-import db.operators.logical.LogicalScanOperator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +30,11 @@ public class VValues {
     /**
      * Create V-Values for table
      */
-    public VValues(LogicalScanOperator tableScan) {
+    public VValues(TableHeader header, TableStats stats) {
         this();
 
-        TableStats stats = tableScan.getTable().getStats();
-
         int i = 0;
-        for (String attribute : tableScan.getHeader().getQualifiedAttributeNames()) {
+        for (String attribute : header.getQualifiedAttributeNames()) {
             // Estimate with either range of values or tuple count
             int vval = Math.min(stats.maximums[i] - stats.minimums[i] + 1, stats.count);
             vvalues.put(attribute, vval);

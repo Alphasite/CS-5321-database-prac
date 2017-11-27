@@ -1,23 +1,39 @@
 package db.query.optimizer;
 
-import db.operators.logical.LogicalOperator;
-
 /**
  * Abstract representation of a left-deep join tree, with heuristics to estimate its cost.
  */
 class JoinPlan {
 
     private int estimatedTupleCount;
-    private int joinCost;
+    private int cost;
+    private int tableCount;
 
-    private JoinPlan leftChild;
+    private JoinPlan parentJoin;
+    private String joinTable;
 
-    /**
-     * The underlying logical query plan tree
-     */
-    private LogicalOperator rightChild;
+    public JoinPlan(JoinOrderOptimizer.Relation baseOp) {
+        this.parentJoin = null;
+        this.joinTable = baseOp.name;
 
-    public JoinPlan(LogicalOperator baseOp) {
+        this.cost = 0;
+        this.tableCount = 1;
 
+        this.estimatedTupleCount = baseOp.tupleCount;
+    }
+
+    public JoinPlan(JoinPlan parentJoin, JoinOrderOptimizer.Relation joinWith) {
+        this.parentJoin = parentJoin;
+        this.joinTable = joinWith.name;
+
+        this.tableCount = parentJoin.tableCount + 1;
+
+        this.estimatedTupleCount;
+
+        if (this.tableCount <= 2) {
+            this.cost = 0;
+        } else {
+            this.cost = parentJoin.cost + parentJoin.estimatedTupleCount;
+        }
     }
 }
