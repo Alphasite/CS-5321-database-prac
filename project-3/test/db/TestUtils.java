@@ -1,6 +1,5 @@
 package db;
 
-import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
@@ -205,9 +204,8 @@ public class TestUtils {
 
     public static Operator getQueryPlan(Path dbFolder, String query, PhysicalPlanConfig config) {
         Database DB = Database.loadDatabase(dbFolder);
-        UnionFind unionFind = new UnionFind();
 
-        QueryBuilder builder = new QueryBuilder(DB, unionFind);
+        QueryBuilder builder = new QueryBuilder(DB);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, dbFolder, dbFolder.resolve("indexes"));
 
         try {

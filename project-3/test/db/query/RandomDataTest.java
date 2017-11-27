@@ -3,7 +3,6 @@ package db.query;
 import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.TestUtils;
-import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
@@ -89,7 +88,7 @@ public class RandomDataTest {
         FileUtils.copyDirectory(path.toFile(), tempDir.toFile());
 
         Database DB = Database.loadDatabase(tempDir);
-        QueryBuilder builder = new QueryBuilder(DB, new UnionFind());
+        QueryBuilder builder = new QueryBuilder(DB);
 
         this.logical = builder.buildQuery(TestUtils.parseQuery(query));
         this.physical = TestUtils.getQueryPlan(tempDir, query, config);

@@ -3,6 +3,7 @@ package db.operators.physical.extended;
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
+import db.operators.logical.LogicalSortOperator;
 import db.operators.physical.Operator;
 import db.operators.physical.SeekableOperator;
 import org.junit.Before;
@@ -28,12 +29,12 @@ public class InMemorySortOperatorTest {
     @Before
     public void setUp() {
         tuplesA = new ArrayList<>();
-        tuplesA.add(new Tuple(Arrays.asList(1, 2, 1)));
         tuplesA.add(new Tuple(Arrays.asList(1, 2, 3)));
-        tuplesA.add(new Tuple(Arrays.asList(2, 1, 3)));
-        tuplesA.add(new Tuple(Arrays.asList(3, 3, 2)));
-        tuplesA.add(new Tuple(Arrays.asList(4, 3, 2)));
         tuplesA.add(new Tuple(Arrays.asList(5, 1, 1)));
+        tuplesA.add(new Tuple(Arrays.asList(2, 1, 3)));
+        tuplesA.add(new Tuple(Arrays.asList(4, 3, 2)));
+        tuplesA.add(new Tuple(Arrays.asList(3, 3, 2)));
+        tuplesA.add(new Tuple(Arrays.asList(1, 2, 1)));
         headerA = new TableHeader(Arrays.asList("Sailors", "Sailors", "Sailors"), Arrays.asList("A", "B", "C"));
         opA = new DummyOperator(tuplesA, headerA);
     }
@@ -45,7 +46,8 @@ public class InMemorySortOperatorTest {
                 Arrays.asList("B")
         );
 
-        Operator sort = new InMemorySortOperator(opA, header);
+        TableHeader sortHeader = LogicalSortOperator.computeSortHeader(header, headerA);
+        Operator sort = new InMemorySortOperator(opA, sortHeader);
 
         assertEquals(Arrays.asList(2, 1, 3), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
@@ -62,7 +64,8 @@ public class InMemorySortOperatorTest {
                 Arrays.asList("C", "B")
         );
 
-        Operator sort = new InMemorySortOperator(opA, header);
+        TableHeader sortHeader = LogicalSortOperator.computeSortHeader(header, headerA);
+        Operator sort = new InMemorySortOperator(opA, sortHeader);
 
         assertEquals(Arrays.asList(5, 1, 1), sort.getNextTuple().fields);
         assertEquals(Arrays.asList(1, 2, 1), sort.getNextTuple().fields);

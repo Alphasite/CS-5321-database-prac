@@ -24,7 +24,7 @@ import static db.Utilities.Utilities.*;
  * This class reads the tokens from the parsed SQL query and generates a tree of {@link LogicalOperator}
  * that can then be used to retrieve all matching records.
  * <p>
- * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY
+ * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY.
  */
 public class QueryBuilder {
     private Database db;
@@ -45,9 +45,9 @@ public class QueryBuilder {
     /**
      * Initialize query builder using the provided database object as a source for Table schema information
      */
-    public QueryBuilder(Database db, UnionFind unionFind) {
+    public QueryBuilder(Database db) {
         this.db = db;
-        this.unionFind = unionFind;
+        this.unionFind = new UnionFind();
         this.tableIdentifiers = new ArrayList<>();
         this.tableOperators = new ArrayList<>();
     }
