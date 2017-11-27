@@ -14,15 +14,13 @@ import java.util.Map;
 
 public class JoinOrderOptimizer {
 
-    private int bestCost;
-    private JoinPlan bestPlan;
-
-    private UnionFind constraints;
-
     /**
      * Map table identifiers to useful info for optimization
      */
     private Map<String, Relation> relationsToJoin;
+
+    private UnionFind constraints;
+    private JoinPlan bestPlan;
 
     class Relation {
         String name;
@@ -37,11 +35,6 @@ public class JoinOrderOptimizer {
             this.op = op;
         }
     }
-
-    // Private variables used for recursion
-
-    private int currentRelationSize;
-    private int currentPlanCost;
 
     public JoinOrderOptimizer(LogicalJoinOperator join) {
         this.constraints = join.getUnionFind();
@@ -62,32 +55,35 @@ public class JoinOrderOptimizer {
     }
 
     public Operator buildOptimizedPlan(List<Operator> sources) {
-        computeBestPlan(new ArrayList<>(), new ArrayList<>(relationsToJoin.keySet()), 0);
+        computeBestPlan(new ArrayList<>(relationsToJoin.keySet()), null);
+
+        List<String> joins = bestPlan.getJoins();
 
         return null;
     }
 
-    private void computeBestPlan(List<String> joined, List<String> toJoin, int planCost) {
+    private void computeBestPlan(List<String> toJoin, JoinPlan currentPlan) {
         if (toJoin.size() == 0) {
-            if (planCost < bestCost) {
-                bestCost = planCost;
-                bestPlan = new ArrayList<>(joined); // Create a copy to prevent side-effects
+            if (currentPlan.cost < bestPlan.cost) {
+                bestPlan = currentPlan;
             }
         } else {
             // Continue iterating
             for (String relation : toJoin) {
-                VValues relationVValues = relationsToJoin.get(relation).vvalues;
-                int joinCost = 0;
+                JoinPlan plan;
+                if (currentPlan == null) {
+                    plan = new JoinPlan(this.relationsToJoin.get(relation));
+                } else {
+                    plan = new JoinPlan(currentPlan, this.relationsToJoin.get(relation));
+                }
 
                 // Apply modifications
-                joined.add(relation);
                 toJoin.remove(relation);
 
-                computeBestPlan(joined, toJoin, planCost + joinCost);
+                computeBestPlan(toJoin, plan);
 
                 // Revert modifications
                 toJoin.add(relation);
-                joined.remove(relation);
             }
         }
     }
