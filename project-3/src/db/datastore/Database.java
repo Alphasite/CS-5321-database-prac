@@ -17,7 +17,7 @@ public class Database {
     private final Path dbPath;
 
     private final Map<String, TableInfo> tables;
-    private List<IndexInfo> indexInfo;
+    private List<IndexInfo> indexes;
 
     /**
      * Instantiate the catalogue.
@@ -28,7 +28,7 @@ public class Database {
         this.dbPath = dbPath;
 
         this.tables = tables;
-        this.indexInfo = new ArrayList<>();
+        this.indexes = new ArrayList<>();
     }
 
     /**
@@ -73,30 +73,18 @@ public class Database {
 
     /**
      * If present, read index catalog info from file. Does not deserialize indexes.
-     *
-     * @param indexConfigFile
      */
     private void loadIndexInfo(Path indexConfigFile) {
-        // Prevent crashes when running old tests
-        if (!Files.exists(indexConfigFile)) {
-            return;
-        }
-
-        try {
-            Scanner scanner = new Scanner(indexConfigFile);
-
+        try (Scanner scanner = new Scanner(indexConfigFile)) {
             while (scanner.hasNextLine()) {
                 IndexInfo info = IndexInfo.parse(scanner.nextLine());
 
-                // add to indexInfo
-                indexInfo.add(info);
+                indexes.add(info);
 
-                // add to tableInfo
-                TableInfo thisIndexTable = tables.get(info.tableName);
-                thisIndexTable.indices.add(info);
+                // reference index in table schema
+                tables.get(info.tableName).indices.add(info);
             }
         } catch (IOException e) {
-            // No index_info.txt found
             System.out.println("WARNING: No index_info.txt found, proceeding with 0 indices...");
         }
     }
@@ -112,7 +100,7 @@ public class Database {
             e.printStackTrace();
         }
 
-        for (IndexInfo config : indexInfo) {
+        for (IndexInfo config : indexes) {
             BulkLoader.buildIndex(this, config, indexFolder);
         }
     }

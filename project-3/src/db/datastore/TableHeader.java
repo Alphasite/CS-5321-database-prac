@@ -35,6 +35,24 @@ public class TableHeader {
     }
 
     /**
+     * Generate header from list of qualified attribute names.
+     *
+     * @param qualifiedAttributeNames List of attribute names with syntax <em>'tableId'.'column'</em>
+     */
+    public TableHeader(List<String> qualifiedAttributeNames) {
+        this();
+
+        for (String attribute : qualifiedAttributeNames) {
+            String[] tokens = attribute.split("\\.");
+
+            assert tokens.length == 2;
+
+            this.tableIdentifiers.add(tokens[0]);
+            this.columnNames.add(tokens[1]);
+        }
+    }
+
+    /**
      * @return The width of the table.
      */
     public int size() {

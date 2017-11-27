@@ -24,7 +24,7 @@ import static db.Utilities.Utilities.*;
  * This class reads the tokens from the parsed SQL query and generates a tree of {@link LogicalOperator}
  * that can then be used to retrieve all matching records.
  * <p>
- * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY
+ * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY.
  */
 public class QueryBuilder {
     private Database db;

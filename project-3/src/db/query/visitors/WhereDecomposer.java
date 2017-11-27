@@ -12,7 +12,10 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 
 /**
  * Another expression visitor, handles breaking the WHERE clause into multiple tokens and classify them based
@@ -21,7 +24,6 @@ import java.util.*;
 public class WhereDecomposer implements ExpressionVisitor {
     private UnionFind unionFind;
     private List<Pair<TablePair, Expression>> unusableExpressions;
-    private Map<TablePair, Expression> joinPredicates;
 
     private Expression nakedExpression;
 
