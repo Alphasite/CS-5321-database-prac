@@ -51,18 +51,18 @@ public class IndexScanOperatorTest {
         boatsTable = database.getTable("Boats");
         boatIndex = boatsTable.indices.get(0);
         boatsIndexTree = BTree.createTree(expectedIndexes);
-        boatsOperator = new IndexScanOperator(boatsTable, "Boat", boatIndex, boatsIndexTree, min, max);
+        boatsOperator = new IndexScanOperator(boatsTable, "Boats", boatIndex, boatsIndexTree, min, max);
         numberOfTuples = 10000 - 4 - 32;
 
         Path boatsIndexFile2 = BulkLoader.buildIndex(database, boatIndex, indexesDir);
         BTree boatsIndexTree2 = BTree.createTree((boatsIndexFile2));
-        boatsOperator2 = new IndexScanOperator(boatsTable, "Boat", boatIndex, boatsIndexTree2, 9982, null);
+        boatsOperator2 = new IndexScanOperator(boatsTable, "Boats", boatIndex, boatsIndexTree2, 9982, null);
 
         sailorIndex = database.getTable("Sailors").indices.get(0);
         Path sailorsIndexFile = BulkLoader.buildIndex(database, sailorIndex, indexesDir);
         sailorsTable = database.getTable("Sailors");
         sailorsIndexTree = BTree.createTree(sailorsIndexFile);
-        sailorsOperator = new IndexScanOperator(sailorsTable, "Boat", sailorIndex, sailorsIndexTree, null, 13);
+        sailorsOperator = new IndexScanOperator(sailorsTable, "Boats", sailorIndex, sailorsIndexTree, null, 13);
     }
 
     @After
@@ -74,7 +74,7 @@ public class IndexScanOperatorTest {
     @Test
     public void fullScan() throws Exception {
         boatsOperator.close();
-        boatsOperator = new IndexScanOperator(boatsTable, "Boat", boatIndex, boatsIndexTree, 0, 10000);
+        boatsOperator = new IndexScanOperator(boatsTable, "Boats", boatIndex, boatsIndexTree, 0, 10000);
 
         TestUtils.unorderedCompareTuples(new ScanOperator(boatsTable), boatsOperator);
 
