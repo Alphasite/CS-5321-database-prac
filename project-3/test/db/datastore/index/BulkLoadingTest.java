@@ -1,10 +1,10 @@
 package db.datastore.index;
 
+import db.DatabaseStructure;
 import db.TestUtils;
 import db.datastore.Database;
 import db.datastore.IndexInfo;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.*;
@@ -18,8 +18,9 @@ public class BulkLoadingTest {
     private IndexInfo config;
 
     @Before
-    public void init() {
-        DB = Database.loadDatabase(TestUtils.NEW_DB_PATH);
+    public void init() throws IOException {
+        DatabaseStructure path = new DatabaseStructure(TestUtils.NEW_SAMPLES_PATH);
+        DB = Database.loadDatabase(path.db);
 
         config = new IndexInfo();
     }
@@ -38,7 +39,6 @@ public class BulkLoadingTest {
         assertEquals(true, compareBinary(referenceFile.toFile(), indexFile.toFile()));
     }
 
-    @Ignore
     @Test
     public void testClusteredBulkLoading() {
         config.tableName = "Sailors";
