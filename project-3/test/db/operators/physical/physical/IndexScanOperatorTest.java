@@ -149,7 +149,7 @@ public class IndexScanOperatorTest {
 
     @Test
     public void getHeader() throws Exception {
-        assertThat(boatsOperator.getHeader(), is(boatsTable.header));
+        assertThat(boatsOperator.getHeader().toString(), equalTo(boatsTable.header.toString()));
     }
 
     @Test
