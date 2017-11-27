@@ -4,8 +4,7 @@ import db.datastore.TableHeader;
 import db.operators.UnaryNode;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -29,37 +28,14 @@ public class LogicalSortOperator implements LogicalOperator, UnaryNode<LogicalOp
      * Compute the full sorting header for this sort from partial sort header and tuple layout
      */
     public static TableHeader computeSortHeader(TableHeader sortHeader, TableHeader tupleLayout) {
-        Set<String> alreadySortedColumns = new HashSet<>();
+        // Use LinkedHashSet to preserve insertion order
+        Set<String> sortingAttributes = new LinkedHashSet<>(sortHeader.getQualifiedAttributeNames());
+        Set<String> allAttributes = new LinkedHashSet<>(tupleLayout.getQualifiedAttributeNames());
 
-        List<String> aliases = new ArrayList<>();
-        List<String> columns = new ArrayList<>();
+        // Append extra attributes in order defined by tuple layout
+        sortingAttributes.addAll(allAttributes);
 
-        for (int i = 0; i < sortHeader.tableIdentifiers.size(); i++) {
-            String alias = sortHeader.tableIdentifiers.get(i);
-            String column = sortHeader.columnNames.get(i);
-            String fullName = alias + "." + column;
-
-            if (!alreadySortedColumns.contains(fullName)) {
-                aliases.add(alias);
-                columns.add(column);
-                alreadySortedColumns.add(fullName);
-            }
-        }
-
-        for (int i = 0; i < tupleLayout.tableIdentifiers.size(); i++) {
-            String alias = tupleLayout.tableIdentifiers.get(i);
-            String column = tupleLayout.columnNames.get(i);
-            String fullName = alias + "." + column;
-
-            // Append non specified columns so that they are used to break ties
-            if (!alreadySortedColumns.contains(fullName)) {
-                aliases.add(alias);
-                columns.add(column);
-                alreadySortedColumns.add(fullName);
-            }
-        }
-
-        return new TableHeader(aliases, columns);
+        return new TableHeader(new ArrayList<>(sortingAttributes));
     }
 
     /**

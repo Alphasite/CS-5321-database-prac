@@ -36,9 +36,7 @@ public class GeneralConfig {
     }
 
     public static GeneralConfig fromFile(Path configFile) {
-        try {
-            Scanner scanner = new Scanner(configFile);
-
+        try (Scanner scanner = new Scanner(configFile)) {
             Path inputDir = Paths.get(scanner.nextLine());
             Path outputDir = Paths.get(scanner.nextLine());
             Path tempDir = Paths.get(scanner.nextLine());

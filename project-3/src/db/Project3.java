@@ -72,6 +72,7 @@ public class Project3 {
         int i = 1;
 
         // Load plan config
+        // TODO: not needed anymore
         PhysicalPlanConfig planConfig = new PhysicalPlanConfig(
                 JoinImplementation.SMJ,
                 SortImplementation.EXTERNAL,
