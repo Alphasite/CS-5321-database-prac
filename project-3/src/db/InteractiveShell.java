@@ -1,6 +1,5 @@
 package db;
 
-import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleWriter;
@@ -67,8 +66,7 @@ public class InteractiveShell {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
 
                 // Build logical query plan
-                UnionFind unionFind = new UnionFind();
-                QueryBuilder builder = new QueryBuilder(DB, unionFind);
+                QueryBuilder builder = new QueryBuilder(DB);
                 LogicalOperator logicalPlan = builder.buildQuery(select);
 
                 // Create physical plan optimized for query on given data
