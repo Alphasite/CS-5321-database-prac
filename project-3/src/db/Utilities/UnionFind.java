@@ -3,7 +3,7 @@ package db.Utilities;
 import java.util.*;
 
 /**
- * Implementation of a union-find datastructure, ie. a partition of a set of elements into disjoint subsets.
+ * Implementation of a union-find data structure, ie. a partition of a set of elements into disjoint subsets.
  * Provides efficient methods for merging and checking if elements are in the same subset.
  * <p>
  * Used as part of plan optimization to implement pushing selections.
@@ -92,6 +92,7 @@ public class UnionFind {
         }
     }
 
+    // TODO: doc
     public List<Set<String>> getSets() {
         Map<String, Set<String>> sets = new HashMap<>();
 
