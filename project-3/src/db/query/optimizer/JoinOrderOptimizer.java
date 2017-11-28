@@ -5,7 +5,6 @@ import db.Utilities.Utilities;
 import db.operators.logical.LogicalJoinOperator;
 import db.operators.logical.LogicalOperator;
 import db.operators.logical.LogicalScanOperator;
-import db.operators.physical.Operator;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,20 +20,6 @@ public class JoinOrderOptimizer {
 
     private UnionFind constraints;
     private JoinPlan bestPlan;
-
-    class Relation {
-        String name;
-        int tupleCount;
-        VValues vvalues;
-        LogicalOperator op;
-
-        Relation(String name, int tupleCount, VValues vvalues, LogicalOperator op) {
-            this.name = name;
-            this.tupleCount = tupleCount;
-            this.vvalues = vvalues;
-            this.op = op;
-        }
-    }
 
     public JoinOrderOptimizer(LogicalJoinOperator join) {
         this.constraints = join.getUnionFind();
@@ -54,17 +39,20 @@ public class JoinOrderOptimizer {
         }
     }
 
-    public Operator buildOptimizedPlan(List<Operator> sources) {
+    /**
+     * Recursively enumerate all possible join orders and evaluate their cost, preserving the minimum one.
+     * This implementation is efficient because it keeps previously evaluated deep trees on the stack.
+     */
+    public List<String> computeBestJoinOrder() {
         computeBestPlan(new ArrayList<>(relationsToJoin.keySet()), null);
 
-        List<String> joins = bestPlan.getJoins();
-
-        return null;
+        return bestPlan.getJoins();
     }
 
     private void computeBestPlan(List<String> toJoin, JoinPlan currentPlan) {
         if (toJoin.size() == 0) {
-            if (currentPlan.cost < bestPlan.cost) {
+            // Evaluate total plan cost
+            if (currentPlan.getCost() < bestPlan.getCost()) {
                 bestPlan = currentPlan;
             }
         } else {
@@ -74,7 +62,7 @@ public class JoinOrderOptimizer {
                 if (currentPlan == null) {
                     plan = new JoinPlan(this.relationsToJoin.get(relation));
                 } else {
-                    plan = new JoinPlan(currentPlan, this.relationsToJoin.get(relation));
+                    plan = new JoinPlan(currentPlan, this.relationsToJoin.get(relation), this.constraints.getSets());
                 }
 
                 // Apply modifications

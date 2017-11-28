@@ -1,45 +1,56 @@
 package db.query.optimizer;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Abstract representation of a left-deep join tree, with heuristics to estimate its cost.
  */
 class JoinPlan {
 
-    int estimatedTupleCount;
-    int cost;
-    int tableCount;
+    private int estimatedTupleCount;
+    private int cost;
+    private int tableCount;
 
     private JoinPlan parentJoin;
-    private String joinTable;
+    private Relation joinTable;
 
     /**
-     * Create a join plan on a single table
+     * Internal vvalue map to simplify attribute lookup
      */
-    public JoinPlan(JoinOrderOptimizer.Relation baseOp) {
+    private Map<String, Integer> vvalues;
+
+    /**
+     * Create a join plan on a single table.
+     */
+    public JoinPlan(Relation baseRelation) {
         this.parentJoin = null;
-        this.joinTable = baseOp.name;
+        this.joinTable = baseRelation;
 
         this.cost = 0;
         this.tableCount = 1;
+        this.estimatedTupleCount = baseRelation.tupleCount;
 
-        this.estimatedTupleCount = baseOp.tupleCount;
+        this.vvalues = new HashMap<>(baseRelation.vvalues.getVvalues());
     }
 
     /**
-     * Create a join plan that uses parent as a left child and the given relation as a right child
+     * Create a join plan that uses parent as a left child and the given relation as a right child.
+     *
+     * @param parentJoin Parent left-deep join tree.
+     * @param joinWith Relation to join parent with.
+     * @param attributeEqualitySets List of sets of attribute names describing attributes which have to be joined.
      */
-    public JoinPlan(JoinPlan parentJoin, JoinOrderOptimizer.Relation joinWith) {
+    public JoinPlan(JoinPlan parentJoin, Relation joinWith, List<Set<String>> attributeEqualitySets) {
         this.parentJoin = parentJoin;
-        this.joinTable = joinWith.name;
+        this.joinTable = joinWith;
+
+        this.vvalues = new HashMap<>(parentJoin.vvalues);
+        this.vvalues.putAll(joinWith.vvalues.getVvalues());
 
         this.tableCount = parentJoin.tableCount + 1;
 
-        // TODO: implement intermediate relation size estimation
-//        this.estimatedTupleCount;
+        this.estimatedTupleCount = estimateJoinSize(attributeEqualitySets);
 
         if (parentJoin.tableCount < 2) {
             this.cost = 0;
@@ -48,16 +59,64 @@ class JoinPlan {
         }
     }
 
-    public List<String> getJoins() {
-        List<String> joins = new ArrayList<>();
+    private int estimateJoinSize(List<Set<String>> sets) {
+        double total = this.parentJoin.estimatedTupleCount * this.joinTable.tupleCount;
+
+        List<String> relationAttributes = this.joinTable.op.getHeader().getQualifiedAttributeNames();
+
+        Set<String> attributesAvailableForJoin = this.parentJoin.vvalues.keySet();
+
+        for (Set<String> set : sets) {
+            // Find join conditions in set involving attributes of this relation
+            Set<String> intersect = new HashSet<>(set);
+            intersect.retainAll(relationAttributes);
+
+            if (!intersect.isEmpty()) {
+                // Pick any attribute of this relation and try to join it with another in parent join tree
+                String attribute = intersect.iterator().next();
+
+                Set<String> available = new HashSet<>(set);
+                available.retainAll(attributesAvailableForJoin);
+
+                if (!available.isEmpty()) {
+                    String joinOn = available.iterator().next();
+
+                    // Read VValues and update tuple count estimation accordingly
+                    int vvalA = this.vvalues.get(attribute);
+                    int vvalB = this.vvalues.get(joinOn);
+
+                    total /= Math.max(vvalA, vvalB);
+                }
+            }
+        }
+
+        return Math.min(1, (int) total);
+    }
+
+    public int getCost() {
+        return cost;
+    }
+
+    public int getEstimatedTupleCount() {
+        return estimatedTupleCount;
+    }
+
+    public List<Relation> getRelations() {
+        List<Relation> relations = new ArrayList<>();
         JoinPlan join = this;
 
         while (join != null) {
-            joins.add(join.joinTable);
+            relations.add(join.joinTable);
             join = join.parentJoin;
         }
 
-        Collections.reverse(joins);
-        return joins;
+        Collections.reverse(relations);
+        return relations;
+    }
+
+    public List<String> getJoins() {
+        return getRelations().stream()
+                .map(r -> r.name)
+                .collect(Collectors.toList());
     }
 }
