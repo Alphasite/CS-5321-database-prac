@@ -201,7 +201,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         boolean singleSource = (source instanceof LogicalScanOperator);
 
         // If we don't or can't use indices just add a selection operator
-        if (!config.useIndices || !singleSource) {
+        if (!config.useIndices || !singleSource || this.currentTable.indices.size() == 0) {
             Operator select = new SelectionOperator(operators.pollLast(), node.getPredicate());
             operators.add(select);
             return;
