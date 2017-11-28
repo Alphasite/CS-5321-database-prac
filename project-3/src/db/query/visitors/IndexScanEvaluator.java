@@ -1,5 +1,7 @@
 package db.query.visitors;
 
+import db.Utilities.Pair;
+import db.Utilities.Utilities;
 import db.datastore.IndexInfo;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
@@ -15,6 +17,8 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.nio.file.Path;
 import java.util.HashMap;
 
+import static db.datastore.Database.PAGE_SIZE;
+
 /**
  * Expression visitor used to collect the selection expressions that may be
  * optimized by an Index Scan and any leftover expressions
@@ -22,11 +26,15 @@ import java.util.HashMap;
 public class IndexScanEvaluator implements ExpressionVisitor{
     private TableInfo tableInfo;
     private Expression leftoverExpression;
+    private HashMap<String, Expression> leftoverExpressionCols;
     private Integer expressionVal;
     private Path indexesFolder;
     private String indexedColName;
     private HashMap<String, Integer> indicesLow;
     private HashMap<String, Integer> indicesHigh;
+    private Integer bestLow;
+    private Integer bestHigh;
+    private IndexInfo bestIndexInfo;
 
     /**
      * Setup evaluator
@@ -36,6 +44,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
     public IndexScanEvaluator(TableInfo tableInfo, Path indexesFolder) {
         this.tableInfo = tableInfo;
         this.leftoverExpression = null;
+        leftoverExpressionCols = new HashMap<>();
         this.expressionVal = null;
         this.indexedColName = null;
         this.indexesFolder = indexesFolder;
@@ -119,6 +128,14 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         }
     }
 
+    private void addToColumnExpression(Expression e, String colName) {
+        if (leftoverExpressionCols.containsKey(colName)) {
+            leftoverExpressionCols.put(colName, new AndExpression(leftoverExpressionCols.get(colName), e));
+        } else {
+            leftoverExpressionCols.put(colName, e);
+        }
+    }
+
     /**
      * Gets any remaining expressions, i.e. conditions involving columns other
      * than indexed column and not-equals-to conditions, which
@@ -138,13 +155,74 @@ public class IndexScanEvaluator implements ExpressionVisitor{
      *         otherwise null
      */
 //    public BTree getIndexTree() {
-//        if (low == null && high == null) {
+//        if (bestLow == null && bestHigh == null) {
 //            // index cannot be used
 //            return null;
 //        } else {
 //            return BTree.createTree(indexesFolder.resolve(index.tableName + "." + index.attributeName));
 //        }
 //    }
+
+    public Pair<BTree, Expression> getBestIndexTree() {
+
+        // get number of pages/tuples in relation
+        int numPages = (int) (tableInfo.file.toFile().length() / PAGE_SIZE);
+        int numTuples = tableInfo.getStats().count;
+
+        int tupleSize = tableInfo.header.size() * 4;
+
+        // set the initial minimum to the cost of the scan
+        IndexInfo minimumIndex = null;
+        double minimumCost = numTuples * tupleSize / PAGE_SIZE;
+
+        for (IndexInfo info : tableInfo.indices) {
+
+            // calculate reduction factor
+            int colIndex = tableInfo.header.columnNames.indexOf(info.attributeName);
+            int minimum = tableInfo.getStats().minimums[colIndex];
+            int maximum = tableInfo.getStats().maximums[colIndex];
+            int low = indicesLow.getOrDefault(info.attributeName, minimum);
+            int high = indicesHigh.getOrDefault(info.attributeName, maximum);
+            double reductionFactor = ((double) (high - low + 1)) / ((double) maximum - minimum + 1);
+
+            // get number of leaves in index tree
+            int numLeaves = BTree.createTree(indexesFolder.resolve(info.tableName + "." + info.attributeName)).getNbLeaves();
+
+            // calculate cost
+            double cost;
+            if (info.isClustered) {
+                cost = 3 + numPages * reductionFactor;
+            } else {
+                cost = 3 + numLeaves * reductionFactor + numTuples * reductionFactor;
+            }
+
+            if (cost < minimumCost) {
+                minimumCost = cost;
+                minimumIndex = info;
+            }
+
+        }
+
+        if (minimumIndex == null) {
+            // most efficient is full scan
+            return null;
+        } else {
+            bestLow = indicesLow.getOrDefault(minimumIndex.attributeName, null);
+            bestHigh = indicesHigh.getOrDefault(minimumIndex.attributeName, null);
+            bestIndexInfo = minimumIndex;
+
+            Expression leftover = leftoverExpression;
+            for (String col : leftoverExpressionCols.keySet()) {
+                if (!col.equals(minimumIndex.attributeName)) {
+                    leftover = Utilities.joinExpression(leftover, leftoverExpressionCols.get(col));
+                }
+            }
+            return new Pair<>(
+                    BTree.createTree(indexesFolder.resolve(minimumIndex.tableName + "." + minimumIndex.attributeName)),
+                    leftover
+            );
+        }
+    }
 
     /**
      * Gets the value of indicesLow.
@@ -164,6 +242,32 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         return indicesHigh;
     }
 
+    /**
+     * Gets the value of bestLow.
+     *
+     * @return the value of bestLow
+     */
+    public Integer getBestLow() {
+        return this.bestLow;
+    }
+
+    /**
+     * Gets the value of bestHigh.
+     *
+     * @return the value of bestHigh
+     */
+    public Integer getBestHigh() {
+        return this.bestHigh;
+    }
+
+    public IndexInfo getBestIndexInfo() {
+        return bestIndexInfo;
+    }
+
+    /*
+     * ExpressionVisitor methods
+     */
+
     @Override
     public void visit(LongValue longValue) {
         expressionVal = (int) longValue.getValue();
@@ -171,8 +275,11 @@ public class IndexScanEvaluator implements ExpressionVisitor{
 
     @Override
     public void visit(Column column) {
-        if (indicesLow.containsKey(column.getColumnName())) {
-            indexedColName = column.getColumnName();
+        for (IndexInfo info : tableInfo.indices) {
+            if (info.attributeName.equals(column.getColumnName())) {
+                indexedColName = column.getColumnName();
+                break;
+            }
         }
     }
 
@@ -194,6 +301,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
         if (childIndexedCol != null) {
             indicesLow.put(childIndexedCol, expressionVal);
             indicesHigh.put(childIndexedCol, expressionVal);
+            addToColumnExpression(equalsTo, childIndexedCol);
         } else {
             addToLeftover(equalsTo);
         }
@@ -211,6 +319,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
                 Integer oldLow = indicesLow.getOrDefault(childIndexedCol, null);
                 indicesLow.put(childIndexedCol, maxNullCheck(oldLow, expressionVal + 1));
             }
+            addToColumnExpression(greaterThan, childIndexedCol);
         } else {
             addToLeftover(greaterThan);
         }
@@ -228,6 +337,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
                 Integer oldLow = indicesLow.getOrDefault(childIndexedCol, null);
                 indicesLow.put(childIndexedCol, maxNullCheck(oldLow, expressionVal));
             }
+            addToColumnExpression(greaterThanEquals, childIndexedCol);
         } else {
             addToLeftover(greaterThanEquals);
         }
@@ -245,6 +355,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
                 Integer oldHigh = indicesHigh.getOrDefault(childIndexedCol, null);
                 indicesHigh.put(childIndexedCol, minNullCheck(oldHigh, expressionVal - 1));
             }
+            addToColumnExpression(minorThan, childIndexedCol);
         } else {
             addToLeftover(minorThan);
         }
@@ -262,6 +373,7 @@ public class IndexScanEvaluator implements ExpressionVisitor{
                 Integer oldHigh = indicesHigh.getOrDefault(childIndexedCol, null);
                 indicesHigh.put(childIndexedCol, minNullCheck(oldHigh, expressionVal));
             }
+            addToColumnExpression(minorThanEquals, childIndexedCol);
         } else {
             addToLeftover(minorThanEquals);
         }

@@ -214,19 +214,20 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexesFolder);
         node.getPredicate().accept(scanEval);
 
-
-        BTree treeIndex = scanEval.getIndexTree();
-        Expression leftovers = scanEval.getLeftoverExpression();
+        Pair<BTree, Expression> btreePair = scanEval.getBestIndexTree();
 
         Operator currentOp = operators.pollLast();
 
-        if (treeIndex == null) {
+        if (btreePair == null) {
             // Regular scan -> (rename) -> select
             Operator select = new SelectionOperator(currentOp, node.getPredicate());
             operators.add(select);
         } else {
+            BTree treeIndex = btreePair.getLeft();
+            Expression leftovers = btreePair.getRight();
+
             // Replace scan with indexed scan, add rename if needed
-            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableName(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
+            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableName(), scanEval.getBestIndexInfo(), treeIndex, scanEval.getBestLow(), scanEval.getBestHigh());
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers
