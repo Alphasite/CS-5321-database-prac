@@ -1,5 +1,6 @@
 package db.query;
 
+import db.Utilities.Pair;
 import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.Database;
@@ -13,6 +14,9 @@ import net.sf.jsqlparser.statement.select.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+
+import static db.Utilities.Utilities.*;
 
 /**
  * Query plan generator
@@ -20,7 +24,7 @@ import java.util.List;
  * This class reads the tokens from the parsed SQL query and generates a tree of {@link LogicalOperator}
  * that can then be used to retrieve all matching records.
  * <p>
- * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY
+ * Supports SELECT-FROM-WHERE queries with some restrictions as well as DISTINCT and ORDER BY.
  */
 public class QueryBuilder {
     private Database db;
@@ -36,20 +40,20 @@ public class QueryBuilder {
      * List of logical operators used to access table tuples, in the order specified in the FROM token
      * (ie. Scan or Scan + Rename).
      */
-    private List<LogicalOperator> tableOperators;
+    private List<LogicalScanOperator> tableOperators;
 
     /**
      * Initialize query builder using the provided database object as a source for Table schema information
      */
-    public QueryBuilder(Database db, UnionFind unionFind) {
+    public QueryBuilder(Database db) {
         this.db = db;
-        this.unionFind = unionFind;
+        this.unionFind = new UnionFind();
         this.tableIdentifiers = new ArrayList<>();
         this.tableOperators = new ArrayList<>();
     }
 
     /**
-     * Populate internal structures with name/alias info for all referenced tables and create Scan/Rename operators
+     * Populate internal structures with name/alias info for all referenced tables and create Scan/Rename operators.
      *
      * @param fromTable The leftmost table in the join
      * @param joins     All other joins
@@ -73,7 +77,7 @@ public class QueryBuilder {
 
     /**
      * Builds an optimized Relational Algebra execution plan for the given query using a tree of logical operators.
-     * Optimizations performed at this stage include evaluating predicates as early as possible.
+     * Optimizations performed at this stage include pushing selections and propagating constraints along equalities.
      * It is necessary to convert the resulting tree to a physical plan in order to execute the query.
      *
      * @param query Parsed query object
@@ -162,16 +166,17 @@ public class QueryBuilder {
     }
 
     /**
-     * Build the internal maps used to link every part of the WHERE clause to the table they reference
+     * Process the WHERE clause, push selections down the tree and add a join operator with leftover expressions.
      *
      * @param rootExpression the where expression
-     * @return The root node of the sql tree formed from the where and from conditions
+     * @return The root node of the SELECT-FROM-WHERE tree
      */
     private LogicalOperator processWhereClause(Expression rootExpression) {
         LogicalOperator rootNode;
 
         // Decompose the expression tree and then add the root nodes expressions to the root node.
 
+        // Add all attributes to the union find
         for (LogicalOperator operator : this.tableOperators) {
             TableHeader header = operator.getHeader();
 
@@ -181,16 +186,64 @@ public class QueryBuilder {
         }
 
         if (rootExpression != null) {
+            // Generate bounded joined attribute sets
             WhereDecomposer bwb = new WhereDecomposer(unionFind);
             rootExpression.accept(bwb);
 
-            rootNode = new LogicalJoinOperator(this.tableOperators, bwb.getUnionFind(), bwb.getUnusableExpressions());
+            List<LogicalOperator> scansOrSelects = new ArrayList<>();
+            for (LogicalScanOperator scan : this.tableOperators) {
+                TableHeader header = scan.getHeader();
+
+                Expression expression = null;
+
+                // Add R.A comp Val expressions
+                for (String attribute : header.getQualifiedAttributeNames()) {
+                    if (unionFind.getMinimum(attribute) != null) {
+                        expression = joinExpression(expression, greaterThanColumn(attribute, unionFind.getMinimum(attribute)));
+                    }
+
+                    if (unionFind.getMaximum(attribute) != null) {
+                        expression = joinExpression(expression, lessThanColumn(attribute, unionFind.getMaximum(attribute)));
+                    }
+                }
+
+                // Add R.A = R.B expressions to current selection
+                for (Set<String> equalitySet : unionFind.getSets()) {
+                    List<String> equalHeaders = new ArrayList<>();
+
+                    for (String column : equalitySet) {
+                        Pair<String, String> splitColumn = splitLongFormColumn(column);
+                        if (splitColumn.getLeft().equals(scan.getTableAlias())) {
+                            equalHeaders.add(splitColumn.getRight());
+                        }
+                    }
+
+                    if (equalHeaders.size() > 1) {
+                        for (int j = 1; j < equalHeaders.size(); j++) {
+                            Expression equalityExpression = Utilities.equalPairToExpression(
+                                    scan.getTableAlias() + "." + equalHeaders.get(j - 1),
+                                    scan.getTableAlias() + "." + equalHeaders.get(j)
+                            );
+
+                            expression = joinExpression(expression, equalityExpression);
+                        }
+                    }
+                }
+
+                if (expression == null) {
+                    scansOrSelects.add(scan);
+                } else {
+                    scansOrSelects.add(new LogicalSelectOperator(scan, expression));
+                }
+            }
+
+            rootNode = new LogicalJoinOperator(scansOrSelects, bwb.getUnionFind(), bwb.getUnusableExpressions());
 
             if (bwb.getNakedExpression() != null) {
                 rootNode = new LogicalSelectOperator(rootNode, bwb.getNakedExpression());
             }
         } else {
-            rootNode = new LogicalJoinOperator(this.tableOperators, new UnionFind(), new ArrayList<>());
+            rootNode = new LogicalJoinOperator(new ArrayList<>(this.tableOperators), new UnionFind(), new ArrayList<>());
         }
 
         return rootNode;

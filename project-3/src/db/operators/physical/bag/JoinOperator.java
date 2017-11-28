@@ -14,4 +14,9 @@ public interface JoinOperator extends Operator, BinaryNode<Operator> {
      * @return The expression which decides whether or not the tuple is joined, if one is used for this join.
      */
     Expression getPredicate();
+
+    /**
+     * @return The name of the join type, for the printer.
+     */
+    String getJoinType();
 }

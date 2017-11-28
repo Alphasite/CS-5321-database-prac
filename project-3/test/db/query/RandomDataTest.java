@@ -3,11 +3,15 @@ package db.query;
 import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
 import db.TestUtils;
+import db.datastore.Database;
 import db.datastore.tuple.Tuple;
 import db.operators.DummyOperator;
+import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
+import db.query.visitors.LogicalTreePrinter;
+import db.query.visitors.PhysicalTreePrinter;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -19,7 +23,6 @@ import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation;
 
-@Ignore
 @RunWith(Parameterized.class)
 public class RandomDataTest {
     private final static int ROWS_PER_TABLE = 1500;
@@ -40,14 +43,18 @@ public class RandomDataTest {
             "SELECT DISTINCT * FROM Sailors;",
             "SELECT * FROM Sailors S1, Sailors S2 WHERE S1.A < S2.A;",
             "SELECT B.F, B.D FROM Boats B ORDER BY B.D, B.F;",
+            "SELECT DISTINCT B.F, B.D FROM Boats B ORDER BY B.D, B.F;",
+            "SELECT DISTINCT B.F, B.D FROM Boats B;",
             "SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
             "SELECT DISTINCT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
             "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
     };
 
     private static final int[] blockSizes = new int[]{10, 50, 100};
+    private final String query;
+    private final LogicalOperator logical;
 
-    private Operator actualResult;
+    private Operator physical;
     private Operator expectedResult;
     private boolean isOrdered;
 
@@ -63,6 +70,10 @@ public class RandomDataTest {
             for (JoinImplementation joinType : JoinImplementation.values()) {
                 for (SortImplementation sortType : SortImplementation.values()) {
                     for (int blockSize : blockSizes) {
+                        if (joinType.equals(JoinImplementation.TNLJ) || blockSize != 100) {
+                            continue;
+                        }
+
                         testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize, false), results.get(query), query, joinType, sortType, blockSize, dir});
                     }
                 }
@@ -72,24 +83,39 @@ public class RandomDataTest {
         return testCases;
     }
 
-    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, Path tempDir) {
-        this.actualResult = TestUtils.getQueryPlan(tempDir, query, config);
-        this.expectedResult = new DummyOperator(expected, actualResult.getHeader());
+    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, Path tempDir) throws IOException {
+        Path path = Files.createTempDirectory("db-tempdir");
+        FileUtils.copyDirectory(path.toFile(), tempDir.toFile());
+
+        Database DB = Database.loadDatabase(tempDir);
+        QueryBuilder builder = new QueryBuilder(DB);
+
+        this.logical = builder.buildQuery(TestUtils.parseQuery(query));
+        this.physical = TestUtils.getQueryPlan(tempDir, query, config);
+
+        this.expectedResult = new DummyOperator(expected, physical.getHeader());
+        this.query = query;
         this.isOrdered = query.contains("ORDER BY");
     }
 
     @After
     public void tearDown() throws Exception {
-        this.actualResult.close();
+        this.physical.close();
         this.expectedResult.close();
     }
 
     @Test
     public void test() {
+        System.out.println("Query: " + this.query);
+        System.out.println("Logical Tree:");
+        LogicalTreePrinter.printTree(this.logical);
+        System.out.println("Physical Tree:");
+        PhysicalTreePrinter.printTree(this.physical);
+
         if (isOrdered) {
-            TestUtils.compareTuples(this.expectedResult, this.actualResult);
+            TestUtils.compareTuples(this.expectedResult, this.physical);
         } else {
-            TestUtils.unorderedCompareTuples(this.expectedResult, this.actualResult);
+            TestUtils.unorderedCompareTuples(this.expectedResult, this.physical);
         }
     }
 }

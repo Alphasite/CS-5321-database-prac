@@ -13,6 +13,7 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.jsqlparser/jsqlparser
     compile fileTree(dir: 'lib', include: '*.jar')
     testCompile group: 'com.h2database', name: 'h2', version: '1.4.196'
+    testCompile group: 'commons-io', name: 'commons-io', version: '2.6'
 }
 
 jar {

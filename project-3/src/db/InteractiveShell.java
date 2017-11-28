@@ -1,6 +1,5 @@
 package db;
 
-import db.Utilities.UnionFind;
 import db.datastore.Database;
 import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleWriter;
@@ -8,7 +7,9 @@ import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
 import db.query.QueryBuilder;
+import db.query.visitors.LogicalTreePrinter;
 import db.query.visitors.PhysicalPlanBuilder;
+import db.query.visitors.PhysicalTreePrinter;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -22,15 +23,17 @@ import java.nio.file.Paths;
 import java.util.Scanner;
 
 public class InteractiveShell {
-    public static String INPUT_PATH = "resources/samples/input";
-    public static String DB_PATH = INPUT_PATH + "/db";
-    public static String INDEXES_PATH = DB_PATH + "/indexes";
+    private static String INPUT_PATH = "resources/samples/input";
+    private static String DB_PATH = INPUT_PATH + "/db";
+    private static String INDEXES_PATH = DB_PATH + "/indexes";
 
-    public static String OUTPUT_PATH = "resources/samples/output";
-    public static String TEMP_PATH = "resources/samples/tmp";
+    private static String OUTPUT_PATH = "resources/samples/output";
+    private static String TEMP_PATH = "resources/samples/tmp";
 
-    public static final boolean WRITE_OUTPUT_TO_FILE = false;
-    public static final boolean BINARY_OUTPUT = false;
+    private static final boolean WRITE_OUTPUT_TO_FILE = false;
+    private static final boolean BINARY_OUTPUT = false;
+
+    private static final boolean DUMP_TREE_INFO = true;
 
     /**
      * @param args If present : [inputFolder] [outputFolder]
@@ -67,13 +70,20 @@ public class InteractiveShell {
                 PlainSelect select = (PlainSelect) ((Select) statement).getSelectBody();
 
                 // Build logical query plan
-                UnionFind unionFind = new UnionFind();
-                QueryBuilder builder = new QueryBuilder(DB, unionFind);
+                QueryBuilder builder = new QueryBuilder(DB);
                 LogicalOperator logicalPlan = builder.buildQuery(select);
+
+                if (DUMP_TREE_INFO) {
+                    LogicalTreePrinter.printTree(logicalPlan);
+                }
 
                 // Create physical plan optimized for query on given data
                 PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(Paths.get(TEMP_PATH), Paths.get(INDEXES_PATH));
                 Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
+
+                if (DUMP_TREE_INFO) {
+                    PhysicalTreePrinter.printTree(queryPlanRoot);
+                }
 
                 TupleWriter writer = new StringTupleWriter(System.out);
                 queryPlanRoot.dump(writer);

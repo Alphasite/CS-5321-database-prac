@@ -37,7 +37,7 @@ public class LogicalScanOperator implements LogicalOperator {
      */
     @Override
     public TableHeader getHeader() {
-        return this.header;
+        return header;
     }
 
     /**

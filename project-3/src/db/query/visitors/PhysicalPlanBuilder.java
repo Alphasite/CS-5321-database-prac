@@ -25,7 +25,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation.IN_MEMORY;
-import static db.Utilities.Utilities.*;
+import static db.Utilities.Utilities.joinExpression;
 
 /**
  * Physical query plan builder, implemented as a Logical operator tree visitor
@@ -153,7 +153,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                                 rightOpSorted = new ExternalSortOperator(joined, rightSortHeader, config.sortParameter, temporaryFolder);
                             }
 
-                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, leftoverJoinCondition);
+                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, condition);
                         } else {
                             // when no equijoins, just use BNLJ
                             join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
@@ -184,52 +184,10 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     @Override
     public void visit(LogicalScanOperator node) {
-        TableHeader header = node.getHeader();
-
-        ScanOperator scanOperator = new ScanOperator(node.getTable(), node.getTableAlias());
-
-        Expression expression = null;
-
-        for (String attribute : header.getQualifiedAttributeNames()) {
-            if (unionFind.getMinimum(attribute) != null) {
-                expression = joinExpression(expression, greaterThanColumn(attribute, unionFind.getMinimum(attribute)));
-            }
-
-            if (unionFind.getMaximum(attribute) != null) {
-                expression = joinExpression(expression, lessThanColumn(attribute, unionFind.getMaximum(attribute)));
-            }
-
-            for (Set<String> equalitySet : unionFind.getSets()) {
-                List<String> equalHeaders = new ArrayList<>();
-
-                for (String column : equalitySet) {
-                    Pair<String, String> splitColumn = splitLongFormColumn(column);
-                    if (splitColumn.getLeft().equals(node.getTableAlias())) {
-                        equalHeaders.add(splitColumn.getRight());
-                    }
-                }
-
-                if (equalHeaders.size() > 1) {
-                    for (int j = 1; j < equalHeaders.size(); j++) {
-                        Expression equalityExpression = Utilities.equalPairToExpression(
-                                node.getTableAlias() + "." + equalHeaders.get(j - 1),
-                                node.getTableAlias() + "." + equalHeaders.get(j)
-                        );
-
-                        expression = joinExpression(expression, equalityExpression);
-                    }
-                }
-            }
-        }
-
-        if (expression != null) {
-            operators.add(new SelectionOperator(scanOperator, expression));
-        } else {
-            operators.add(scanOperator);
-        }
-
         // Update leaf node info for future uses
         this.currentTable = node.getTable();
+
+        operators.add(new ScanOperator(node.getTable(), node.getTableAlias()));
     }
 
     /**
@@ -250,7 +208,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         }
 
         // Handle index scan and renaming
-        // Preconditions : source is either Scan or Scan + Rename, anything else is likely to break
+        // Preconditions : source is either Scan, anything else is likely to break
+
+        LogicalScanOperator sourceScan = (LogicalScanOperator) source;
 
         IndexInfo indexInfo = this.currentTable.indices.get(0);
         IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexInfo, indexesFolder);
@@ -267,7 +227,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             operators.add(select);
         } else {
             // Replace scan with indexed scan, add rename if needed
-            Operator op = new IndexScanOperator(this.currentTable, indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
+            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableAlias(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers

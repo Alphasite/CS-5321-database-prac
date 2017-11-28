@@ -5,6 +5,7 @@ import db.PhysicalPlanConfig.JoinImplementation;
 import db.TestUtils;
 import db.operators.physical.Operator;
 import db.performance.DiskIOStatistics;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 
-@Ignore
 @RunWith(Parameterized.class)
 public class JoinPerformanceTest {
     private final static int ROWS_PER_TABLE = 5000;
@@ -62,8 +62,11 @@ public class JoinPerformanceTest {
         return testCases;
     }
 
-    public JoinPerformanceTest(PhysicalPlanConfig config, String query, int queryIdx, JoinImplementation join, int blockSize, Path tempDir) {
-        this.actualResult = TestUtils.getQueryPlan(tempDir, query, config);
+    public JoinPerformanceTest(PhysicalPlanConfig config, String query, int queryIdx, JoinImplementation join, int blockSize, Path tempDir) throws IOException {
+        Path path = Files.createTempDirectory("db-tempdir");
+        FileUtils.copyDirectory(tempDir.toFile(), path.toFile());
+
+        this.actualResult = TestUtils.getQueryPlan(path, query, config);
         this.join = join;
         this.blockSize = blockSize;
         this.queryIdx = queryIdx;

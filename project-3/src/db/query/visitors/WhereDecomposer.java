@@ -12,20 +12,26 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.select.SubSelect;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
 
 /**
- * Another expression visitor, handles breaking the WHERE clause into multiple tokens and classify them based
- * on which tables they reference
+ * Expression visitor for logical query building. Analyzes an AND based WHERE expression and generates optimal
+ * selection bounds for every attribute by merging constraints.
  */
 public class WhereDecomposer implements ExpressionVisitor {
     private UnionFind unionFind;
+
+    /**
+     * Leftover join expressions (such as R.A < S.D).
+     */
     private List<Pair<TablePair, Expression>> unusableExpressions;
-    private Map<TablePair, Expression> joinPredicates;
 
     private Expression nakedExpression;
 
-    private Queue<String> referencedTables;
+    private Queue<String> referencedAttributes;
 
     public WhereDecomposer() {
         this(new UnionFind());
@@ -36,18 +42,18 @@ public class WhereDecomposer implements ExpressionVisitor {
         this.nakedExpression = null;
         this.unusableExpressions = new ArrayList<>();
 
-        this.referencedTables = new ArrayDeque<>();
+        this.referencedAttributes = new ArrayDeque<>();
     }
 
     /**
-     * @return the where expression without breaking it down in to join and filter expressions
+     * @return the where expression without breaking it down into join and filter expressions
      */
     public Expression getNakedExpression() {
         return nakedExpression;
     }
 
     /**
-     * @return the table-table expressions which cant be added to the union find
+     * @return the table-table expressions which can't be added to the union find.
      */
     public List<Pair<TablePair, Expression>> getUnusableExpressions() {
         return unusableExpressions;
@@ -61,7 +67,7 @@ public class WhereDecomposer implements ExpressionVisitor {
     }
 
     /**
-     * Process a comparison node by retrieving referenced tables from the stack
+     * Process a comparison node by retrieving referenced tables from the stack.
      *
      * @param comparator the comparator which contains the expression
      * @param isEquals   whether or not the expression is an equals statement
@@ -70,25 +76,35 @@ public class WhereDecomposer implements ExpressionVisitor {
         comparator.getLeftExpression().accept(this);
         comparator.getRightExpression().accept(this);
 
-        // Handle constant expressions
-        if (referencedTables.size() == 0) {
+        // Handle constant expressions (not needed for spec)
+        if (referencedAttributes.size() == 0) {
             if (nakedExpression != null) {
                 nakedExpression = new AndExpression(nakedExpression, comparator);
             } else {
                 nakedExpression = comparator;
             }
-        } else if (referencedTables.size() == 1) {
-            referencedTables.poll();
+        } else if (referencedAttributes.size() == 1) {
+            // Att (comp) val expressions are used to update selection bounds for group of Att
+
+            String attribute = referencedAttributes.poll();
             ExpressionBoundsBuilderVisitor.progressivelyBuildUnionBounds(unionFind, comparator);
         } else {
-            String table1 = referencedTables.poll();
-            String table2 = referencedTables.poll();
+            // Att1 = Att2 statements are used to merge attribute bounds sets
+            // Anything else is unusable : store it in separate list
 
-            TablePair pair = new TablePair(table1, table2);
+            String att1 = referencedAttributes.poll();
+            String att2 = referencedAttributes.poll();
+
+            if (att1 == null || att2 == null) {
+                throw new RuntimeException("Join expression has an unexpectedly null column.");
+            }
 
             if (isEquals) {
-                ExpressionUnionBuilderVisitor.progressivelyBuildUnionFind(unionFind, comparator);
+                unionFind.union(att1, att2);
             } else {
+                String table1 = att1.substring(0, att1.indexOf("."));
+                String table2 = att2.substring(0, att2.indexOf("."));
+                TablePair pair = new TablePair(table1, table2);
                 unusableExpressions.add(new Pair<>(pair, comparator));
             }
         }
@@ -99,7 +115,7 @@ public class WhereDecomposer implements ExpressionVisitor {
      */
     @Override
     public void visit(Column column) {
-        this.referencedTables.offer(column.getTable().getName());
+        this.referencedAttributes.offer(column.getWholeColumnName());
     }
 
     /**
@@ -115,6 +131,11 @@ public class WhereDecomposer implements ExpressionVisitor {
     ////////////////////////////////////////////////////
     // Trivial
     ////////////////////////////////////////////////////
+
+    @Override
+    public void visit(LongValue longValue) {
+
+    }
 
     @Override
     public void visit(EqualsTo equalsTo) {
@@ -154,11 +175,6 @@ public class WhereDecomposer implements ExpressionVisitor {
     ////////////////////////////////////////////////////
     // Not used.
     ////////////////////////////////////////////////////
-
-    @Override
-    public void visit(LongValue longValue) {
-
-    }
 
     @Override
     public void visit(OrExpression orExpression) {

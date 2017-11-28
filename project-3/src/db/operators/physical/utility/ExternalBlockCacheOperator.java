@@ -45,6 +45,15 @@ public class ExternalBlockCacheOperator extends AbstractOperator implements Seek
      */
     public ExternalBlockCacheOperator(TableHeader header, Path tempDirectory, String fileName) {
         this.header = header;
+
+        if (!Files.exists(tempDirectory)) {
+            try {
+                Files.createDirectories(tempDirectory);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         this.bufferFile = tempDirectory.resolve(fileName);
         this.writer = getWriter(header, bufferFile);
         this.reader = null;

@@ -22,4 +22,9 @@ public interface SortOperator extends Operator, UnaryNode<Operator>, SeekableOpe
      * @return The index of the tuple returned by the last call to <pre>getNextTuple()</pre> or -1 if no such tuple exists.
      */
     long getTupleIndex();
+
+    /**
+     * @return The name of the sort type, for the printer.
+     */
+    String getSortType();
 }

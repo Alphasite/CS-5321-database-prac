@@ -30,8 +30,8 @@ public class VValueTest {
         TableInfo boats = DB.getTable("Boats");
         TableInfo sailors = DB.getTable("Sailors");
 
-        vBoats = new VValues(new LogicalScanOperator(boats, "B"));
-        vSailors = new VValues(new LogicalScanOperator(sailors, "S"));
+        vBoats = new VValues(LogicalScanOperator.computeHeader(boats.header, "B"), boats.getStats());
+        vSailors = new VValues(LogicalScanOperator.computeHeader(sailors.header, "S"), sailors.getStats());
     }
 
     @Test
