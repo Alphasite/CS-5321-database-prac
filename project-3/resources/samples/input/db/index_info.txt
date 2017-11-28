@@ -1,0 +1,4 @@
+Boats F 1 20
+Boats E 0 10
+Sailors A 1 15
+Sailors B 0 20

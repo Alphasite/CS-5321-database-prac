@@ -50,7 +50,7 @@ public class RandomDataTest {
             "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
     };
 
-    private static final int[] blockSizes = new int[]{10, 50, 100};
+    private static final int[] blockSizes = new int[]{1, 3, 10, 50, 100};
     private final String query;
     private final LogicalOperator logical;
 
@@ -58,7 +58,7 @@ public class RandomDataTest {
     private Operator expectedResult;
     private boolean isOrdered;
 
-    @Parameterized.Parameters(name = "{index}: join={3} sort={4} block={5} query={2}")
+    @Parameterized.Parameters(name = "{index}: join={3} sort={4} block={5} indices={6} query={2}")
     public static Collection<Object[]> data() throws IOException {
         List<Object[]> testCases = new ArrayList<>();
 
@@ -67,14 +67,21 @@ public class RandomDataTest {
         Map<String, List<Tuple>> results = TestUtils.populateDatabase(dir, Arrays.asList(testQueries), ROWS_PER_TABLE, RAND_RANGE);
 
         for (String query : testQueries) {
-            for (JoinImplementation joinType : JoinImplementation.values()) {
-                for (SortImplementation sortType : SortImplementation.values()) {
-                    for (int blockSize : blockSizes) {
-                        if (joinType.equals(JoinImplementation.TNLJ) || blockSize != 100) {
-                            continue;
-                        }
+            for (Boolean useIndices : Arrays.asList(true, false)) {
 
-                        testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize, false), results.get(query), query, joinType, sortType, blockSize, dir});
+                for (JoinImplementation joinType : JoinImplementation.values()) {
+                    for (SortImplementation sortType : SortImplementation.values()) {
+                        for (int blockSize : blockSizes) {
+                            if (joinType.equals(JoinImplementation.TNLJ)) {
+                                continue;
+                            }
+
+                            if (blockSize == 1 && (sortType.equals(SortImplementation.EXTERNAL) || joinType.equals(JoinImplementation.SMJ))) {
+                                continue;
+                            }
+
+                            testCases.add(new Object[]{new PhysicalPlanConfig(joinType, sortType, blockSize, blockSize, useIndices), results.get(query), query, joinType, sortType, blockSize, useIndices, dir});
+                        }
                     }
                 }
             }
@@ -83,7 +90,7 @@ public class RandomDataTest {
         return testCases;
     }
 
-    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, Path tempDir) throws IOException {
+    public RandomDataTest(PhysicalPlanConfig config, List<Tuple> expected, String query, JoinImplementation join, SortImplementation sort, int blockSize, boolean useIndices, Path tempDir) throws IOException {
         Path path = Files.createTempDirectory("db-tempdir");
         FileUtils.copyDirectory(path.toFile(), tempDir.toFile());
 
