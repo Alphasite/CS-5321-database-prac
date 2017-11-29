@@ -48,6 +48,8 @@ public class RandomDataTest {
             "SELECT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
             "SELECT DISTINCT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
             "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
+            "SELECT * FROM Sailors S, Reserves R, Large L WHERE S.A = R.G AND R.H = L.I",
+            "SELECT * FROM Large L1, Large L2 WHERE L1.I = L2.I"
     };
 
     private static final int[] blockSizes = new int[]{1, 3, 11, 100};
