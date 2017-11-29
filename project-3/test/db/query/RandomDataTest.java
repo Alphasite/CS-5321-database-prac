@@ -95,6 +95,7 @@ public class RandomDataTest {
         FileUtils.copyDirectory(path.toFile(), tempDir.toFile());
 
         Database DB = Database.loadDatabase(tempDir);
+        DB.buildIndexes();
         QueryBuilder builder = new QueryBuilder(DB);
 
         this.logical = builder.buildQuery(TestUtils.parseQuery(query));
