@@ -69,16 +69,19 @@ public class RandomDataTest {
         for (String query : testQueries) {
             for (Boolean useIndices : Arrays.asList(true, false)) {
                 for (int blockSize : blockSizes) {
-                    testCases.add(new Object[]{
-                            new PhysicalPlanConfig(null, SortImplementation.EXTERNAL, blockSize, blockSize, useIndices),
-                            results.get(query),
-                            query,
-                            null,
-                            SortImplementation.EXTERNAL,
-                            blockSize,
-                            useIndices,
-                            dir
-                    });
+                    // Neither sorting nor joining can handle tiny buffers.
+                    if (blockSize >= 3) {
+                        testCases.add(new Object[]{
+                                new PhysicalPlanConfig(null, SortImplementation.EXTERNAL, blockSize, blockSize, useIndices),
+                                results.get(query),
+                                query,
+                                null,
+                                SortImplementation.EXTERNAL,
+                                blockSize,
+                                useIndices,
+                                dir
+                        });
+                    }
 
                     for (JoinImplementation joinType : JoinImplementation.values()) {
                         for (SortImplementation sortType : SortImplementation.values()) {
