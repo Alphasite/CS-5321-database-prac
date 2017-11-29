@@ -149,20 +149,14 @@ public class IndexScanEvaluator implements ExpressionVisitor{
     }
 
     /**
-     * Gets a BTree representing the tree index that can be used to scan
-     * this table, or null if no such tree exists.
-     * @return A BTree if this table can be optimized with an IndexScan,
-     *         otherwise null
+     * Gets a Pair of BTree and Expression representing the tree index that can be
+     * used to scan this table and the expressions not handled by this tree, or null
+     * if no such tree exists.
+     * Side effect: Sets the values of bestLow, bestHigh, and bestIndexInfo
+     *
+     * @return A Pair of BTree and Expression if this table can be optimized with an
+     *         IndexScan, otherwise null
      */
-//    public BTree getIndexTree() {
-//        if (bestLow == null && bestHigh == null) {
-//            // index cannot be used
-//            return null;
-//        } else {
-//            return BTree.createTree(indexesFolder.resolve(index.tableName + "." + index.attributeName));
-//        }
-//    }
-
     public Pair<BTree, Expression> getBestIndexTree() {
 
         // get number of pages/tuples in relation
@@ -186,7 +180,9 @@ public class IndexScanEvaluator implements ExpressionVisitor{
             double reductionFactor = ((double) (high - low + 1)) / ((double) maximum - minimum + 1);
 
             // get number of leaves in index tree
-            int numLeaves = BTree.createTree(indexesFolder.resolve(info.tableName + "." + info.attributeName)).getNbLeaves();
+            Path indexFile = indexesFolder.resolve(info.tableName + "." + info.attributeName);
+            assert indexFile.toFile().exists();
+            int numLeaves = BTree.createTree(indexFile).getNbLeaves();
 
             // calculate cost
             double cost;
