@@ -2,6 +2,9 @@ package db.Utilities;
 
 import db.datastore.TableHeader;
 import db.datastore.tuple.Tuple;
+import db.operators.UnaryNode;
+import db.operators.logical.LogicalOperator;
+import db.operators.logical.LogicalScanOperator;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -183,5 +186,17 @@ public class Utilities {
         } else {
             return new AndExpression(left, right);
         }
+    }
+
+    public static LogicalScanOperator getLeafScan(LogicalOperator op) {
+        while (!(op instanceof LogicalScanOperator)) {
+            if (!(op instanceof UnaryNode)) {
+                throw new RuntimeException("Cannot find leaf of non-unary operator");
+            }
+
+            op = ((UnaryNode<LogicalOperator>) op).getChild();
+        }
+
+        return (LogicalScanOperator) op;
     }
 }

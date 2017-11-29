@@ -30,8 +30,8 @@ public class InteractiveShell {
     private static String OUTPUT_PATH = "resources/samples/output";
     private static String TEMP_PATH = "resources/samples/tmp";
 
-    private static final boolean WRITE_OUTPUT_TO_FILE = true;
-    private static final boolean BINARY_OUTPUT = true;
+    private static final boolean WRITE_OUTPUT_TO_FILE = false;
+    private static final boolean BINARY_OUTPUT = false;
 
     private static final boolean DUMP_TREE_INFO = true;
 

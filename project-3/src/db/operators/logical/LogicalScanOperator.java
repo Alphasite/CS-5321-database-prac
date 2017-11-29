@@ -11,18 +11,18 @@ import java.util.ArrayList;
  * @inheritDoc
  */
 public class LogicalScanOperator implements LogicalOperator {
-    private final String tableName;
+    private final String tableAlias;
     private final TableInfo table;
     private final TableHeader header;
 
     /**
      * @param table The table info
-     * @param tableName The name of the table.
+     * @param tableAlias The alias to use when referencing this table
      */
-    public LogicalScanOperator(TableInfo table, String tableName) {
+    public LogicalScanOperator(TableInfo table, String tableAlias) {
         this.table = table;
-        this.tableName = tableName;
-        this.header = computeHeader(table.header, tableName);
+        this.tableAlias = tableAlias;
+        this.header = computeHeader(table.header, tableAlias);
     }
 
     /**
@@ -43,8 +43,8 @@ public class LogicalScanOperator implements LogicalOperator {
     /**
      * @return Get the name of the table.
      */
-    public String getTableName() {
-        return tableName;
+    public String getTableAlias() {
+        return tableAlias;
     }
 
     /**

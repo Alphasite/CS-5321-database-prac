@@ -2,7 +2,6 @@ package db.query.visitors;
 
 import db.PhysicalPlanConfig;
 import db.Utilities.Pair;
-import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
@@ -17,6 +16,7 @@ import db.operators.physical.extended.SortOperator;
 import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
 import db.query.TablePair;
+import db.query.optimizer.JoinOrderOptimizer;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -24,7 +24,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 import static db.PhysicalPlanConfig.SortImplementation.IN_MEMORY;
-import static db.Utilities.Utilities.*;
+import static db.Utilities.Utilities.joinExpression;
 
 /**
  * Physical query plan builder, implemented as a Logical operator tree visitor
@@ -46,8 +46,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     private TableInfo currentTable;
 
-    private UnionFind unionFind;
-
     private Path temporaryFolder;
     private Path indexesFolder;
 
@@ -64,7 +62,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         this.operators = new ArrayDeque<>();
         this.currentTable = null;
-        this.unionFind = new UnionFind();
     }
 
     public Operator buildFromLogicalTree(LogicalOperator root) {
@@ -78,15 +75,11 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
      */
     @Override
     public void visit(LogicalJoinOperator node) {
-        this.unionFind = node.getUnionFind();
-
-        // We are no longer on a single path, remove references to leaf node
-        this.currentTable = null;
 
         Map<String, Set<String>> columnToEqualitySetMapping = new HashMap<>();
         Map<Set<String>, Set<String>> equalitySetToUsedSetMap = new HashMap<>();
 
-        for (Set<String> equalitySet : this.unionFind.getSets()) {
+        for (Set<String> equalitySet : node.getUnionFind().getSets()) {
             for (String column : equalitySet) {
                 columnToEqualitySetMapping.put(column, equalitySet);
             }
@@ -94,79 +87,31 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             equalitySetToUsedSetMap.put(equalitySet, new HashSet<>());
         }
 
-        List<LogicalOperator> children = node.getChildren();
+        // BEGIN NEW CODE
 
-        for (LogicalOperator op : children) {
-            op.accept(this);
+        JoinOrderOptimizer optimizer = new JoinOrderOptimizer(node);
+        List<LogicalOperator> joinPlan = optimizer.computeBestJoinOrder();
+
+        for (LogicalOperator source : joinPlan) {
+            source.accept(this);
         }
 
-        Operator join = operators.poll();
+        // Operators are appended at the end of the queue so we have to retrieve them from the front (FIFO order)
 
-        for (int i = 1; i < children.size(); i++) {
-            Expression condition = null;
-            Operator joined = operators.poll();
+        Operator root = this.operators.remove();
 
-            TableHeader header = LogicalJoinOperator.computeHeader(join.getHeader(), joined.getHeader());
+        while (!this.operators.isEmpty()) {
+            Operator joinWith = this.operators.remove();
 
-            for (String attribute : header.getQualifiedAttributeNames()) {
-                Set<String> equalitySet = columnToEqualitySetMapping.get(attribute);
-                Set<String> usedEqualitySet = equalitySetToUsedSetMap.get(equalitySet);
-
-                if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(attribute)) {
-                    String equalColumn = usedEqualitySet.stream()
-                            .findAny()
-                            .get();
-
-                    condition = Utilities.joinExpression(condition, Utilities.equalPairToExpression(attribute, equalColumn));
-                }
-
-                usedEqualitySet.add(attribute);
-            }
-
-            // TODO expand unused expressions here
-
-            switch (config.joinImplementation) {
-                case TNLJ:
-                    join = new TupleNestedJoinOperator(join, joined, condition);
-                    break;
-                case BNLJ:
-                    join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
-                    break;
-                case SMJ:
-                    SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(join.getHeader(), joined.getHeader());
-                    if (condition != null) {
-                        condition.accept(smjEval);
-
-                        TableHeader leftSortHeader = smjEval.getLeftSortHeader();
-                        TableHeader rightSortHeader = smjEval.getRightSortHeader();
-                        Expression leftoverJoinCondition = smjEval.getLeftoverExpression();
-
-                        if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
-                            SortOperator leftOpSorted, rightOpSorted;
-
-                            if (config.sortImplementation == IN_MEMORY) {
-                                leftOpSorted = new InMemorySortOperator(join, leftSortHeader);
-                                rightOpSorted = new InMemorySortOperator(joined, rightSortHeader);
-                            } else /* EXTERNAL */ {
-                                leftOpSorted = new ExternalSortOperator(join, leftSortHeader, config.sortParameter, temporaryFolder);
-                                rightOpSorted = new ExternalSortOperator(joined, rightSortHeader, config.sortParameter, temporaryFolder);
-                            }
-
-                            join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, condition);
-                        } else {
-                            // when no equijoins, just use BNLJ
-                            join = new BlockNestedJoinOperator(join, joined, condition, config.joinParameter);
-                        }
-                    } else {
-                        join = new BlockNestedJoinOperator(join, joined, null, config.joinParameter);
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+            root = createJoin(root, joinWith, columnToEqualitySetMapping, equalitySetToUsedSetMap);
         }
 
-        operators.push(join);
+        this.operators.offer(root);
+
+        // END OF NEW CODE
+
+        // We are no longer on a single path, remove references to leaf node
+        this.currentTable = null;
 
         Expression unusedExpression = null;
         for (Pair<TablePair, Expression> tablePairExpressionPair : node.getUnusedExpressions()) {
@@ -174,8 +119,71 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         }
 
         if (unusedExpression != null) {
-            operators.push(new SelectionOperator(operators.poll(), unusedExpression));
+            operators.push(new SelectionOperator(operators.pollLast(), unusedExpression));
         }
+    }
+
+    private Operator createJoin(Operator inner, Operator outer, Map<String, Set<String>> c2e, Map<Set<String>, Set<String>> e2s) {
+        Operator join;
+        Expression joinCondition = null;
+        TableHeader header = LogicalJoinOperator.computeHeader(inner.getHeader(), outer.getHeader());
+
+        for (String attribute : header.getQualifiedAttributeNames()) {
+            Set<String> equalitySet = c2e.get(attribute);
+            Set<String> usedEqualitySet = e2s.get(equalitySet);
+
+            if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(attribute)) {
+                String equalColumn = usedEqualitySet.stream()
+                        .findAny()
+                        .get();
+
+                joinCondition = Utilities.joinExpression(joinCondition, Utilities.equalPairToExpression(attribute, equalColumn));
+            }
+
+            usedEqualitySet.add(attribute);
+        }
+
+        switch (config.joinImplementation) {
+            // TODO: find another method of choosing joins
+            case TNLJ:
+                join = new TupleNestedJoinOperator(inner, outer, joinCondition);
+                break;
+            case BNLJ:
+                join = new BlockNestedJoinOperator(inner, outer, joinCondition, config.joinParameter);
+                break;
+            case SMJ:
+                SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(inner.getHeader(), outer.getHeader());
+                if (joinCondition != null) {
+                    joinCondition.accept(smjEval);
+
+                    TableHeader leftSortHeader = smjEval.getLeftSortHeader();
+                    TableHeader rightSortHeader = smjEval.getRightSortHeader();
+
+                    if (leftSortHeader.size() > 0 && rightSortHeader.size() > 0) {
+                        SortOperator leftOpSorted, rightOpSorted;
+
+                        if (config.sortImplementation == IN_MEMORY) {
+                            leftOpSorted = new InMemorySortOperator(inner, leftSortHeader);
+                            rightOpSorted = new InMemorySortOperator(outer, rightSortHeader);
+                        } else /* EXTERNAL */ {
+                            leftOpSorted = new ExternalSortOperator(inner, leftSortHeader, config.sortParameter, temporaryFolder);
+                            rightOpSorted = new ExternalSortOperator(outer, rightSortHeader, config.sortParameter, temporaryFolder);
+                        }
+
+                        join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, joinCondition);
+                    } else {
+                        // when no equijoins, just use BNLJ
+                        join = new BlockNestedJoinOperator(inner, outer, joinCondition, config.joinParameter);
+                    }
+                } else {
+                    join = new BlockNestedJoinOperator(inner, outer, null, config.joinParameter);
+                }
+                break;
+            default:
+                throw new NotImplementedException();
+        }
+
+        return join;
     }
 
     /**
@@ -186,7 +194,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         // Update leaf node info for future uses
         this.currentTable = node.getTable();
 
-        operators.add(new ScanOperator(node.getTable(), node.getTableName()));
+        operators.add(new ScanOperator(node.getTable(), node.getTableAlias()));
     }
 
     /**
@@ -227,7 +235,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             Expression leftovers = btreePair.getRight();
 
             // Replace scan with indexed scan, add rename if needed
-            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableName(), scanEval.getBestIndexInfo(), treeIndex, scanEval.getBestLow(), scanEval.getBestHigh());
+            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableAlias(), scanEval.getBestIndexInfo(), treeIndex, scanEval.getBestLow(), scanEval.getBestHigh());
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers

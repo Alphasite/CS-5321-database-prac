@@ -213,7 +213,7 @@ public class QueryBuilder {
 
                     for (String column : equalitySet) {
                         Pair<String, String> splitColumn = splitLongFormColumn(column);
-                        if (splitColumn.getLeft().equals(scan.getTableName())) {
+                        if (splitColumn.getLeft().equals(scan.getTableAlias())) {
                             equalHeaders.add(splitColumn.getRight());
                         }
                     }
@@ -221,8 +221,8 @@ public class QueryBuilder {
                     if (equalHeaders.size() > 1) {
                         for (int j = 1; j < equalHeaders.size(); j++) {
                             Expression equalityExpression = Utilities.equalPairToExpression(
-                                    scan.getTableName() + "." + equalHeaders.get(j - 1),
-                                    scan.getTableName() + "." + equalHeaders.get(j)
+                                    scan.getTableAlias() + "." + equalHeaders.get(j - 1),
+                                    scan.getTableAlias() + "." + equalHeaders.get(j)
                             );
 
                             expression = joinExpression(expression, equalityExpression);
