@@ -1,7 +1,6 @@
 package db.query.optimizer;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Abstract representation of a left-deep join tree, with heuristics to estimate its cost.
@@ -112,11 +111,5 @@ class JoinPlan {
 
         Collections.reverse(relations);
         return relations;
-    }
-
-    public List<String> getJoins() {
-        return getRelations().stream()
-                .map(r -> r.name)
-                .collect(Collectors.toList());
     }
 }

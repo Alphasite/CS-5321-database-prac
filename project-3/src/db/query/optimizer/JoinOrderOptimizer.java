@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JoinOrderOptimizer {
 
@@ -43,16 +44,20 @@ public class JoinOrderOptimizer {
      * Recursively enumerate all possible join orders and evaluate their cost, preserving the minimum one.
      * This implementation is efficient because it keeps previously evaluated deep trees on the stack.
      */
-    public List<String> computeBestJoinOrder() {
+    public List<LogicalOperator> computeBestJoinOrder() {
         computeBestPlan(new ArrayList<>(relationsToJoin.keySet()), null);
 
-        return bestPlan.getJoins();
+        List<LogicalOperator> bestOrder = bestPlan.getRelations().stream()
+                .map(r -> r.op)
+                .collect(Collectors.toList());
+
+        return bestOrder;
     }
 
     private void computeBestPlan(List<String> toJoin, JoinPlan currentPlan) {
         if (toJoin.size() == 0) {
             // Evaluate total plan cost
-            if (currentPlan.getCost() < bestPlan.getCost()) {
+            if (bestPlan == null || currentPlan.getCost() < bestPlan.getCost()) {
                 bestPlan = currentPlan;
             }
         } else {
@@ -65,13 +70,10 @@ public class JoinOrderOptimizer {
                     plan = new JoinPlan(currentPlan, this.relationsToJoin.get(relation), this.constraints.getSets());
                 }
 
-                // Apply modifications
-                toJoin.remove(relation);
+                List<String> nextIter = new ArrayList<>(toJoin);
+                nextIter.remove(relation);
 
-                computeBestPlan(toJoin, plan);
-
-                // Revert modifications
-                toJoin.add(relation);
+                computeBestPlan(nextIter, plan);
             }
         }
     }
