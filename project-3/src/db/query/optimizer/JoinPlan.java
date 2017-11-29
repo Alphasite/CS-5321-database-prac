@@ -159,7 +159,7 @@ public class JoinPlan {
                 System.out.println("bnlj Cost:   " + bnljCost);
                 System.out.println("sort buffer: " + config.sortParameter);
 
-                if (smjCost > bnljCost && config.sortParameter >= 3) {
+                if (smjCost > bnljCost || config.sortParameter < 3) {
                     System.out.println("winner:      BNLJ");
                     joinImplementations.add(JoinImplementation.BNLJ);
                 } else {
