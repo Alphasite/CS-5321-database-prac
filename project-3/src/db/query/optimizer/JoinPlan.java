@@ -89,7 +89,7 @@ class JoinPlan {
             }
         }
 
-        return Math.min(1, (int) total);
+        return Math.max(1, (int) total);
     }
 
     public int getCost() {
