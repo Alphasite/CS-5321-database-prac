@@ -137,18 +137,6 @@ public class IndexScanEvaluator implements ExpressionVisitor{
     }
 
     /**
-     * Gets any remaining expressions, i.e. conditions involving columns other
-     * than indexed column and not-equals-to conditions, which
-     * cannot be optimized by the Sort-Merge Join
-     * @return An expression that consists of all non-equijoin conditions used
-     *         for this Sort-Merge Join, or null if all of the expressions are
-     *         equijoins
-     */
-    public Expression getLeftoverExpression() {
-        return this.leftoverExpression;
-    }
-
-    /**
      * Gets a Pair of BTree and Expression representing the tree index that can be
      * used to scan this table and the expressions not handled by this tree, or null
      * if no such tree exists.
@@ -158,7 +146,6 @@ public class IndexScanEvaluator implements ExpressionVisitor{
      *         IndexScan, otherwise null
      */
     public Pair<BTree, Expression> getBestIndexTree() {
-
         // get number of pages/tuples in relation
         int numPages = (int) (tableInfo.file.toFile().length() / PAGE_SIZE);
         int numTuples = tableInfo.getStats().count;
@@ -196,7 +183,6 @@ public class IndexScanEvaluator implements ExpressionVisitor{
                 minimumCost = cost;
                 minimumIndex = info;
             }
-
         }
 
         if (minimumIndex == null) {
@@ -218,24 +204,6 @@ public class IndexScanEvaluator implements ExpressionVisitor{
                     leftover
             );
         }
-    }
-
-    /**
-     * Gets the value of indicesLow.
-     *
-     * @return the value of indicesLow
-     */
-    public HashMap<String, Integer> getIndicesLow() {
-        return indicesLow;
-    }
-
-    /**
-     * Gets the value of indicesHigh.
-     *
-     * @return the value of indicesHigh
-     */
-    public HashMap<String, Integer> getIndicesHigh() {
-        return indicesHigh;
     }
 
     /**
