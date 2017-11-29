@@ -147,6 +147,7 @@ public class TestUtils {
     public static Map<String, List<Tuple>> populateDatabase(Path dbFolder, List<String> queries, int numColumns, int randRange, boolean generateSamples) {
         try {
             List<String> schema = Arrays.asList("Sailors A B C", "Boats D E F", "Reserves G H");
+            List<String> indices = Arrays.asList("Boats F 1 20", "Boats E 0 10", "Sailors A 1 15", "Sailors B 0 20");
 
             // create db folder if it doesn't already exist
             Files.createDirectories(dbFolder);
@@ -154,6 +155,10 @@ public class TestUtils {
             // write schema.txt file
             Path schemaFile = dbFolder.resolve("schema.txt");
             Files.write(schemaFile, schema, Charset.forName("UTF-8"));
+
+            // write index_info.txt
+            Path indexFile = dbFolder.resolve("index_info.txt");
+            Files.write(indexFile, indices, Charset.forName("UTF-8"));
 
             // create data folder if it doesn't already exist
             Path dataFolder = dbFolder.resolve("data");

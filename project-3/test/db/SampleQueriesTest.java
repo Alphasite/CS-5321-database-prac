@@ -25,6 +25,7 @@ import org.junit.runners.Parameterized.Parameters;
 import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 @RunWith(Parameterized.class)
@@ -49,6 +50,7 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 DatabaseStructure path = new DatabaseStructure(TestUtils.SAMPLES_PATH);
                 Database DB = Database.loadDatabase(path.db);
+                DB.buildIndexes();
 
                 QueryBuilder builder = new QueryBuilder(DB);
 
@@ -56,13 +58,15 @@ public class SampleQueriesTest {
                 LogicalOperator logicalPlan = builder.buildQuery(select);
                 Path expectedFile = path.expected.resolve("query" + i++);
 
-                for (JoinImplementation joinType : JoinImplementation.values()) {
-                    for (SortImplementation sortType : SortImplementation.values()) {
-                        if (joinType.equals(JoinImplementation.TNLJ)) {
-                            continue;
-                        }
+                for (Boolean useIndices : Arrays.asList(true, false)) {
+                    for (JoinImplementation joinType : JoinImplementation.values()) {
+                        for (SortImplementation sortType : SortImplementation.values()) {
+                            if (joinType.equals(JoinImplementation.TNLJ)) {
+                                continue;
+                            }
 
-                        testCases.add(new Object[]{logicalPlan, path, expectedFile, statement.toString(), joinType, sortType});
+                            testCases.add(new Object[]{logicalPlan, path, expectedFile, statement.toString(), joinType, sortType, useIndices});
+                        }
                     }
                 }
             }
@@ -78,7 +82,8 @@ public class SampleQueriesTest {
                              Path expectedFile,
                              String query,
                              JoinImplementation joinType,
-                             SortImplementation sortType) {
+                             SortImplementation sortType,
+                             boolean useIndices) {
 
         this.path = path;
         this.logicalOperator = logicalOperator;
@@ -86,7 +91,7 @@ public class SampleQueriesTest {
 
         this.isOrdered = query.contains("ORDER BY") || query.contains("DISTINCT");
 
-        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16, false);
+        PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16, useIndices);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, path.tmp, path.indices);
 
         this.queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalOperator);
@@ -114,7 +119,7 @@ public class SampleQueriesTest {
         System.out.println("Physical Tree:");
         PhysicalTreePrinter.printTree(this.queryPlanRoot);
     }
-    
+
     @Test
     public void test() {
         if (isOrdered) {
