@@ -50,6 +50,7 @@ public class SampleQueriesTest {
             while ((statement = parser.Statement()) != null) {
                 DatabaseStructure path = new DatabaseStructure(TestUtils.SAMPLES_PATH);
                 Database DB = Database.loadDatabase(path.db);
+                DB.buildIndexes();
 
                 QueryBuilder builder = new QueryBuilder(DB);
 

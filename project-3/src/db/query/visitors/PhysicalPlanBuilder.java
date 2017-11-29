@@ -4,7 +4,6 @@ import db.PhysicalPlanConfig;
 import db.Utilities.Pair;
 import db.Utilities.UnionFind;
 import db.Utilities.Utilities;
-import db.datastore.IndexInfo;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.datastore.index.BTree;
@@ -212,22 +211,23 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         LogicalScanOperator sourceScan = (LogicalScanOperator) source;
 
-        IndexInfo indexInfo = this.currentTable.indices.get(0);
-        IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexInfo, indexesFolder);
+        IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexesFolder);
         node.getPredicate().accept(scanEval);
 
-        BTree treeIndex = scanEval.getIndexTree();
-        Expression leftovers = scanEval.getLeftoverExpression();
+        Pair<BTree, Expression> btreePair = scanEval.getBestIndexTree();
 
         Operator currentOp = operators.pollLast();
 
-        if (treeIndex == null) {
+        if (btreePair == null) {
             // Regular scan -> (rename) -> select
             Operator select = new SelectionOperator(currentOp, node.getPredicate());
             operators.add(select);
         } else {
+            BTree treeIndex = btreePair.getLeft();
+            Expression leftovers = btreePair.getRight();
+
             // Replace scan with indexed scan, add rename if needed
-            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableName(), indexInfo, treeIndex, scanEval.getLow(), scanEval.getHigh());
+            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableName(), scanEval.getBestIndexInfo(), treeIndex, scanEval.getBestLow(), scanEval.getBestHigh());
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers

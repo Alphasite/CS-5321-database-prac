@@ -4,9 +4,9 @@ import db.datastore.TableInfo;
 
 public class TableStats {
     protected TableInfo table;
-    protected int count;
-    protected int[] minimums;
-    protected int[] maximums;
+    public int count;
+    public int[] minimums;
+    public int[] maximums;
 
     public TableStats(TableInfo table) {
         int numOfColumns = table.header.size();
