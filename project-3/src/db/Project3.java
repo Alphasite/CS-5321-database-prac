@@ -1,6 +1,5 @@
 package db;
 
-import db.PhysicalPlanConfig.JoinImplementation;
 import db.Utilities.Utilities;
 import db.datastore.Database;
 import db.datastore.stats.StatsGatherer;
@@ -74,7 +73,7 @@ public class Project3 {
         // Load plan config
         // TODO: not needed anymore
         PhysicalPlanConfig planConfig = new PhysicalPlanConfig(
-                JoinImplementation.SMJ,
+                null,
                 SortImplementation.EXTERNAL,
                 5,
                 5,
