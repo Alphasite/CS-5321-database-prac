@@ -50,7 +50,7 @@ public class RandomDataTest {
             "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
     };
 
-    private static final int[] blockSizes = new int[]{1, 3, 10, 50, 100};
+    private static final int[] blockSizes = new int[]{1, 3, 11, 100};
     private final String query;
     private final LogicalOperator logical;
 
@@ -68,10 +68,20 @@ public class RandomDataTest {
 
         for (String query : testQueries) {
             for (Boolean useIndices : Arrays.asList(true, false)) {
+                for (int blockSize : blockSizes) {
+                    testCases.add(new Object[]{
+                            new PhysicalPlanConfig(null, SortImplementation.EXTERNAL, blockSize, blockSize, useIndices),
+                            results.get(query),
+                            query,
+                            null,
+                            SortImplementation.EXTERNAL,
+                            blockSize,
+                            useIndices,
+                            dir
+                    });
 
-                for (JoinImplementation joinType : JoinImplementation.values()) {
-                    for (SortImplementation sortType : SortImplementation.values()) {
-                        for (int blockSize : blockSizes) {
+                    for (JoinImplementation joinType : JoinImplementation.values()) {
+                        for (SortImplementation sortType : SortImplementation.values()) {
                             if (joinType.equals(JoinImplementation.TNLJ)) {
                                 continue;
                             }

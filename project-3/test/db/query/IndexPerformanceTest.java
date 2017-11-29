@@ -11,6 +11,7 @@ import db.performance.DiskIOStatistics;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -102,6 +103,7 @@ public class IndexPerformanceTest {
         System.out.println("Write: " + DiskIOStatistics.writes);
     }
 
+    @Ignore
     @Test
     public void test() {
         long startTime = System.currentTimeMillis();

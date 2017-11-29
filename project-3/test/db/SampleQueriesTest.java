@@ -59,6 +59,8 @@ public class SampleQueriesTest {
                 Path expectedFile = path.expected.resolve("query" + i++);
 
                 for (Boolean useIndices : Arrays.asList(true, false)) {
+                    testCases.add(new Object[]{logicalPlan, path, expectedFile, statement.toString(), null, SortImplementation.EXTERNAL, useIndices});
+
                     for (JoinImplementation joinType : JoinImplementation.values()) {
                         for (SortImplementation sortType : SortImplementation.values()) {
                             if (joinType.equals(JoinImplementation.TNLJ)) {

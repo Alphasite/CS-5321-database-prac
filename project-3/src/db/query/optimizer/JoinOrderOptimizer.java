@@ -10,10 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class JoinOrderOptimizer {
-
     /**
      * Map table identifiers to useful info for optimization
      */
@@ -44,14 +42,10 @@ public class JoinOrderOptimizer {
      * Recursively enumerate all possible join orders and evaluate their cost, preserving the minimum one.
      * This implementation is efficient because it keeps previously evaluated deep trees on the stack.
      */
-    public List<LogicalOperator> computeBestJoinOrder() {
+    public JoinPlan computeBestJoinOrder() {
         computeBestPlan(new ArrayList<>(relationsToJoin.keySet()), null);
 
-        List<LogicalOperator> bestOrder = bestPlan.getRelations().stream()
-                .map(r -> r.op)
-                .collect(Collectors.toList());
-
-        return bestOrder;
+        return bestPlan;
     }
 
     private void computeBestPlan(List<String> toJoin, JoinPlan currentPlan) {
@@ -77,5 +71,4 @@ public class JoinOrderOptimizer {
             }
         }
     }
-
 }

@@ -1,12 +1,23 @@
 package db.query.optimizer;
 
+import db.PhysicalPlanConfig;
+import db.PhysicalPlanConfig.JoinImplementation;
+import db.datastore.Database;
+import db.operators.logical.LogicalOperator;
+
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+
+import static java.lang.Math.ceil;
+import static java.lang.Math.log;
 
 /**
  * Abstract representation of a left-deep join tree, with heuristics to estimate its cost.
  */
-class JoinPlan {
+public class JoinPlan {
 
+    private int tupleSize;
     private int estimatedTupleCount;
     private int cost;
     private int tableCount;
@@ -29,6 +40,7 @@ class JoinPlan {
         this.cost = 0;
         this.tableCount = 1;
         this.estimatedTupleCount = baseRelation.tupleCount;
+        this.tupleSize = baseRelation.tupleSize;
 
         this.vvalues = new HashMap<>(baseRelation.vvalues.getVvalues());
     }
@@ -50,6 +62,7 @@ class JoinPlan {
         this.tableCount = parentJoin.tableCount + 1;
 
         this.estimatedTupleCount = estimateJoinSize(attributeEqualitySets);
+        this.tupleSize = parentJoin.tupleSize + joinWith.tupleSize;
 
         if (parentJoin.tableCount < 2) {
             this.cost = 0;
@@ -100,6 +113,10 @@ class JoinPlan {
         return estimatedTupleCount;
     }
 
+    public int getTupleSize() {
+        return this.tupleSize;
+    }
+
     public List<Relation> getRelations() {
         List<Relation> relations = new ArrayList<>();
         JoinPlan join = this;
@@ -111,5 +128,80 @@ class JoinPlan {
 
         Collections.reverse(relations);
         return relations;
+    }
+
+    public List<LogicalOperator> getJoinOrder() {
+        return this.getRelations().stream()
+                .map(r -> r.op)
+                .collect(Collectors.toList());
+    }
+
+    public List<JoinImplementation> getJoinTypes(PhysicalPlanConfig config) {
+        List<JoinImplementation> joinImplementations = new ArrayList<>();
+
+        BiFunction<JoinPlan, Relation, Void> recursiveFunction = (parentJoin, table) -> {
+            if (parentJoin != null) {
+                int outerTupleSize = parentJoin.getTupleSize();
+                int outerTupleCount = parentJoin.getEstimatedTupleCount();
+                int outerTuplesPerPage = Database.PAGE_SIZE / 4 / outerTupleSize;
+                int outerPages = (int) ceil(1f * outerTupleCount / outerTuplesPerPage);
+
+                int innerTupleSize = table.tupleSize;
+                int innerTupleCount = table.tupleCount;
+                int innerTuplesPerPage = Database.PAGE_SIZE / 4 / innerTupleSize;
+                int innerPages = (int) ceil(1f * innerTupleCount / innerTuplesPerPage);
+
+                int bnljCost = computeBNLJCost(config.joinParameter, outerPages, innerPages);
+                int smjCost = computeSMJCost(config.sortParameter, outerPages, innerPages);
+
+                System.out.println("###################################");
+                System.out.println("smj Cost:    " + smjCost);
+                System.out.println("bnlj Cost:   " + bnljCost);
+                System.out.println("sort buffer: " + config.sortParameter);
+
+                if (smjCost > bnljCost && config.sortParameter >= 3) {
+                    System.out.println("winner:      BNLJ");
+                    joinImplementations.add(JoinImplementation.BNLJ);
+                } else {
+                    System.out.println("winner:      SMJ");
+                    joinImplementations.add(JoinImplementation.SMJ);
+                }
+
+                System.out.println("###################################");
+            }
+
+            return null;
+        };
+
+        this.recursePlan(recursiveFunction);
+
+        return joinImplementations;
+    }
+
+    private static int computeBNLJCost(int blockCount, int outerPages, int innerPages) {
+        int blockSize = blockCount - 2;
+        int outerBlocks = (int) ceil(1f * outerPages / blockSize);
+        return outerPages + outerBlocks * innerPages;
+    }
+
+    private static int computeSMJCost(int sortBlocks, int outerPages, int innerPages) {
+        int innerCost = computeSortCost(sortBlocks, innerPages) + innerPages;
+        int outerCost = computeSortCost(sortBlocks, outerPages) + outerPages;
+        return innerCost + outerCost;
+    }
+
+    private static int computeSortCost(int blocks, int numberOfPages) {
+        int numberOfPasses = (int) ceil(log(1f * numberOfPages / blocks) / log(blocks - 1)) + 1;
+        int passCost = 2 * numberOfPages;
+
+        return passCost * numberOfPasses;
+    }
+
+    private void recursePlan(BiFunction<JoinPlan, Relation, Void> recursiveFunction) {
+        if (this.parentJoin != null) {
+            this.parentJoin.recursePlan(recursiveFunction);
+        }
+
+        recursiveFunction.apply(this.parentJoin, this.joinTable);
     }
 }
