@@ -54,7 +54,7 @@ public class Project3 {
 
         List<TableStats> stats = StatsGatherer.gatherStats(DB);
         String statsFile = StatsGatherer.asString(stats);
-        StatsGatherer.writeStatsFile(config.inputDir, statsFile);
+        StatsGatherer.writeStatsFile(config.inputDir.resolve("db"), statsFile);
 
         if (config.evaluateQueries) {
             try {
@@ -137,13 +137,20 @@ public class Project3 {
                 queryPlanRoot.reset();
             }
 
+            try {
+                Files.deleteIfExists(outputFile);
+            } catch (IOException e) {
+                System.out.println("Error deleting file: " + e.getMessage());
+            }
+
             if (BINARY_OUTPUT) {
                 fileWriter = BinaryTupleWriter.get(queryPlanRoot.getHeader(), outputFile);
             } else {
                 fileWriter = StringTupleWriter.get(outputFile);
             }
 
-            queryPlanRoot.dump(fileWriter);
+            int tuplesWritten = queryPlanRoot.dump(fileWriter);
+            System.out.println("Wrote: " + tuplesWritten);
 
         } finally {
             queryPlanRoot.close();
