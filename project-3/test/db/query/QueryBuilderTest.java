@@ -1,5 +1,6 @@
 package db.query;
 
+import db.PhysicalPlanConfig;
 import db.DatabaseStructure;
 import db.TestUtils;
 import db.Utilities.UnionFind;
@@ -48,7 +49,11 @@ public class QueryBuilderTest {
     @Before
     public void init() {
         this.logicalBuilder = new QueryBuilder(DB);
-        this.physicalBuilder = new PhysicalPlanBuilder(TestUtils.TEMP_PATH, TestUtils.DB_PATH.resolve("indexes"));
+        this.physicalBuilder = new PhysicalPlanBuilder(
+                new PhysicalPlanConfig(PhysicalPlanConfig.JoinImplementation.TNLJ, PhysicalPlanConfig.SortImplementation.IN_MEMORY),
+                TestUtils.TEMP_PATH,
+                TestUtils.DB_PATH.resolve("indexes")
+        );
     }
 
     @Test

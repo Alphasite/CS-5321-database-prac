@@ -28,24 +28,24 @@ public class Project3Test {
     public void setUp() throws Exception {
         Project3.DUMP_TO_CONSOLE = false;
 
-        Path tmp = Paths.get("resources/samples/tmp");
-
-        if (!Files.exists(tmp)) {
-            Files.createDirectory(tmp);
-        }
-
-        Path output = Paths.get("resources/samples/output").resolve("project3-test");
-
-        if (!Files.exists(output)) {
-            Files.createDirectory(output);
-        }
-
         Path path = Files.createTempDirectory("db-tempdir");
         FileUtils.copyDirectory(TestUtils.SAMPLES_PATH.toFile(), path.toFile());
 
         inputPath = path.resolve("input");
         outputPath = path.resolve("output");
         tempPath = path.resolve("temporary");
+
+        if (!Files.exists(inputPath)) {
+            Files.createDirectory(inputPath);
+        }
+
+        if (!Files.exists(outputPath)) {
+            Files.createDirectory(outputPath);
+        }
+
+        if (!Files.exists(tempPath)) {
+            Files.createDirectory(tempPath);
+        }
 
         configPath = path.resolve("config.txt");
         Files.write(configPath, Arrays.asList(

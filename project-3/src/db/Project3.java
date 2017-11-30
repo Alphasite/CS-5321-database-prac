@@ -71,14 +71,7 @@ public class Project3 {
         int i = 1;
 
         // Load plan config
-        // TODO: not needed anymore
-        PhysicalPlanConfig planConfig = new PhysicalPlanConfig(
-                null,
-                SortImplementation.EXTERNAL,
-                5,
-                5,
-                true
-        );
+        PhysicalPlanConfig planConfig = PhysicalPlanConfig.DEFAULT_CONFIG;
 
         // Create directories if needed
         try {
