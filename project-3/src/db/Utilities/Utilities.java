@@ -130,7 +130,9 @@ public class Utilities {
      */
     public static void cleanDirectory(Path directory) {
         try {
-            Files.walk(directory).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
+            if (Files.exists(directory)) {
+                Files.walk(directory).filter(Files::isRegularFile).map(Path::toFile).forEach(File::delete);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -95,6 +95,8 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         JoinPlan joinPlan = optimizer.computeBestJoinOrder();
         List<LogicalOperator> joinOrder = joinPlan.getJoinOrder();
         Deque<JoinImplementation> joinTypes = new LinkedList<>(joinPlan.getJoinTypes(config));
+        Deque<Boolean> flipInnerOuters = new LinkedList<>(joinPlan.getFlipInnerOuter(config));
+
 
         for (LogicalOperator source : joinOrder) {
             source.accept(this);
@@ -113,12 +115,24 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             // Find the correct join type for this join, use the specified join type if required,
             // If none is specified then use the one computed by the join planner.
             JoinImplementation joinImplementation = joinTypes.remove();
+            Boolean flipInnerOuter = flipInnerOuters.remove();
 
             if (this.config.joinImplementation != null) {
                 joinImplementation = this.config.joinImplementation;
             }
 
-            root = createJoin(root, joinWith, joinImplementation, columnToEqualitySetMapping, equalitySetToUsedSetMap, unusedExpressions, usedExpressions);
+            Operator outer;
+            Operator inner;
+
+            if (!flipInnerOuter) {
+                outer = root;
+                inner = joinWith;
+            } else {
+                outer = joinWith;
+                inner = root;
+            }
+
+            root = createJoin(outer, inner, joinImplementation, columnToEqualitySetMapping, equalitySetToUsedSetMap, unusedExpressions, usedExpressions);
         }
 
         this.operators.offer(root);
@@ -141,8 +155,8 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
     }
 
     private Operator createJoin(
-            Operator inner,
             Operator outer,
+            Operator inner,
             JoinImplementation joinImplementation,
             Map<String, Set<String>> columnToEqualitySetMapping,
             Map<Set<String>, Set<String>> equalitySetToUsedSetMap,
@@ -153,7 +167,7 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         Operator join;
         Expression joinCondition = null;
-        TableHeader header = LogicalJoinOperator.computeHeader(inner.getHeader(), outer.getHeader());
+        TableHeader header = LogicalJoinOperator.computeHeader(outer.getHeader(), inner.getHeader());
 
         for (String attribute : header.getQualifiedAttributeNames()) {
             Set<String> equalitySet = columnToEqualitySetMapping.get(attribute);
@@ -189,13 +203,13 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         switch (joinImplementation) {
             // TODO: find another method of choosing joins
             case TNLJ:
-                join = new TupleNestedJoinOperator(inner, outer, joinCondition);
+                join = new TupleNestedJoinOperator(outer, inner, joinCondition);
                 break;
             case BNLJ:
-                join = new BlockNestedJoinOperator(inner, outer, joinCondition, config.joinParameter);
+                join = new BlockNestedJoinOperator(outer, inner, joinCondition, config.joinParameter);
                 break;
             case SMJ:
-                SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(inner.getHeader(), outer.getHeader());
+                SMJHeaderEvaluator smjEval = new SMJHeaderEvaluator(outer.getHeader(), inner.getHeader());
                 if (joinCondition != null) {
                     joinCondition.accept(smjEval);
 
@@ -206,20 +220,20 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                         SortOperator leftOpSorted, rightOpSorted;
 
                         if (config.sortImplementation == IN_MEMORY) {
-                            leftOpSorted = new InMemorySortOperator(inner, leftSortHeader);
-                            rightOpSorted = new InMemorySortOperator(outer, rightSortHeader);
+                            leftOpSorted = new InMemorySortOperator(outer, leftSortHeader);
+                            rightOpSorted = new InMemorySortOperator(inner, rightSortHeader);
                         } else /* EXTERNAL */ {
-                            leftOpSorted = new ExternalSortOperator(inner, leftSortHeader, config.sortParameter, temporaryFolder);
-                            rightOpSorted = new ExternalSortOperator(outer, rightSortHeader, config.sortParameter, temporaryFolder);
+                            leftOpSorted = new ExternalSortOperator(outer, leftSortHeader, config.sortParameter, temporaryFolder);
+                            rightOpSorted = new ExternalSortOperator(inner, rightSortHeader, config.sortParameter, temporaryFolder);
                         }
 
                         join = new SortMergeJoinOperator(leftOpSorted, rightOpSorted, joinCondition);
                     } else {
                         // when no equijoins, just use BNLJ
-                        join = new BlockNestedJoinOperator(inner, outer, joinCondition, config.joinParameter);
+                        join = new BlockNestedJoinOperator(outer, inner, joinCondition, config.joinParameter);
                     }
                 } else {
-                    join = new BlockNestedJoinOperator(inner, outer, null, config.joinParameter);
+                    join = new BlockNestedJoinOperator(outer, inner, null, config.joinParameter);
                 }
                 break;
             default:

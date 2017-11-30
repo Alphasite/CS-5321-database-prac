@@ -2,6 +2,7 @@ package db.query.optimizer;
 
 import db.PhysicalPlanConfig;
 import db.PhysicalPlanConfig.JoinImplementation;
+import db.Utilities.Pair;
 import db.datastore.Database;
 import db.operators.logical.LogicalOperator;
 
@@ -137,7 +138,16 @@ public class JoinPlan {
     }
 
     public List<JoinImplementation> getJoinTypes(PhysicalPlanConfig config) {
+        return this.getJoinTypesAndFlips(config).getLeft();
+    }
+
+    public List<Boolean> getFlipInnerOuter(PhysicalPlanConfig config) {
+        return this.getJoinTypesAndFlips(config).getRight();
+    }
+
+    private Pair<List<JoinImplementation>, List<Boolean>> getJoinTypesAndFlips(PhysicalPlanConfig config) {
         List<JoinImplementation> joinImplementations = new ArrayList<>();
+        List<Boolean> flipInnerOuterRelations = new ArrayList<>();
 
         BiFunction<JoinPlan, Relation, Void> recursiveFunction = (parentJoin, table) -> {
             if (parentJoin != null) {
@@ -167,6 +177,12 @@ public class JoinPlan {
                     joinImplementations.add(JoinImplementation.SMJ);
                 }
 
+                if (outerPages > innerPages) {
+                    flipInnerOuterRelations.add(true);
+                } else {
+                    flipInnerOuterRelations.add(false);
+                }
+
                 System.out.println("###################################");
             }
 
@@ -175,7 +191,7 @@ public class JoinPlan {
 
         this.recursePlan(recursiveFunction);
 
-        return joinImplementations;
+        return new Pair<>(joinImplementations, flipInnerOuterRelations);
     }
 
     private static int computeBNLJCost(int blockCount, int outerPages, int innerPages) {

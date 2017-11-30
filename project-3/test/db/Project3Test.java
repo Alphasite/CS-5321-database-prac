@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
+
 public class Project3Test {
     Path configPath;
 
@@ -59,29 +62,41 @@ public class Project3Test {
         int[] numColumns = {
                 3, 1, 2, 2, 3,
                 1, 3, 5, 8, 8,
-                3, 6, 2, 8, 8
+                3, 6, 2, 8, 8,
+                10 // This is random, but doesnt matter apparently
         };
 
-        for (int i = 1; i <= 17; i++) {
+        assertThat(Files.exists(inputPath.resolve("db").resolve("stats.txt")), equalTo(true));
+
+        List<String> queries = Files.readAllLines(inputPath.resolve("queries.sql"));
+
+        for (int i = 1; i < 17; i++) {
             Path expected = Paths.get("resources/samples/expected/query" + i);
             Path result = outputPath.resolve("query" + i);
 
             List<String> tables = new ArrayList<>();
             List<String> columns = new ArrayList<>();
 
-            for (int j = 0; j < numColumns.length; j++) {
+            for (int j = 0; j < numColumns[i - 1]; j++) {
                 tables.add("table");
                 columns.add("" + j);
             }
 
             TableHeader header = new TableHeader(tables, columns);
 
-            System.out.println("Comparing: " + i);
+            System.out.println("Comparing: " + i + " " + queries.get(i - 1));
 
-            TestUtils.unorderedCompareTuples(
-                    new ScanOperator(new TableInfo(header, expected, true)),
-                    new ScanOperator(new TableInfo(header, result, true))
-            );
+            if (queries.get(i - 1).contains("ORDER BY")) {
+                TestUtils.compareTuples(
+                        new ScanOperator(new TableInfo(header, expected, true)),
+                        new ScanOperator(new TableInfo(header, result, true))
+                );
+            } else {
+                TestUtils.unorderedCompareTuples(
+                        new ScanOperator(new TableInfo(header, expected, true)),
+                        new ScanOperator(new TableInfo(header, result, true))
+                );
+            }
         }
     }
 }
