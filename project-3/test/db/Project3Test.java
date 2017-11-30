@@ -3,18 +3,24 @@ package db;
 import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.operators.physical.physical.ScanOperator;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-@Ignore
 public class Project3Test {
+    Path configPath;
+
+    Path inputPath;
+    Path outputPath;
+    Path tempPath;
+
     @Before
     public void setUp() throws Exception {
         Project3.DUMP_TO_CONSOLE = false;
@@ -25,16 +31,30 @@ public class Project3Test {
             Files.createDirectory(tmp);
         }
 
-        Path output = Paths.get("resources/samples/output");
+        Path output = Paths.get("resources/samples/output").resolve("project3-test");
 
         if (!Files.exists(output)) {
             Files.createDirectory(output);
         }
+
+        Path path = Files.createTempDirectory("db-tempdir");
+        FileUtils.copyDirectory(TestUtils.SAMPLES_PATH.toFile(), path.toFile());
+
+        inputPath = path.resolve("input");
+        outputPath = path.resolve("output");
+        tempPath = path.resolve("temporary");
+
+        configPath = path.resolve("config.txt");
+        Files.write(configPath, Arrays.asList(
+                inputPath.toString(),
+                outputPath.toString(),
+                tempPath.toString()
+        ));
     }
 
     @Test
     public void main() throws Exception {
-        Project3.main(new String[]{"resources/samples/input/config.txt"});
+        Project3.main(new String[]{configPath.toString()});
 
         int[] numColumns = {
                 3, 1, 2, 2, 3,
@@ -44,7 +64,7 @@ public class Project3Test {
 
         for (int i = 1; i <= 17; i++) {
             Path expected = Paths.get("resources/samples/expected/query" + i);
-            Path result = Paths.get("resources/samples/output/query" + i);
+            Path result = outputPath.resolve("query" + i);
 
             List<String> tables = new ArrayList<>();
             List<String> columns = new ArrayList<>();

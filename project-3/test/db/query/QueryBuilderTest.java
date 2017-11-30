@@ -1,6 +1,7 @@
 package db.query;
 
 import db.PhysicalPlanConfig;
+import db.DatabaseStructure;
 import db.TestUtils;
 import db.Utilities.UnionFind;
 import db.datastore.Database;
@@ -16,10 +17,10 @@ import db.operators.physical.physical.ScanOperator;
 import db.query.visitors.PhysicalPlanBuilder;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -34,14 +35,15 @@ import static org.junit.Assert.assertTrue;
  * TODO: probably change these tests to match new functionality
  */
 public class QueryBuilderTest {
-    private static Database DB;
+    private Database DB;
 
     private QueryBuilder logicalBuilder;
     private PhysicalPlanBuilder physicalBuilder;
 
-    @BeforeClass
-    public static void loadData() {
-        DB = Database.loadDatabase(TestUtils.DB_PATH);
+    @Before
+    public void loadData() throws IOException {
+        DatabaseStructure databaseStructure = new DatabaseStructure(TestUtils.SAMPLES_PATH);
+        this.DB = Database.loadDatabase(databaseStructure.db);
     }
 
     @Before
@@ -154,6 +156,8 @@ public class QueryBuilderTest {
         Operator root = physicalBuilder.buildFromLogicalTree(logRoot);
 
         assertTrue(root instanceof ProjectionOperator);
+
+        assertThat(root.getHeader().size(), equalTo(1));
         assertEquals("S", root.getHeader().tableIdentifiers.get(0));
         assertEquals("C", root.getHeader().columnNames.get(0));
 
