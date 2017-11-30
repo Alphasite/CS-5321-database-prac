@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.IsEqual.equalTo;
+
 public class Project3Test {
     Path configPath;
 
@@ -61,6 +64,8 @@ public class Project3Test {
                 1, 3, 5, 8, 8,
                 3, 6, 2, 8, 8
         };
+
+        assertThat(Files.exists(inputPath.resolve("db").resolve("stats.txt")), equalTo(true));
 
         for (int i = 1; i <= 17; i++) {
             Path expected = Paths.get("resources/samples/expected/query" + i);
