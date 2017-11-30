@@ -4,6 +4,7 @@ import db.datastore.TableHeader;
 import db.datastore.TableInfo;
 import db.operators.physical.physical.ScanOperator;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.file.Files;
@@ -12,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+@Ignore
 public class Project3Test {
     @Before
     public void setUp() throws Exception {
