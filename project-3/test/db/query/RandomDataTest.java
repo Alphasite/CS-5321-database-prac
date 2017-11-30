@@ -49,7 +49,17 @@ public class RandomDataTest {
             "SELECT DISTINCT * FROM Sailors S, Reserves R, Boats B WHERE S.A = R.G AND R.H = B.D ORDER BY S.C, S.A, S.B, R.G, R.H, B.D, B.E, B.F;",
             "SELECT * FROM Sailors S, Reserves R WHERE S.A = R.G AND R.H = S.B;",
             "SELECT * FROM Sailors S, Reserves R, Large L WHERE S.A = R.G AND R.H = L.I",
-            "SELECT * FROM Large L1, Large L2 WHERE L1.I = L2.I"
+            "SELECT * FROM Large L1, Large L2 WHERE L1.I = L2.I",
+            "SELECT * FROM Sailors WHERE Sailors.B = 100;", // used unclustered index
+            "SELECT * FROM Sailors WHERE Sailors.B < 100;", // unused unclustered index
+            "SELECT * FROM Sailors WHERE Sailors.A < 100;", // clustered index
+            "SELECT * FROM Boats WHERE Boats.E = 500;", // used unclustered index
+            "SELECT * FROM Boats WHERE Boats.E > 500;", // unused unclustered index
+            "SELECT * FROM Sailors, Boats WHERE Sailors.A < 100 AND Boats.F > 900 AND Boats.F < 1000;", // both clustered indexes
+            "SELECT * FROM Sailors, Boats WHERE Sailors.A < 100 AND Boats.E > 900 AND Boats.E < 1000;", // one clustered one unclustered
+            "SELECT * FROM Sailors, Boats WHERE Sailors.B < 100 AND Boats.F > 900 AND Boats.F < 1000;", // one unclustered one clustered
+            "SELECT * FROM Sailors, Boats WHERE Sailors.B < 100 AND Boats.E > 900 AND Boats.E < 1000;", // both unclustered
+            "SELECT * FROM Sailors, Boats WHERE Sailors.C < 100 AND Boats.D > 900 AND Boats.D < 1000;", // both no indices
     };
 
     private static final int[] blockSizes = new int[]{1, 3, 11, 100};
