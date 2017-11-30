@@ -22,7 +22,13 @@ public class PhysicalPlanConfig {
         EXTERNAL
     }
 
-    public static final PhysicalPlanConfig DEFAULT_CONFIG = new PhysicalPlanConfig(JoinImplementation.TNLJ, SortImplementation.IN_MEMORY);
+    public static final PhysicalPlanConfig DEFAULT_CONFIG = new PhysicalPlanConfig(
+            null,
+            SortImplementation.EXTERNAL,
+            5,
+            5,
+            true
+    );
 
     public JoinImplementation joinImplementation;
     public SortImplementation sortImplementation;
