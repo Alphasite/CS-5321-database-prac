@@ -144,9 +144,9 @@ public class TestUtils {
         return populateDatabase(dbFolder, queries, numColumns, randRange, true);
     }
 
-    public static Map<String, List<Tuple>> populateDatabase(Path dbFolder, List<String> queries, int numColumns, int randRange, boolean generateSamples) {
+    public static Map<String, List<Tuple>> populateDatabase(Path dbFolder, List<String> queries, int numRows, int randRange, boolean generateSamples) {
         try {
-            List<String> schema = Arrays.asList("Sailors A B C", "Boats D E F", "Reserves G H");
+            List<String> schema = Arrays.asList("Sailors A B C", "Boats D E F", "Reserves G H", "Large I J K");
             List<String> indices = Arrays.asList("Boats F 1 20", "Boats E 0 10", "Sailors A 1 15", "Sailors B 0 20");
 
             // create db folder if it doesn't already exist
@@ -164,16 +164,18 @@ public class TestUtils {
             Path dataFolder = dbFolder.resolve("data");
             Files.createDirectories(dataFolder);
 
-            List<Tuple> sailors = generateTuples(3, numColumns, randRange);
-            List<Tuple> boats = generateTuples(3, numColumns, randRange);
-            List<Tuple> reserves = generateTuples(2, numColumns, randRange);
+            List<Tuple> sailors = generateTuples(3, numRows, randRange);
+            List<Tuple> boats = generateTuples(3, numRows, randRange);
+            List<Tuple> reserves = generateTuples(2, numRows, randRange);
+            List<Tuple> large = generateTuples(3, 10000, randRange);
 
             dumpTable(sailors, dataFolder, "Sailors", Arrays.asList("A", "B", "C"));
             dumpTable(boats, dataFolder, "Boats", Arrays.asList("D", "E", "F"));
             dumpTable(reserves, dataFolder, "Reserves", Arrays.asList("G", "H"));
+            dumpTable(large, dataFolder, "Large", Arrays.asList("I", "J", "K"));
 
             if (generateSamples) {
-                return getSampleResult(queries, sailors, boats, reserves);
+                return getSampleResult(queries, sailors, boats, reserves, large);
             } else {
                 return null;
             }
@@ -228,7 +230,7 @@ public class TestUtils {
     }
 
 
-    public static Map<String, List<Tuple>> getSampleResult(List<String> queries, List<Tuple> sailors, List<Tuple> boats, List<Tuple> reserves) {
+    public static Map<String, List<Tuple>> getSampleResult(List<String> queries, List<Tuple> sailors, List<Tuple> boats, List<Tuple> reserves, List<Tuple> large) {
         try {
             Class.forName("org.h2.Driver");
         } catch (Exception e) {
@@ -239,10 +241,12 @@ public class TestUtils {
             c.createStatement().execute("CREATE TABLE Sailors (A INT, B INT, C INT)");
             c.createStatement().execute("CREATE TABLE Boats (D INT, E INT, F INT)");
             c.createStatement().execute("CREATE TABLE Reserves (G INT, H INT)");
+            c.createStatement().execute("CREATE TABLE Large (I INT, J INT, K INT)");
 
             populateSailors(c, sailors);
             populateBoats(c, boats);
             populateReserves(c, reserves);
+            populateLarge(c, large);
 
             Map<String, List<Tuple>> queryResults = new HashMap<>();
 
@@ -283,6 +287,10 @@ public class TestUtils {
 
     public static void populateReserves(Connection c, List<Tuple> tuples) throws SQLException {
         populateTuples(c, "INSERT INTO Reserves (G, H) VALUES (?, ?)", tuples);
+    }
+
+    public static void populateLarge(Connection c, List<Tuple> tuples) throws SQLException {
+        populateTuples(c, "INSERT INTO Large (I, J, K) VALUES (?, ?, ?)", tuples);
     }
 
     private static void populateTuples(Connection c, String sql, List<Tuple> tuples) throws SQLException {

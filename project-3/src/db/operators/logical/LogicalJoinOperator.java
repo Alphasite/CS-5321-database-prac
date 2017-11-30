@@ -85,7 +85,7 @@ public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalOpe
      * @return the list of unused expressions
      */
     public List<Pair<TablePair, Expression>> getUnusedExpressions() {
-        return unusedExpressions;
+        return new ArrayList<>(unusedExpressions);
     }
 
     /**

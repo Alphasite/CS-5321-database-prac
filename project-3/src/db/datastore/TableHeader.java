@@ -1,8 +1,6 @@
 package db.datastore;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * An object which contains the mappings required to resolve a column index from its fully qualified name.
@@ -115,6 +113,10 @@ public class TableHeader {
         }
 
         return result;
+    }
+
+    public Set<String> getJoinedTableAliases() {
+        return new HashSet<>(this.tableIdentifiers);
     }
 
     /**

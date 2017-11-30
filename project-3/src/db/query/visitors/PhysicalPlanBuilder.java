@@ -1,6 +1,7 @@
 package db.query.visitors;
 
 import db.PhysicalPlanConfig;
+import db.PhysicalPlanConfig.JoinImplementation;
 import db.Utilities.Pair;
 import db.Utilities.Utilities;
 import db.datastore.TableHeader;
@@ -17,6 +18,7 @@ import db.operators.physical.physical.IndexScanOperator;
 import db.operators.physical.physical.ScanOperator;
 import db.query.TablePair;
 import db.query.optimizer.JoinOrderOptimizer;
+import db.query.optimizer.JoinPlan;
 import net.sf.jsqlparser.expression.Expression;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -90,11 +92,16 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         // BEGIN NEW CODE
 
         JoinOrderOptimizer optimizer = new JoinOrderOptimizer(node);
-        List<LogicalOperator> joinPlan = optimizer.computeBestJoinOrder();
+        JoinPlan joinPlan = optimizer.computeBestJoinOrder();
+        List<LogicalOperator> joinOrder = joinPlan.getJoinOrder();
+        Deque<JoinImplementation> joinTypes = new LinkedList<>(joinPlan.getJoinTypes(config));
 
-        for (LogicalOperator source : joinPlan) {
+        for (LogicalOperator source : joinOrder) {
             source.accept(this);
         }
+
+        List<Pair<TablePair, Expression>> unusedExpressions = node.getUnusedExpressions();
+        Set<Pair<TablePair, Expression>> usedExpressions = new HashSet<>();
 
         // Operators are appended at the end of the queue so we have to retrieve them from the front (FIFO order)
 
@@ -103,7 +110,15 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         while (!this.operators.isEmpty()) {
             Operator joinWith = this.operators.remove();
 
-            root = createJoin(root, joinWith, columnToEqualitySetMapping, equalitySetToUsedSetMap);
+            // Find the correct join type for this join, use the specified join type if required,
+            // If none is specified then use the one computed by the join planner.
+            JoinImplementation joinImplementation = joinTypes.remove();
+
+            if (this.config.joinImplementation != null) {
+                joinImplementation = this.config.joinImplementation;
+            }
+
+            root = createJoin(root, joinWith, joinImplementation, columnToEqualitySetMapping, equalitySetToUsedSetMap, unusedExpressions, usedExpressions);
         }
 
         this.operators.offer(root);
@@ -115,7 +130,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
 
         Expression unusedExpression = null;
         for (Pair<TablePair, Expression> tablePairExpressionPair : node.getUnusedExpressions()) {
-            unusedExpression = joinExpression(unusedExpression, tablePairExpressionPair.getRight());
+            if (!usedExpressions.contains(tablePairExpressionPair)) {
+                unusedExpression = joinExpression(unusedExpression, tablePairExpressionPair.getRight());
+            }
         }
 
         if (unusedExpression != null) {
@@ -123,14 +140,24 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         }
     }
 
-    private Operator createJoin(Operator inner, Operator outer, Map<String, Set<String>> c2e, Map<Set<String>, Set<String>> e2s) {
+    private Operator createJoin(
+            Operator inner,
+            Operator outer,
+            JoinImplementation joinImplementation,
+            Map<String, Set<String>> columnToEqualitySetMapping,
+            Map<Set<String>, Set<String>> equalitySetToUsedSetMap,
+            List<Pair<TablePair, Expression>> unusedExpressions,
+            Set<Pair<TablePair, Expression>> usedExpressions
+    ) {
+        // Push down equality join conditions
+
         Operator join;
         Expression joinCondition = null;
         TableHeader header = LogicalJoinOperator.computeHeader(inner.getHeader(), outer.getHeader());
 
         for (String attribute : header.getQualifiedAttributeNames()) {
-            Set<String> equalitySet = c2e.get(attribute);
-            Set<String> usedEqualitySet = e2s.get(equalitySet);
+            Set<String> equalitySet = columnToEqualitySetMapping.get(attribute);
+            Set<String> usedEqualitySet = equalitySetToUsedSetMap.get(equalitySet);
 
             if (equalitySet.size() > 1 && usedEqualitySet.size() > 0 && !usedEqualitySet.contains(attribute)) {
                 String equalColumn = usedEqualitySet.stream()
@@ -143,7 +170,23 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             usedEqualitySet.add(attribute);
         }
 
-        switch (config.joinImplementation) {
+        // Push down other join expressions
+
+        Set<String> tables = header.getJoinedTableAliases();
+
+        for (Pair<TablePair, Expression> unusedExpression : unusedExpressions) {
+            if (!usedExpressions.contains(unusedExpression)) {
+                boolean hasLeftTable = tables.contains(unusedExpression.getLeft().getTable1());
+                boolean hasRightTable = tables.contains(unusedExpression.getLeft().getTable2());
+
+                if (hasLeftTable && hasRightTable) {
+                    usedExpressions.add(unusedExpression);
+                    joinCondition = Utilities.joinExpression(joinCondition, unusedExpression.getRight());
+                }
+            }
+        }
+
+        switch (joinImplementation) {
             // TODO: find another method of choosing joins
             case TNLJ:
                 join = new TupleNestedJoinOperator(inner, outer, joinCondition);
@@ -256,7 +299,6 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         Operator sort;
 
         switch (config.sortImplementation) {
-
             case IN_MEMORY:
                 sort = new InMemorySortOperator(operators.pollLast(), node.getSortHeader());
                 break;

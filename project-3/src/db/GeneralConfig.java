@@ -37,19 +37,14 @@ public class GeneralConfig {
 
     public static GeneralConfig fromFile(Path configFile) {
         try (Scanner scanner = new Scanner(configFile)) {
+
             Path inputDir = Paths.get(scanner.nextLine());
             Path outputDir = Paths.get(scanner.nextLine());
             Path tempDir = Paths.get(scanner.nextLine());
 
             GeneralConfig config = new GeneralConfig(inputDir, outputDir, tempDir);
-
-            if (scanner.hasNextLine()) {
-                config.buildIndexes = (Integer.parseInt(scanner.nextLine()) == 1);
-                config.evaluateQueries = (Integer.parseInt(scanner.nextLine()) == 1);
-            } else {
-                config.buildIndexes = true;
-                config.evaluateQueries = true;
-            }
+            config.buildIndexes = true;
+            config.evaluateQueries = true;
 
             return config;
         } catch (IOException e) {
