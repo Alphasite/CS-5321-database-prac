@@ -67,14 +67,14 @@ public class Project3Test {
 
         assertThat(Files.exists(inputPath.resolve("db").resolve("stats.txt")), equalTo(true));
 
-        for (int i = 1; i <= 17; i++) {
+        for (int i = 1; i < 16; i++) {
             Path expected = Paths.get("resources/samples/expected/query" + i);
             Path result = outputPath.resolve("query" + i);
 
             List<String> tables = new ArrayList<>();
             List<String> columns = new ArrayList<>();
 
-            for (int j = 0; j < numColumns.length; j++) {
+            for (int j = 0; j < numColumns[i - 1]; j++) {
                 tables.add("table");
                 columns.add("" + j);
             }
