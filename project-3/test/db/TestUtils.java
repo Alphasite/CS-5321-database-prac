@@ -71,7 +71,7 @@ public class TestUtils {
             i++;
         }
 
-        System.out.println("ALL OKAY: checked " + i + " rows.");
+        System.out.println("ALL OKAY: checked " + i + " rows [ordered]");
     }
 
     /**
@@ -112,7 +112,7 @@ public class TestUtils {
             i++;
         }
 
-        System.out.println("ALL OKAY: checked " + i + " rows.");
+        System.out.println("ALL OKAY: checked " + i + " rows [unordered]");
     }
 
     public static PlainSelect parseQuery(String query) {

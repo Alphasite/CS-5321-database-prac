@@ -38,7 +38,7 @@ public class SampleQueriesTest {
     private boolean isOrdered;
     private String query;
 
-    @Parameters(name = "join={3} sort={4} query={2} path={1}")
+    @Parameters(name = "{index}: join={3} sort={4} query={2} path={1}")
     public static Collection<Object[]> data() {
         ArrayList<Object[]> testCases = new ArrayList<>();
 
@@ -91,7 +91,7 @@ public class SampleQueriesTest {
         this.logicalOperator = logicalOperator;
         this.query = query;
 
-        this.isOrdered = query.contains("ORDER BY") || query.contains("DISTINCT");
+        this.isOrdered = query.contains("ORDER BY");
 
         PhysicalPlanConfig config = new PhysicalPlanConfig(joinType, sortType, 8, 16, useIndices);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, path.tmp, path.indices);

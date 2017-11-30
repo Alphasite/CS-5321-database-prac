@@ -10,7 +10,9 @@ import db.datastore.tuple.string.StringTupleWriter;
 import db.operators.logical.LogicalOperator;
 import db.operators.physical.Operator;
 import db.query.QueryBuilder;
+import db.query.visitors.LogicalTreePrinter;
 import db.query.visitors.PhysicalPlanBuilder;
+import db.query.visitors.PhysicalTreePrinter;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
@@ -25,8 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-
-import static db.PhysicalPlanConfig.SortImplementation;
 
 /**
  * Startup class for db.Project3
@@ -117,8 +117,16 @@ public class Project3 {
         // Build logical query plan
         LogicalOperator logicalPlan = builder.buildQuery(selectQuery);
 
+        System.out.println("Logical Tree:");
+        LogicalTreePrinter.printTree(logicalPlan);
+        System.out.println("");
+
         // Create physical plan optimized for query on given data
         Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
+
+        System.out.println("Physical Tree:");
+        PhysicalTreePrinter.printTree(queryPlanRoot);
+        System.out.println("");
 
         // Write output to file
         TupleWriter fileWriter = null;
