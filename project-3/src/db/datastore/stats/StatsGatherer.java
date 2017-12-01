@@ -64,6 +64,12 @@ public class StatsGatherer {
                 .collect(Collectors.joining("\n"));
     }
 
+    /**
+     * Write the stats text to the correct file.
+     *
+     * @param directory the directory which contains the stats file.
+     * @param contents  the contents of the stats file.
+     */
     public static void writeStatsFile(Path directory, String contents) {
         try {
             Files.write(directory.resolve("stats.txt"), contents.getBytes(), StandardOpenOption.CREATE,

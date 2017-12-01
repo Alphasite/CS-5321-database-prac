@@ -2,12 +2,20 @@ package db.datastore.stats;
 
 import db.datastore.TableInfo;
 
+/**
+ * A container class which contains the stats for a table.
+ */
 public class TableStats {
     protected TableInfo table;
     public int count;
     public int[] minimums;
     public int[] maximums;
 
+    /**
+     * Initialise the class and prepare for real values to be populated into it.
+     *
+     * @param table the table info.
+     */
     public TableStats(TableInfo table) {
         int numOfColumns = table.header.size();
 

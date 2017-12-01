@@ -107,6 +107,9 @@ public class Database {
         }
     }
 
+    /**
+     * Build the indices as guided by the config file.
+     */
     public void buildIndexes() {
         Path indexFolder = dbPath.resolve("indexes");
 

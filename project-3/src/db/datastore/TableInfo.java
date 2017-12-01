@@ -37,6 +37,11 @@ public class TableInfo {
         this.indices = new ArrayList<>();
     }
 
+    /**
+     * Get the stats for this table.
+     *
+     * @return the table's stats.
+     */
     public TableStats getStats() {
         if (this.stats == null) {
             this.stats = StatsGatherer.gatherStats(this);
