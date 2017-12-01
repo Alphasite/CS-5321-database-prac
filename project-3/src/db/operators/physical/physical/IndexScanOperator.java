@@ -94,7 +94,9 @@ public class IndexScanOperator extends AbstractOperator {
      */
     private Tuple generateNextTupleClustered() {
         int index = this.tableInfo.header.resolve(this.tableInfo.tableName, this.index.attributeName).get();
-        if (highVal == null || this.reader.peek().fields.get(index) <= highVal) {
+        boolean boundedByLow = (lowVal == null) || (this.reader.peek().fields.get(index) >= lowVal);
+        boolean boundedByHigh = (highVal == null) || (this.reader.peek().fields.get(index) <= highVal);
+        if (boundedByLow && boundedByHigh) {
             return this.reader.next();
         } else {
             return null;
