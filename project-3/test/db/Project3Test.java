@@ -71,8 +71,17 @@ public class Project3Test {
         List<String> queries = Files.readAllLines(inputPath.resolve("queries.sql"));
 
         for (int i = 1; i < 17; i++) {
-            Path expected = Paths.get("resources/samples/expected/query" + i);
+            Path expectedDir = Paths.get("resources/samples/expected/");
+            Path expected = expectedDir.resolve("query" + i);
+
             Path result = outputPath.resolve("query" + i);
+
+            Path logicalFile = outputPath.resolve("query" + i + " logicalplan");
+            Path physicalFile = outputPath.resolve("query" + i + " physicalplan");
+
+            assertThat(expected.toString(), Files.exists(expected), equalTo(true));
+            assertThat(logicalFile.toString(), Files.exists(logicalFile), equalTo(true));
+            assertThat(physicalFile.toString(), Files.exists(physicalFile), equalTo(true));
 
             List<String> tables = new ArrayList<>();
             List<String> columns = new ArrayList<>();

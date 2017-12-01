@@ -29,9 +29,13 @@ public class LogicalTreePrinter implements LogicalTreeVisitor {
      * @param node the node to dump.
      */
     public static void printTree(LogicalOperator node) {
+        System.out.println(getTree(node));
+    }
+
+    public static String getTree(LogicalOperator node) {
         LogicalTreePrinter printer = new LogicalTreePrinter();
         node.accept(printer);
-        System.out.println(String.join("\n", printer.lines));
+        return String.join("\n", printer.lines);
     }
 
     /**
@@ -44,7 +48,6 @@ public class LogicalTreePrinter implements LogicalTreeVisitor {
         Optional<Expression> expression = node.getUnusedExpressions().stream()
                 .map(Pair::getRight)
                 .reduce(Utilities::joinExpression);
-
 
         line.append("Join");
 

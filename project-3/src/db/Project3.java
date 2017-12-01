@@ -88,11 +88,14 @@ public class Project3 {
 
                     // Get select body from statement
                     PlainSelect selectQuery = (PlainSelect) ((Select) statement).getSelectBody();
-                    Path outputFile = config.outputDir.resolve("query" + i++);
+                    Path outputFile = config.outputDir.resolve("query" + i);
+                    Path outputLogicalTreeFile = config.outputDir.resolve("query" + i + " logicalplan");
+                    Path outputPhyscialTreeFile = config.outputDir.resolve("query" + i + " physicalplan");
+                    i++;
 
                     long start = System.currentTimeMillis();
 
-                    runQuery(selectQuery, outputFile, config.tempDir, config.inputDir.resolve("db").resolve("indexes"), DB, planConfig);
+                    runQuery(selectQuery, outputFile, outputLogicalTreeFile, outputPhyscialTreeFile, config.tempDir, config.inputDir.resolve("db").resolve("indexes"), DB, planConfig);
 
                     System.out.println("Query executed in " + (System.currentTimeMillis() - start) + "ms");
 
@@ -110,22 +113,26 @@ public class Project3 {
         }
     }
 
-    public static void runQuery(PlainSelect selectQuery, Path outputFile, Path tempDir, Path indexesDir, Database DB, PhysicalPlanConfig config) {
+    public static void runQuery(PlainSelect selectQuery, Path outputFile, Path outputLogicalTreeFile, Path outputPhyscialTreeFile, Path tempDir, Path indexesDir, Database DB, PhysicalPlanConfig config) {
         QueryBuilder builder = new QueryBuilder(DB);
         PhysicalPlanBuilder physicalBuilder = new PhysicalPlanBuilder(config, tempDir, indexesDir);
 
         // Build logical query plan
         LogicalOperator logicalPlan = builder.buildQuery(selectQuery);
 
+        String logicalTree = LogicalTreePrinter.getTree(logicalPlan);
+
         System.out.println("Logical Tree:");
-        LogicalTreePrinter.printTree(logicalPlan);
+        System.out.println(logicalTree);
         System.out.println("");
+
 
         // Create physical plan optimized for query on given data
         Operator queryPlanRoot = physicalBuilder.buildFromLogicalTree(logicalPlan);
+        String physicalTree = PhysicalTreePrinter.getTree(queryPlanRoot);
 
         System.out.println("Physical Tree:");
-        PhysicalTreePrinter.printTree(queryPlanRoot);
+        System.out.println(physicalTree);
         System.out.println("");
 
         // Write output to file
@@ -153,6 +160,11 @@ public class Project3 {
             int tuplesWritten = queryPlanRoot.dump(fileWriter);
             System.out.println("Wrote: " + tuplesWritten);
 
+            Files.write(outputLogicalTreeFile, logicalTree.getBytes());
+            Files.write(outputPhyscialTreeFile, physicalTree.getBytes());
+
+        } catch (IOException e) {
+            System.err.println("Error writing tree files to disk: " + e.getMessage());
         } finally {
             queryPlanRoot.close();
 

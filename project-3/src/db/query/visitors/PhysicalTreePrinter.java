@@ -29,9 +29,13 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     }
 
     public static void printTree(Operator node) {
+        System.out.println(getTree(node));
+    }
+
+    public static String getTree(Operator node) {
         PhysicalTreePrinter printer = new PhysicalTreePrinter();
         node.accept(printer);
-        System.out.println(String.join("\n", printer.lines));
+        return String.join("\n", printer.lines);
     }
 
     /**
