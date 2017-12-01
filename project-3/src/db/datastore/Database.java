@@ -89,6 +89,24 @@ public class Database {
         }
     }
 
+    /**
+     * Replaces the current set of indices with the given list of IndexInfo instances.
+     * Mostly just for testing purposes.
+     *
+     * @param newIndexes The new set of indices
+     */
+    public void updateIndexes(List<IndexInfo> newIndexes) {
+        indexes = newIndexes;
+
+        for (TableInfo t : tables.values()) {
+            t.indices = new ArrayList<>();
+        }
+
+        for (IndexInfo info : indexes) {
+            tables.get(info.tableName).indices.add(info);
+        }
+    }
+
     public void buildIndexes() {
         Path indexFolder = dbPath.resolve("indexes");
 
