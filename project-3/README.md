@@ -7,6 +7,16 @@ indexes or evaluates query if requested.
 Many parametrized tests are also provided in the test folder to verify the behavior of our 
 implementation.
 
+### Install notes
+
+There are two extra dependencies used by the testing code to simplify some util operations :
+commons-io (file ops) and h2database (reference implementation to compare some outputs).
+
+Both jars are present in the lib folder and should be recognized by eclipse on project import.
+
+On some occasions the project will not build after importing it in eclipse, removing and readding
+the execution JRE solves the issue.
+
 ### Optimization algorithms
 
 **Selection pushing** : _QueryBuilder.processWhereClause()_
@@ -94,11 +104,3 @@ Logic for separating out selection handled via the index:
   visitor looks at every expression joined by an AndExpression and if it both
   a) involves the indexed column and b) involves no other columns, it is an
   expression that can be optimized by an IndexScan.
-
-
-No known bugs.
- 
-### Install notes
-
-On some occasions the project will not build after importing it in eclipse, removing and readding
-the execution JRE solves the issue.

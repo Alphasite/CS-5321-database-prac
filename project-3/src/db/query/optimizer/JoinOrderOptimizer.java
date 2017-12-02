@@ -15,7 +15,7 @@ public class JoinOrderOptimizer {
     /**
      * Map table identifiers to useful info for optimization
      */
-    private Map<String, Relation> relationsToJoin;
+    private Map<String, Relation> relations;
 
     private UnionFind constraints;
     private JoinPlan bestPlan;
@@ -23,7 +23,7 @@ public class JoinOrderOptimizer {
     public JoinOrderOptimizer(LogicalJoinOperator join) {
         this.constraints = join.getUnionFind();
 
-        this.relationsToJoin = new HashMap<>();
+        this.relations = new HashMap<>();
 
         // Load statistics for base tables
         for (LogicalOperator source : join.getChildren()) {
@@ -34,7 +34,7 @@ public class JoinOrderOptimizer {
             VValues vvalues = new VValues(scan.getHeader(), scan.getTable().getStats());
             vvalues.updateConstraints(constraints);
 
-            this.relationsToJoin.put(tableId, new Relation(tableId, tupleCount, vvalues, source));
+            this.relations.put(tableId, new Relation(tableId, tupleCount, vvalues, source));
         }
     }
 
@@ -43,7 +43,7 @@ public class JoinOrderOptimizer {
      * This implementation is efficient because it keeps previously evaluated deep trees on the stack.
      */
     public JoinPlan computeBestJoinOrder() {
-        computeBestPlan(new ArrayList<>(relationsToJoin.keySet()), null);
+        computeBestPlan(new ArrayList<>(relations.keySet()), null);
 
         return bestPlan;
     }
@@ -65,9 +65,9 @@ public class JoinOrderOptimizer {
             for (String relation : toJoin) {
                 JoinPlan plan;
                 if (currentPlan == null) {
-                    plan = new JoinPlan(this.relationsToJoin.get(relation));
+                    plan = new JoinPlan(this.relations.get(relation));
                 } else {
-                    plan = new JoinPlan(currentPlan, this.relationsToJoin.get(relation), this.constraints.getSets());
+                    plan = new JoinPlan(currentPlan, this.relations.get(relation), this.constraints.getSets());
                 }
 
                 List<String> nextIter = new ArrayList<>(toJoin);

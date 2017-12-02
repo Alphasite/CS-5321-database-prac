@@ -94,10 +94,11 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         JoinOrderOptimizer optimizer = new JoinOrderOptimizer(node);
         JoinPlan joinPlan = optimizer.computeBestJoinOrder();
         List<LogicalOperator> joinOrder = joinPlan.getJoinOrder();
+
         Deque<JoinImplementation> joinTypes = new LinkedList<>(joinPlan.getJoinTypes(config));
         Deque<Boolean> flipInnerOuters = new LinkedList<>(joinPlan.getFlipInnerOuter(config));
 
-
+        // Walk through children in order defined by best plan
         for (LogicalOperator source : joinOrder) {
             source.accept(this);
         }
@@ -132,7 +133,8 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
                 inner = root;
             }
 
-            root = createJoin(outer, inner, joinImplementation, columnToEqualitySetMapping, equalitySetToUsedSetMap, unusedExpressions, usedExpressions);
+            root = createJoin(outer, inner, joinImplementation, columnToEqualitySetMapping, equalitySetToUsedSetMap,
+                    unusedExpressions, usedExpressions);
         }
 
         this.operators.offer(root);
@@ -271,10 +273,9 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
             return;
         }
 
-        // Handle index scan and renaming
-        // Preconditions : source is either Scan, anything else is likely to break
+        // We are on a single path (no joins) so there must be a leaf scan
 
-        LogicalScanOperator sourceScan = (LogicalScanOperator) source;
+        LogicalScanOperator sourceScan = Utilities.getLeafScan(source);
 
         IndexScanEvaluator scanEval = new IndexScanEvaluator(this.currentTable, indexesFolder);
         node.getPredicate().accept(scanEval);
@@ -284,15 +285,16 @@ public class PhysicalPlanBuilder implements LogicalTreeVisitor {
         Operator currentOp = operators.pollLast();
 
         if (btreePair == null) {
-            // Regular scan -> (rename) -> select
+            // Regular scan -> select
             Operator select = new SelectionOperator(currentOp, node.getPredicate());
             operators.add(select);
         } else {
             BTree treeIndex = btreePair.getLeft();
             Expression leftovers = btreePair.getRight();
 
-            // Replace scan with indexed scan, add rename if needed
-            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableAlias(), scanEval.getBestIndexInfo(), treeIndex, scanEval.getBestLow(), scanEval.getBestHigh());
+            // Replace scan with indexed scan
+            Operator op = new IndexScanOperator(this.currentTable, sourceScan.getTableAlias(),
+                    scanEval.getBestIndexInfo(), treeIndex, scanEval.getBestLow(), scanEval.getBestHigh());
 
             if (leftovers != null) {
                 // Add a selection operator to handle leftovers
