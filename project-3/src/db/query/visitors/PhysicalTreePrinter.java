@@ -118,10 +118,10 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
     public void visit(IndexScanOperator node) {
         lines.add(pad(
                 "IndexScan[" +
-                        node.getTable().file.getFileName() + ", " +
-                        node.getIndex() + ", " +
-                        node.getLowVal() + ", " +
-                        node.getHighVal() + ", " +
+                        node.getIndex().tableName + "," +
+                        node.getIndex().attributeName + "," +
+                        node.getLowVal() + "," +
+                        node.getHighVal() +
                         "]"
         ));
     }
