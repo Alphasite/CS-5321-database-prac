@@ -5,6 +5,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
+/**
+ * A config class which contains the in/out/tmp directories and whether or not to build indices, stats, queries, etc.
+ */
 public class GeneralConfig {
 
     private static final Path INPUT_PATH = Paths.get("resources/samples-4/input");
@@ -35,6 +38,12 @@ public class GeneralConfig {
         this.evaluateQueries = true;
     }
 
+    /**
+     * Initialise the config from the config file.
+     *
+     * @param configFile the config file to read.
+     * @return the parsed config file.
+     */
     public static GeneralConfig fromFile(Path configFile) {
         try (Scanner scanner = new Scanner(configFile)) {
 
@@ -44,6 +53,7 @@ public class GeneralConfig {
 
             GeneralConfig config = new GeneralConfig(inputDir, outputDir, tempDir);
             config.buildIndexes = true;
+            config.gatherStats = true;
             config.evaluateQueries = true;
 
             return config;

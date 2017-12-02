@@ -45,6 +45,9 @@ public class VValues {
         }
     }
 
+    /**
+     * Refresh VV values using the current constraints.
+     */
     private void recomputeVValues() {
         for (String attribute : this.vvalues.keySet()) {
             int min = lowerBounds.get(attribute);

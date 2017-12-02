@@ -2,6 +2,9 @@ package db.operators.logical;
 
 import db.datastore.TableHeader;
 
+/**
+ * The super class for all logical operators.
+ */
 public interface LogicalOperator {
 
     /**

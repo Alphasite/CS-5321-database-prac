@@ -48,6 +48,12 @@ public class JoinOrderOptimizer {
         return bestPlan;
     }
 
+    /**
+     * Recursively compute the best join plan (see above)
+     *
+     * @param toJoin      the tables which are yet to be joined
+     * @param currentPlan the plan with all currently joined tables
+     */
     private void computeBestPlan(List<String> toJoin, JoinPlan currentPlan) {
         if (toJoin.size() == 0) {
             // Evaluate total plan cost

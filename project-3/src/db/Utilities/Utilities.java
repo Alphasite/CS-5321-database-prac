@@ -138,11 +138,25 @@ public class Utilities {
         }
     }
 
+    /**
+     * Split alias.column table name into 2 segments.
+     *
+     * @param longForm alias.column table name
+     * @return the alias and column pair
+     */
     public static Pair<String, String> splitLongFormColumn(String longForm) {
         String[] segments = longForm.split("\\.");
         return new Pair<>(segments[0], segments[1]);
     }
 
+    /**
+     * Validate that the columns differ, exist and are present.
+     *
+     * @param header       the tuple headers
+     * @param tuple        the tuple
+     * @param equalColumns which columsn should be equal
+     * @return whether or not the condition holds.
+     */
     public static boolean checkCondition(TableHeader header, Tuple tuple, List<Pair<String, String>> equalColumns) {
         for (Pair<String, String> equalColumn : equalColumns) {
             Pair<String, String> left = splitLongFormColumn(equalColumn.getLeft());
@@ -162,6 +176,12 @@ public class Utilities {
         return true;
     }
 
+    /**
+     * Convert a string column name into a column object.
+     *
+     * @param column the string column in long form
+     * @return the column object.
+     */
     public static Column stringToColumn(String column) {
         Pair<String, String> splitLongFormColumn = splitLongFormColumn(column);
         return new Column(
@@ -170,18 +190,46 @@ public class Utilities {
         );
     }
 
+    /**
+     * Create an expression asserting that two columns are equal.
+     *
+     * @param left the left column
+     * @param right the right column
+     * @return the expression
+     */
     public static Expression equalPairToExpression(String left, String right) {
         return new EqualsTo(stringToColumn(left), stringToColumn(right));
     }
 
+    /**
+     * Create an expression asserting that a column is < value.
+     *
+     * @param column the column
+     * @param value the value
+     * @return the expression
+     */
     public static Expression lessThanColumn(String column, Integer value) {
         return new MinorThanEquals(stringToColumn(column), new LongValue(value));
     }
 
+    /**
+     * Create an expression asserting that a column is > value.
+     *
+     * @param column the column
+     * @param value the value
+     * @return the expression
+     */
     public static Expression greaterThanColumn(String column, Integer value) {
         return new GreaterThanEquals(stringToColumn(column), new LongValue(value));
     }
 
+    /**
+     * Join two expressions if 1 is non null, otherwise return a value.
+     *
+     * @param left the left expression
+     * @param right the right expression
+     * @return the joined expression
+     */
     public static Expression joinExpression(Expression left, Expression right) {
         if (left == null) {
             return right;
@@ -190,6 +238,12 @@ public class Utilities {
         }
     }
 
+    /**
+     * Get the nested leaf expression from the node.
+     *
+     * @param op the operator to search for a leaf.
+     * @return the scan operator.
+     */
     public static LogicalScanOperator getLeafScan(LogicalOperator op) {
         while (!(op instanceof LogicalScanOperator)) {
             if (!(op instanceof UnaryNode)) {

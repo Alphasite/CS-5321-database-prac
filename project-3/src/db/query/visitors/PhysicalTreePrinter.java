@@ -28,10 +28,19 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         this.lines = new ArrayList<>();
     }
 
+    /**
+     * Print the tree to stdout.
+     *
+     * @param node the node to visit.
+     */
     public static void printTree(Operator node) {
         System.out.println(getTree(node));
     }
 
+    /**
+     * @param node the root node to print
+     * @return the tree as a string.
+     */
     public static String getTree(Operator node) {
         PhysicalTreePrinter printer = new PhysicalTreePrinter();
         node.accept(printer);
@@ -102,6 +111,9 @@ public class PhysicalTreePrinter implements PhysicalTreeVisitor {
         node.getChild().accept(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void visit(IndexScanOperator node) {
         lines.add(pad(

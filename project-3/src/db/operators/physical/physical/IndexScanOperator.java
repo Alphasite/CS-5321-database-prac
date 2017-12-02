@@ -45,6 +45,9 @@ public class IndexScanOperator extends AbstractOperator {
         reset();
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     protected Tuple generateNextTuple() {
         if (this.index.isClustered) {
@@ -54,11 +57,17 @@ public class IndexScanOperator extends AbstractOperator {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public TableHeader getHeader() {
         return this.header;
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public boolean reset() {
         if (this.index.isClustered) {
@@ -68,11 +77,17 @@ public class IndexScanOperator extends AbstractOperator {
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void accept(PhysicalTreeVisitor visitor) {
         visitor.visit(this);
     }
 
+    /**
+     * @inheritDoc
+     */
     @Override
     public void close() {
         if (this.reader != null) {
@@ -144,14 +159,23 @@ public class IndexScanOperator extends AbstractOperator {
         return true;
     }
 
+    /**
+     * @return the lower bound for the index scan
+     */
     public Integer getLowVal() {
         return lowVal;
     }
 
+    /**
+     * @return the upper bound for the index scan
+     */
     public Integer getHighVal() {
         return highVal;
     }
 
+    /**
+     * @return the index which is being used
+     */
     public IndexInfo getIndex() {
         return index;
     }

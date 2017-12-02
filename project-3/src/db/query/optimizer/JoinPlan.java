@@ -72,6 +72,12 @@ public class JoinPlan {
         }
     }
 
+    /**
+     * Estimate the join sizes for each equality set from the union find.
+     *
+     * @param sets the equality sets from the union find.
+     * @return the total size of the joins.
+     */
     private int estimateJoinSize(List<Set<String>> sets) {
         double total = this.parentJoin.estimatedTupleCount * this.joinTable.tupleCount;
 
@@ -106,18 +112,30 @@ public class JoinPlan {
         return Math.max(1, (int) total);
     }
 
+    /**
+     * @return the estimated cost of the plan.
+     */
     public int getCost() {
         return cost;
     }
 
+    /**
+     * @return an estimate of the number of tuples produced after performing all joins.
+     */
     public int getEstimatedTupleCount() {
         return estimatedTupleCount;
     }
 
+    /**
+     * @return the size of a tuple after the joins have been performed.
+     */
     public int getTupleSize() {
         return this.tupleSize;
     }
 
+    /**
+     * @return a list of all relations in a table.
+     */
     public List<Relation> getRelations() {
         List<Relation> relations = new ArrayList<>();
         JoinPlan join = this;
@@ -131,20 +149,41 @@ public class JoinPlan {
         return relations;
     }
 
+    /**
+     * @return a list indicating the order in relations should be joined.
+     */
     public List<LogicalOperator> getJoinOrder() {
         return this.getRelations().stream()
                 .map(r -> r.op)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * A list indicating the type of join to do for each join.
+     *
+     * @param config the plan config.
+     * @return a list of join types, 1 for each join.
+     */
     public List<JoinImplementation> getJoinTypes(PhysicalPlanConfig config) {
         return this.getJoinTypesAndFlips(config).getLeft();
     }
 
+    /**
+     * A list indicating the optimal arrangement of relations for the joins.
+     *
+     * @param config the plan config.
+     * @return a list of booleans, 1 for each join, indicating whether or not to flip inner and outer.
+     */
     public List<Boolean> getFlipInnerOuter(PhysicalPlanConfig config) {
         return this.getJoinTypesAndFlips(config).getRight();
     }
 
+    /**
+     * Compute which join is optimal and whether or not the inner and outer relations should be flipped on a join.
+     *
+     * @param config the plan config.
+     * @return both the list of joins and the list of whether or not to flip.
+     */
     private Pair<List<JoinImplementation>, List<Boolean>> getJoinTypesAndFlips(PhysicalPlanConfig config) {
         List<JoinImplementation> joinImplementations = new ArrayList<>();
         List<Boolean> flipInnerOuterRelations = new ArrayList<>();
@@ -194,18 +233,41 @@ public class JoinPlan {
         return new Pair<>(joinImplementations, flipInnerOuterRelations);
     }
 
+    /**
+     * Estimate the cost of performing a BNLJ on the relations.
+     *
+     * @param blockCount the number of buffer pages available to the join operation.
+     * @param outerPages the size of the outer relation in pages.
+     * @param innerPages the size of the inner relation in pages.
+     * @return the estimated cost of the operation.
+     */
     private static int computeBNLJCost(int blockCount, int outerPages, int innerPages) {
         int blockSize = blockCount - 2;
         int outerBlocks = (int) ceil(1f * outerPages / blockSize);
         return outerPages + outerBlocks * innerPages;
     }
 
+    /**
+     * Estimate the cost of performing a SMJ on the relations.
+     *
+     * @param sortBlocks the number of buffer pages available to the sort operation.
+     * @param outerPages the size of the outer relation in pages.
+     * @param innerPages the size of the inner relation in pages.
+     * @return the estimated cost of the operation.
+     */
     private static int computeSMJCost(int sortBlocks, int outerPages, int innerPages) {
         int innerCost = computeSortCost(sortBlocks, innerPages) + innerPages;
         int outerCost = computeSortCost(sortBlocks, outerPages) + outerPages;
         return innerCost + outerCost;
     }
 
+    /**
+     * Compute the cost of performing an external sort on the relation.
+     *
+     * @param blocks        the number of pages in a block
+     * @param numberOfPages the number of page to sort
+     * @return the estimated cost of the operation in page IOs
+     */
     private static int computeSortCost(int blocks, int numberOfPages) {
         int numberOfPasses = (int) ceil(log(1f * numberOfPages / blocks) / log(blocks - 1)) + 1;
         int passCost = 2 * numberOfPages;
@@ -213,6 +275,11 @@ public class JoinPlan {
         return passCost * numberOfPasses;
     }
 
+    /**
+     * A helper function to recursivly traverse the tree to apply a function to each node, from first join to last.
+     *
+     * @param recursiveFunction the function called on each node.
+     */
     private void recursePlan(BiFunction<JoinPlan, Relation, Void> recursiveFunction) {
         if (this.parentJoin != null) {
             this.parentJoin.recursePlan(recursiveFunction);

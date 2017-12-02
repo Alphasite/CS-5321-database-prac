@@ -2,6 +2,9 @@ package db.query.optimizer;
 
 import db.operators.logical.LogicalOperator;
 
+/**
+ * A helper class which encapsulates the info need to formulate a join plan.
+ */
 class Relation {
     String name;
     int tupleCount;

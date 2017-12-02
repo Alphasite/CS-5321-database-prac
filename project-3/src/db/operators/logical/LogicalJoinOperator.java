@@ -20,6 +20,11 @@ public class LogicalJoinOperator implements LogicalOperator, NaryNode<LogicalOpe
     private List<Pair<TablePair, Expression>> unusedExpressions;
     private TableHeader outputSchema;
 
+    /**
+     * @param children          the child nodes to be joined
+     * @param unionFind         the union find with constraints
+     * @param unusedExpressions join expressions which dont otherwise fit into the union find.
+     */
     public LogicalJoinOperator(List<LogicalOperator> children, UnionFind unionFind, List<Pair<TablePair, Expression>> unusedExpressions) {
         this.children = children;
         this.unionFind = unionFind;

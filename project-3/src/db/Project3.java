@@ -65,6 +65,13 @@ public class Project3 {
         }
     }
 
+    /**
+     * Execute queries from input stream.
+     *
+     * @param queryReader the input stream for queries
+     * @param DB          the database instance for the system
+     * @param config      the config for the system
+     */
     public static void runQueries(Reader queryReader, Database DB, GeneralConfig config) {
         CCJSqlParser parser = new CCJSqlParser(queryReader);
         Statement statement;

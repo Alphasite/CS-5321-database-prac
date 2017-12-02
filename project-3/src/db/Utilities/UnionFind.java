@@ -20,6 +20,12 @@ public class UnionFind {
         this.maximum = new HashMap<>();
     }
 
+    /**
+     * Get the parent for a column
+     *
+     * @param table the column to search
+     * @return the parent of the column
+     */
     private String getParent(String table) {
         while (!Objects.equals(table, this.parent.get(table))) {
             table = this.parent.get(table);
@@ -28,12 +34,23 @@ public class UnionFind {
         return table;
     }
 
+    /**
+     * Add the column to the union find.
+     *
+     * @param table the column to add
+     */
     public void add(String table) {
         if (!parent.containsKey(table)) {
             this.parent.put(table, table);
         }
     }
 
+    /**
+     * Try set the minimum value for a column/set
+     *
+     * @param table   the column to set
+     * @param minimum the new candidate minimum value
+     */
     public void setMinimum(String table, int minimum) {
         table = this.getParent(table);
         if (this.minimum.containsKey(table)) {
@@ -43,6 +60,12 @@ public class UnionFind {
         }
     }
 
+    /**
+     * Try set the maximum value for a column/set
+     *
+     * @param table the column to set
+     * @param maximum the new candidate maximum value
+     */
     public void setMaximum(String table, int maximum) {
         table = this.getParent(table);
         if (this.maximum.containsKey(table)) {
@@ -52,6 +75,12 @@ public class UnionFind {
         }
     }
 
+    /**
+     * Try set the equal value for a column/set
+     *
+     * @param table the column to set
+     * @param value the new candidate equal value
+     */
     public void setEquals(String table, int value) {
         table = this.getParent(table);
         this.setMinimum(table, value);
@@ -75,6 +104,11 @@ public class UnionFind {
         }
     }
 
+    /**
+     * Union 2 equal columns, joining min/max/equals
+     * @param table1 the first column
+     * @param table2 the second column
+     */
     public void union(String table1, String table2) {
         this.add(table1);
         this.add(table2);
@@ -92,7 +126,9 @@ public class UnionFind {
         }
     }
 
-    // TODO: doc
+    /**
+     * @return the equality set of equal columns
+     */
     public List<Set<String>> getSets() {
         Map<String, Set<String>> sets = new HashMap<>();
 
