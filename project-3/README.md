@@ -1,15 +1,36 @@
 # CS-5321-database-prac
 
-## Project 4
+## Project 5
 
-The packages/classes of interest are:
- - Top level class: db.Project3
- - Physical operators: db.operators.physical 
- - Logical operators: db.operators.logical 
- - Builder: db.query.visitors.PhysicalPlanBuilder
-
+The top level class is _db.Project3_. It reads the configuration file and builds
+indexes or evaluates query if requested.
 Many parametrized tests are also provided in the test folder to verify the behavior of our 
 implementation.
+
+### Optimization algorithms
+
+**Selection pushing** : _QueryBuilder.processWhereClause()_
+
+**Selection implementation choice** : _PhysicalPlanBuilder_
+
+**Join ordering** : _JoinOrderOptimizer_
+
+This implementation follows the provided guidelines : it checks all possible
+join orders and evaluates their respective cost, retaining the best one
+for comparison. Join cost evaluation is delegated to the JoinPlan class using
+VValues.
+Note that this implementation uses recursion to generate and evaluate
+join orders, but since we do it from the bottom specific subjoin plans
+are only computed once which makes this as efficient as dynamic programming
+with lower memory usage.
+
+
+**Join implementation choice** : _JoinPlan.getJoinTypesAndFlips_
+
+
+No known bugs
+
+## Project 4
  
 Logic for Index Scan Operator:
 - lowkey and highkey are set in the IndexScanOperator class (this interval is closed)
