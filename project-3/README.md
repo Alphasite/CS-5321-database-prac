@@ -27,6 +27,26 @@ with lower memory usage.
 
 **Join implementation choice** : _JoinPlan.getJoinTypesAndFlips_
 
+The system uses the formulae provided in class to estimate the costs of performing 
+each of the different join types (in reality these number would need further tuning
+and better stats to be fully accurate, but its a somewhat reasonable approach). 
+
+So SMJ cost:
+ - Pages = (sort(L) + sort(S)) + scan(L) + scan(S)
+ - Number of passes = ceil(log_(b-1)ceil(n/b))+1
+ - Cost of each pass = 2N
+ - Pages = number of passes * cost of pass 
+ 
+And BNLJ:
+ - Block size = B - 2
+ - R blocks = ceil(M / block size)
+ - Pages = M + R blocks * S
+ 
+It then selects the cheaper of the two algorithms. 
+
+Also, as request (as i understand it) we decide which operator is inner and which 
+is outer here. Outputting a boolean to indicate whether or not to flip the current 
+ordering.   
 
 No known bugs
 
@@ -48,7 +68,8 @@ Logic for Index Scan Operator:
 Logic for separating out selection handled via the index:
 - Previous to project 4, we already created logic that pushed selection operators
   down the tree. Thus, it is already certain that any logical selection operators
-  are directly above scan operators.
+  are directly above scan operators. Join filter conditions are emitted as early 
+  as possible as well, emitting when all require fields are present in the tuple. 
 - Going by this assumption, when our PhysicalPlanBuilder visits a
   LogicalSelectOperator, we check if any of the selection expressions can be handled
   by an index scan. If not, we proceed the same way as in project 3. If so, we
