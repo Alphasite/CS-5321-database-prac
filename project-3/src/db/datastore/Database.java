@@ -1,6 +1,8 @@
 package db.datastore;
 
 import db.datastore.index.BulkLoader;
+import db.datastore.stats.StatsGatherer;
+import db.datastore.stats.TableStats;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -124,6 +126,14 @@ public class Database {
         for (IndexInfo config : indexes) {
             BulkLoader.buildIndex(this, config, indexFolder);
         }
+    }
+
+    /**
+     * Compute statistics for every base table and save them inside main folder.
+     */
+    public void writeStatistics() {
+        List<TableStats> stats = StatsGatherer.gatherStats(this);
+        StatsGatherer.writeStatsFile(this.dbPath, StatsGatherer.asString(stats));
     }
 
     /**
