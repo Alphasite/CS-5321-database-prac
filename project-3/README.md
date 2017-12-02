@@ -11,7 +11,19 @@ implementation.
 
 **Selection pushing** : _QueryBuilder.processWhereClause()_
 
-**Selection implementation choice** : _PhysicalPlanBuilder_
+**Selection implementation choice** : _IndexScanEvaluator_
+
+The logic for choosing a selection implementation was added to our
+_IndexScanEvaluator_, which was originally used in project 4 to decide whether
+or not the index on a table could be used to optimize the selection on the table.
+In this project we updated the class to handle low and high ranges for multiple
+indices on a table, as well as picking out the best index by calculating each
+index's cost, as described in section 3.3 of the project instructions. After
+the class has looked at all of the conditions and picked out the low and high
+values for each index, it uses this information in the _getBestIndexTree_ method
+to return the index with the lowest cost (or possibly the full scan if that is
+more efficient). The _PhysicalPlanBuilder_ class uses this information to
+put the correct operators (IndexScan or Selection) into the tree.
 
 **Join ordering** : _JoinOrderOptimizer_
 
