@@ -76,8 +76,8 @@ public class Project3Test {
 
             Path result = outputPath.resolve("query" + i);
 
-            Path logicalFile = outputPath.resolve("query" + i + " logicalplan");
-            Path physicalFile = outputPath.resolve("query" + i + " physicalplan");
+            Path logicalFile = outputPath.resolve("query" + i + "_logicalplan");
+            Path physicalFile = outputPath.resolve("query" + i + "_physicalplan");
 
             assertThat(expected.toString(), Files.exists(expected), equalTo(true));
             assertThat(logicalFile.toString(), Files.exists(logicalFile), equalTo(true));

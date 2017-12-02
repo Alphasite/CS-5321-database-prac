@@ -91,8 +91,8 @@ public class Project3 {
                     // Get select body from statement
                     PlainSelect selectQuery = (PlainSelect) ((Select) statement).getSelectBody();
                     Path outputFile = config.outputDir.resolve("query" + i);
-                    Path outputLogicalTreeFile = config.outputDir.resolve("query" + i + " logicalplan");
-                    Path outputPhyscialTreeFile = config.outputDir.resolve("query" + i + " physicalplan");
+                    Path outputLogicalTreeFile = config.outputDir.resolve("query" + i + "_logicalplan");
+                    Path outputPhyscialTreeFile = config.outputDir.resolve("query" + i + "_physicalplan");
                     i++;
 
                     long start = System.currentTimeMillis();
