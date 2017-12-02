@@ -2,8 +2,6 @@ package db;
 
 import db.Utilities.Utilities;
 import db.datastore.Database;
-import db.datastore.stats.StatsGatherer;
-import db.datastore.stats.TableStats;
 import db.datastore.tuple.TupleWriter;
 import db.datastore.tuple.binary.BinaryTupleWriter;
 import db.datastore.tuple.string.StringTupleWriter;
@@ -26,7 +24,6 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * Startup class for db.Project3
@@ -52,9 +49,7 @@ public class Project3 {
             DB.buildIndexes();
         }
 
-        List<TableStats> stats = StatsGatherer.gatherStats(DB);
-        String statsFile = StatsGatherer.asString(stats);
-        StatsGatherer.writeStatsFile(config.inputDir.resolve("db"), statsFile);
+        DB.writeStatistics();
 
         if (config.evaluateQueries) {
             try {
