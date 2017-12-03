@@ -88,10 +88,13 @@ Logic for Index Scan Operator:
 
 
 Logic for separating out selection handled via the index:
-- Previous to project 4, we already created logic that pushed selection operators
-  down the tree. Thus, it is already certain that any logical selection operators
-  are directly above scan operators. Join filter conditions are emitted as early 
-  as possible as well, emitting when all require fields are present in the tuple. 
+- We have multiple approaches to selection pushing in our system, firstly
+  we push selections which can apply only to a single column (including those derived 
+  from the union find), this is done in QueryBuilder.processWhereClause. Expressions 
+  which involve 2 columns are applied in: PhysicalPlanBuilder.createJoin, as we need
+  to know the join order to apply these selections as early as possible (ANDing them
+  with the filter expression for the join), this derived from the unused expressions from 
+  joins and the equality expressions from the union find.
 - Going by this assumption, when our PhysicalPlanBuilder visits a
   LogicalSelectOperator, we check if any of the selection expressions can be handled
   by an index scan. If not, we proceed the same way as in project 3. If so, we
